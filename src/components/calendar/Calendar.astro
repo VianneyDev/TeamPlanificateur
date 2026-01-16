@@ -1,0 +1,18 @@
+---
+import DayToggle from "../islands/DayToggle";
+
+const year = new Date().getFullYear();
+const months = Array.from({ length: 12 }, (_, i) => i);
+---
+
+<DayToggle client:load />
+
+<div class="grid grid-cols-3 gap-4">
+   {months.map(month => (
+      <div class="bg-white rounded shadow p-2">
+         <h2 class="font-semibold">
+            {new Date(year, month).toLocaleDateString("fr-FR", { month: "long" })}
+         </h2>
+      </div>
+   ))}
+</div>

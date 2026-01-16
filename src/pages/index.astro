@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+import Calendar from "../components/calendar/Calendar.astro";
+
 import { db } from "../lib/db";
 
 const teams = await db.team.findMany();
@@ -14,4 +16,6 @@ const teams = await db.team.findMany();
          <li>{team.name}</li>
       ))}
    </ul>
-</Layout>
+
+   <Calendar />
+</Layout> 
