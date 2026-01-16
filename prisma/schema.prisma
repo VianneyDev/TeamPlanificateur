@@ -13,17 +13,17 @@ model Team {
 }
 
 model Member {
-   id        String   @id @default(cuid())
-   name      String
-   email     String   @unique
-   password  String
-   role      String   @default("member") // "member" | "manager"
-   archived  Boolean  @default(false)
-   teamId    String
-   team      Team     @relation(fields: [teamId], references: [id])
-   daysOff   DayOff[]
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
+   id              String              @id @default(cuid())
+   name            String
+   role            String              @default("member") // "member" | "manager"
+   isExternal      Boolean             @default(false)
+   archived        Boolean             @default(false)
+   teamId          String
+   team            Team                @relation(fields: [teamId], references: [id])
+   daysOff         DayOff[]
+   monthlyWorkedDays MonthlyWorkedDays[]
+   createdAt       DateTime            @default(now())
+   updatedAt       DateTime            @updatedAt
 }
 
 model DayOff {
@@ -37,4 +37,19 @@ model DayOff {
    @@unique([memberId, date])
    @@index([date])
    @@index([memberId])
+}
+
+model MonthlyWorkedDays {
+   id        String   @id @default(cuid())
+   year      Int
+   month     Int      // 1-12
+   days      Int
+   memberId  String
+   member    Member   @relation(fields: [memberId], references: [id])
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+
+   @@unique([memberId, year, month])
+   @@index([memberId])
+   @@index([year, month])
 }

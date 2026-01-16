@@ -1,21 +1,20 @@
 ---
+export const prerender = false;
+
 import Layout from "../layouts/Layout.astro";
-
 import Calendar from "../components/calendar/Calendar.astro";
+import MemberSelector from "../components/islands/MemberSelector";
 
-import { db } from "../lib/db";
-
-const teams = await db.team.findMany();
+const selectedMemberId = Astro.cookies.get("selectedMemberId")?.value;
+console.log(selectedMemberId);
 ---
 
 <Layout>
    <h1 class="text-2xl font-bold mb-4">Planning annuel</h1>
 
-   <ul>
-      {teams.map((team: { name: unknown; }) => (
-         <li>{team.name}</li>
-      ))}
-   </ul>
+   {!selectedMemberId && (
+      <MemberSelector client:load />
+   )}
 
    <Calendar />
 </Layout> 
