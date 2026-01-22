@@ -1,8 +1,10 @@
 import type { APIRoute } from "astro";
 import { db } from "../../lib/db";
 
-export const GET: APIRoute = async ({ url }) => {
-  const teamId = url.searchParams.get("teamId");
+export const prerender = false;
+
+export const GET: APIRoute = async ({ request }) => {
+  const teamId = request.headers.get("x-team-id");
 
   if (!teamId) {
     return new Response(JSON.stringify([]), {

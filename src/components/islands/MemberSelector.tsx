@@ -24,12 +24,18 @@ export default function MemberSelector() {
   }, []);
 
   useEffect(() => {
+    if (!selectedTeamId) {
+      setMembers([]);
+      return;
+    }
     if (selectedTeamId) {
-      fetch(`/api/members?teamId=${selectedTeamId}`)
+      fetch("/api/members", {
+        headers: {
+          "x-team-id": selectedTeamId,
+        },
+      })
         .then((res) => res.json())
         .then((data) => setMembers(data));
-    } else {
-      setMembers([]);
     }
   }, [selectedTeamId]);
 
@@ -41,11 +47,11 @@ export default function MemberSelector() {
   };
 
   return (
-    <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+    <div className="mb-6 p-4 bg-slate-500 rounded-lg">
       <h2 className="text-lg font-semibold mb-4">
         Sélectionnez votre équipe et votre nom
       </h2>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4">
         <select
           value={selectedTeamId}
           onChange={(e) => {

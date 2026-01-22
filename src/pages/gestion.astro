@@ -1,0 +1,60 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { db } from "../lib/db";
+
+export const prerender = false;
+
+const teams = await db.team.findMany({
+   include: {
+      members: {
+         where: { archived: false },
+         orderBy: { name: "asc" },
+      },
+   },
+   orderBy: { name: "asc" },
+});
+---
+
+<Layout title="Gestion d'équipe et membres">
+   <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Gestion</h1>
+      <p class="text-gray-600">Gérez vos équipes et membres</p>
+   </div>
+
+   <div class="space-y-6">
+      {teams.map((team) => (
+         <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+               <h2 class="text-xl font-semibold text-gray-900">{team.name}</h2>
+               <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                  {team.members.length} membre{team.members.length > 1 ? "s" : ""}
+               </span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+               {team.members.map((member) => (
+                  <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                     <div class="flex items-center justify-between">
+                        <div>
+                           <p class="font-medium text-gray-900">{member.name}</p>
+                           <div class="flex gap-2 mt-1">
+                              {member.role === "manager" && (
+                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                    Manager
+                                 </span>
+                              )}
+                              {member.isExternal && (
+                                 <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-medium">
+                                    Externe
+                                 </span>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+      ))}
+   </div>
+</Layout>

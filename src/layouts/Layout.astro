@@ -13,8 +13,24 @@ const { title = "Planning équipe" } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
-	<body class="bg-gray-100 text-gray-900">
-      <main class="p-6">
+	<body class="bg-slate-800 text-slate-200 flex">
+      <nav class="bg-slate-900 border-r border-gray-600 shadow-sm">
+         <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center gap-8">
+               <a href="/" class="text-xl font-bold text-gray-200">TPE</a>
+               <div class="flex flex-col gap-1 text-center">
+                  <a href="/" class="px-4 py-2 rounded-md text-sm font-medium text-gray-200 hover:bg-gray-100 hover:text-gray-900">
+                     Dashboard
+                  </a>
+                  <a href="/gestion" class="px-4 py-2 rounded-md text-sm font-medium text-gray-200 hover:bg-gray-100 hover:text-gray-900">
+                     Gestion
+                  </a>
+               </div>
+            </div>
+         </div>
+      </nav>
+
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
          <slot />
       </main>
 	</body>
