@@ -23,13 +23,15 @@ const stats = {
 ---
 
 <Layout>
-   <div class="mb-8">
+   <div class="mb-8 w-full">
       <h1 class="text-3xl font-bold text-gray-200 mb-2">Dashboard</h1>
       <p class="text-gray-400">Vue d'ensemble de votre planning d'équipe</p>
    </div>
 
    {!selectedMember && (
-      <MemberSelector client:load />
+      <div class="flex-1 flex">
+         <MemberSelector client:load />
+      </div>
    )}
 
    {selectedMember && (
