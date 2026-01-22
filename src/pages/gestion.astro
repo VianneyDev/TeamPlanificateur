@@ -1,110 +1,73 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import { db } from "../lib/db";
-
 export const prerender = false;
 
-const teams = await db.team.findMany({
-   include: {
-      members: {
-         where: { archived: false },
-         orderBy: { name: "asc" },
-      },
-   },
-   orderBy: { name: "asc" },
-});
+import Layout from "@/layouts/Layout.astro";
+import { db } from "@/lib/db";
 
-// const stats = {
-//    totalTeams: await db.team.count(),
-//    totalMembers: await db.member.count({ where: { archived: false } }),
-//    totalDaysOff: await db.dayOff.count(),
-// };
+const tab = Astro.url.searchParams.get("tab") ?? "teams";
 ---
 
 <Layout title="Gestion d'équipe et membres">
    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Gestion</h1>
-      <p class="text-gray-600">Gérez vos équipes et membres</p>
+      <h1 class="text-3xl font-bold text-gray-200 mb-2">Gestion</h1>
+      <p class="text-gray-400">
+         Administration des équipes et des membres
+      </p>
    </div>
 
-   <div class="space-y-6">
-      {teams.map((team) => (
-         <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
-            <div class="flex items-center justify-between mb-4">
-               <h2 class="text-xl font-semibold text-gray-900">{team.name}</h2>
-               <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  {team.members.length} membre{team.members.length > 1 ? "s" : ""}
-               </span>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-               {team.members.map((member) => (
-                  <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                     <div class="flex items-center justify-between">
-                        <div>
-                           <p class="font-medium text-gray-900">{member.name}</p>
-                           <div class="flex gap-2 mt-1">
-                              {member.role === "manager" && (
-                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                                    Manager
-                                 </span>
-                              )}
-                              {member.isExternal && (
-                                 <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-xs font-medium">
-                                    Externe
-                                 </span>
-                              )}
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               ))}
-            </div>
-         </div>
-      ))}
+   <div class="mb-6 flex gap-2 border-b border-slate-700">
+      <a href="/gestion?tab=teams" class={`tab ${tab === "teams" ? "tab-active" : "tab"}`}>Équipes</a>
+      <a href="/gestion?tab=members" class={`tab ${tab === "members" ? "tab-active" : "tab"}`}>Membres</a>
+      <a href="/gestion?tab=externes" class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}>Externes</a>
    </div>
 
-   <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-         <div class="flex items-center justify-between">
-            <div>
-               <p class="text-sm font-medium text-gray-600">Équipes</p>
-               <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalTeams}</p>
-            </div>
-            <div class="p-3 bg-blue-100 rounded-lg">
-               <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-               </svg>
-            </div>
-         </div>
-      </div>
+   <!-- {tab === "teams" && <TeamsPanel />}
+   {tab === "members" && <MembersPanel />} -->
 
-      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-         <div class="flex items-center justify-between">
-            <div>
-               <p class="text-sm font-medium text-gray-600">Membres</p>
-               <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalMembers}</p>
-            </div>
-            <div class="p-3 bg-green-100 rounded-lg">
-               <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-               </svg>
-            </div>
-         </div>
+   <!-- Teams -->
+   <div class="bg-slate-900 border border-slate-700 rounded-lg">
+      <div class="flex items-center justify-between p-4 border-b border-slate-700">
+        <h2 class="text-lg font-semibold text-white">Équipes</h2>
+        <button class="btn-primary">+ Ajouter une équipe</button>
       </div>
+    
+      <table class="w-full text-sm">
+        <thead class="text-slate-00">
+          <tr class="border-b border-slate-700">
+            <th class="px-4 py-3 text-left">Nom</th>
+            <th class="px-4 py-3 text-left">Membres</th>
+            <th class="px-4 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- rows -->
+        </tbody>
+      </table>
+   </div>
 
-      <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-         <div class="flex items-center justify-between">
-            <div>
-               <p class="text-sm font-medium text-gray-600">Jours de congé</p>
-               <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalDaysOff}</p>
-            </div>
-            <div class="p-3 bg-purple-100 rounded-lg">
-               <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-               </svg>
-            </div>
-         </div>
+   <!-- Members -->
+   <div class="bg-slate-900 border border-slate-700 rounded-lg">
+      <div class="flex items-center justify-between p-4 border-b border-slate-700">
+        <h2 class="text-lg font-semibold text-white">Membres</h2>
+    
+        <div class="flex gap-2">
+          <select class="select">
+            <option>Toutes les équipes</option>
+          </select>
+          <button class="btn-primary">+ Ajouter</button>
+        </div>
       </div>
-   </div> -->
+    
+      <table class="w-full text-sm">
+        <thead class="text-slate-400">
+          <tr class="border-b border-slate-700">
+            <th class="px-4 py-3 text-left">Nom</th>
+            <th class="px-4 py-3 text-left">Équipe</th>
+            <th class="px-4 py-3 text-left">Rôle</th>
+            <th class="px-4 py-3 text-left">Statut</th>
+            <th class="px-4 py-3 text-right"></th>
+          </tr>
+        </thead>
+      </table>
+   </div>
 </Layout>

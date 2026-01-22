@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "astro";
-import { db } from "./lib/db";
+import { db } from "@/lib/db";
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
   const memberId = context.cookies.get("selectedMemberId")?.value;
