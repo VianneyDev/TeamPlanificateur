@@ -14,18 +14,12 @@ const selectedMember = selectedMemberId
       include: { team: true },
    })
    : null;
-
-const stats = {
-   totalTeams: await db.team.count(),
-   totalMembers: await db.member.count({ where: { archived: false } }),
-   totalDaysOff: await db.dayOff.count(),
-};
 ---
 
 <Layout>
-   <div class="mb-8 w-full">
-      <h1 class="text-3xl font-bold text-gray-200 mb-2">Dashboard</h1>
-      <p class="text-gray-400">Vue d'ensemble de votre planning d'équipe</p>
+   <div class="mb-8">
+      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
+      <p class="text-slate-400 mt-1">Vue d'ensemble de votre planning d'équipe</p>
    </div>
 
    {!selectedMember && (
@@ -35,60 +29,17 @@ const stats = {
    )}
 
    {selectedMember && (
-      <div class="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-         <p class="text-sm text-blue-800">
-            <span class="font-semibold">{selectedMember.name}</span> - Équipe {selectedMember.team.name}
-         </p>
+      <div class="mb-8 flex items-center justify-between rounded-lg bg-slate-700 px-4 py-3">
+        <div class="text-sm text-slate-200">
+          Connecté en tant que
+          <span class="font-semibold ml-1">
+            {selectedMember.name}
+          </span>
+          <span class="text-slate-400 ml-2">
+            — {selectedMember.team.name}
+          </span>
+        </div>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-               <div>
-                  <p class="text-sm font-medium text-gray-600">Équipes</p>
-                  <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalTeams}</p>
-               </div>
-               <div class="p-3 bg-blue-100 rounded-lg">
-                  <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-               </div>
-            </div>
-         </div>
-
-         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-               <div>
-                  <p class="text-sm font-medium text-gray-600">Membres</p>
-                  <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalMembers}</p>
-               </div>
-               <div class="p-3 bg-green-100 rounded-lg">
-                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-               </div>
-            </div>
-         </div>
-
-         <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <div class="flex items-center justify-between">
-               <div>
-                  <p class="text-sm font-medium text-gray-600">Jours de congé</p>
-                  <p class="text-3xl font-bold text-gray-900 mt-2">{stats.totalDaysOff}</p>
-               </div>
-               <div class="p-3 bg-purple-100 rounded-lg">
-                  <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-               </div>
-            </div>
-         </div>
-      </div>
-   )}
-
-   <!-- <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
-      <h2 class="text-xl font-semibold mb-4">Planning annuel</h2> -->
-      <!-- <Calendar /> -->
-      <!-- <p class="text-gray-500 text-sm">Calendrier à venir...</p>
-   </div> -->
+    )}
+    
 </Layout> 
