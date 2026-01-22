@@ -2,6 +2,7 @@
 import "../styles/global.css";
 
 const { title = "Planning équipe" } = Astro.props;
+const member = Astro.locals.member; 
 ---
 
 <!doctype html>
@@ -21,20 +22,24 @@ const { title = "Planning équipe" } = Astro.props;
          </div>
 
          <nav class="flex-1 px-3 py-6 space-y-1">
-            <a href="/" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-white bg-slate-800 rounded-md">
+            <a href="/" class="nav-item">
                <span>Dashboard</span>
             </a>
-            <a href="/gestion" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white rounded-md transition">
-               <span>Gestion</span>
-            </a>
-            <a href="/external" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white rounded-md transition">
+            {member?.role === "manager" && (
+               <a href="/gestion" class="nav-item">
+                  <span>Gestion</span>
+               </a>
+            )}
+            <a href="/external" class="nav-item">
                <span>Jours travaillés</span>
             </a>
          </nav>
 
+         {member && (
          <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
-            © {new Date().getFullYear()} TPE
+            {member.name} - {member.team.name}
           </div>
+          )}
       </aside>
 
       <main class="min-h-screen flex-1 px-6 py-8">
