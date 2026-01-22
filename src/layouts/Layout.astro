@@ -3,6 +3,8 @@ import "../styles/global.css";
 
 const { title = "Planning équipe" } = Astro.props;
 const member = Astro.locals.member; 
+const pathname = Astro.url.pathname;
+const isActive = (path: string) => pathname === path;
 ---
 
 <!doctype html>
@@ -21,25 +23,46 @@ const member = Astro.locals.member;
             <p class="text-xs text-slate-400 mt-1">Planning équipe</p>
          </div>
 
-         <nav class="flex-1 px-3 py-6 space-y-1">
-            <a href="/" class="nav-item">
+         <nav class="flex-1 px-3 py-6 space-y-4">
+            <a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
                <span>Dashboard</span>
             </a>
-            {member?.role === "manager" && (
-               <a href="/gestion" class="nav-item">
-                  <span>Gestion</span>
-               </a>
-            )}
-            <a href="/external" class="nav-item">
+            <a href="/external" class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}>
                <span>Jours travaillés</span>
             </a>
+            {member && member.role === "manager" ? (
+              <a href="/gestion" class={`nav-item ${isActive("/gestion") ? "nav-item-active" : ""}`}>
+                <span>Gestion</span>
+              </a>
+            ) : (
+              <a
+                href="#"
+                class="nav-item pointer-events-none opacity-40"
+                aria-disabled="true"
+                title="Accès réservé aux admins"
+              >
+                <span>Gestion</span>
+              </a>
+            )}
          </nav>
 
          {member && (
-         <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
-            {member.name} - {member.team.name}
-          </div>
-          )}
+            <div class="p-4 border-t border-slate-700 text-xs text-slate-400 flex items-center justify-between gap-2">
+              <div class="truncate">
+                <div class="text-slate-200 font-medium">{member.name}</div>
+                <div class="text-slate-400">{member.team.name}</div>
+              </div>
+          
+              <form method="POST" action="/api/logout">
+                <button
+                  type="submit"
+                  class="text-red-400 hover:text-red-300 text-xs font-medium cursor-pointer"
+                >
+                  Déconnexion
+                </button>
+              </form>
+            </div>
+          )}          
       </aside>
 
       <main class="min-h-screen flex-1 px-6 py-8">

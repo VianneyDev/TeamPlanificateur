@@ -1,11 +1,7 @@
 ---
-import DayToggle from "../islands/DayToggle";
-
 const year = new Date().getFullYear();
 const months = Array.from({ length: 12 }, (_, i) => i);
 ---
-
-<DayToggle client:load />
 
 <div class="grid grid-cols-3 gap-4">
    {months.map(month => (
