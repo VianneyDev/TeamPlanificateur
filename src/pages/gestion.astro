@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
 import { db } from "@/lib/db";
+import TeamsPanel from "@/components/gestion/TeamsPanel.astro";
 
 const tab = Astro.url.searchParams.get("tab") ?? "teams";
 ---
@@ -21,32 +22,11 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
       <a href="/gestion?tab=externes" class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}>Externes</a>
    </div>
 
-   <!-- {tab === "teams" && <TeamsPanel />}
-   {tab === "members" && <MembersPanel />} -->
-
-   <!-- Teams -->
-   <div class="bg-slate-900 border border-slate-700 rounded-lg">
-      <div class="flex items-center justify-between p-4 border-b border-slate-700">
-        <h2 class="text-lg font-semibold text-white">Équipes</h2>
-        <button class="btn-primary">+ Ajouter une équipe</button>
-      </div>
-    
-      <table class="w-full text-sm">
-        <thead class="text-slate-00">
-          <tr class="border-b border-slate-700">
-            <th class="px-4 py-3 text-left">Nom</th>
-            <th class="px-4 py-3 text-left">Membres</th>
-            <th class="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- rows -->
-        </tbody>
-      </table>
-   </div>
+   {tab === "teams" && <TeamsPanel />}
+   <!-- {tab === "members" && <MembersPanel />} -->
 
    <!-- Members -->
-   <div class="bg-slate-900 border border-slate-700 rounded-lg">
+   <!-- <div class="bg-slate-900 border border-slate-700 rounded-lg">
       <div class="flex items-center justify-between p-4 border-b border-slate-700">
         <h2 class="text-lg font-semibold text-white">Membres</h2>
     
@@ -69,5 +49,5 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
           </tr>
         </thead>
       </table>
-   </div>
+   </div> -->
 </Layout>

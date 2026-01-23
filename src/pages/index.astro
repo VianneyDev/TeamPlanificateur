@@ -3,7 +3,7 @@ export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
 import Calendar from "@/components/calendar/Calendar.astro";
-import MemberSelector from "@/components/islands/MemberSelector";
+import MemberSelector from "@/components/islands/member/MemberSelector";
 import { db } from "@/lib/db";
 
 const selectedMemberId = Astro.cookies.get("selectedMemberId")?.value;
