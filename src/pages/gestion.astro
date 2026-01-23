@@ -2,8 +2,8 @@
 export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
+import TeamsPanelWithProvider from "@/components/islands/team/TeamsPanelWithProvider";
 import { db } from "@/lib/db";
-import TeamsPanel from "@/components/gestion/TeamsPanel.astro";
 
 const tab = Astro.url.searchParams.get("tab") ?? "teams";
 ---
@@ -22,7 +22,9 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
       <a href="/gestion?tab=externes" class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}>Externes</a>
    </div>
 
-   {tab === "teams" && <TeamsPanel />}
+   {tab === "teams" && 
+      <TeamsPanelWithProvider client:load />
+   }
    <!-- {tab === "members" && <MembersPanel />} -->
 
    <!-- Members -->
