@@ -3,7 +3,7 @@ export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
 import TeamsPanelWithProvider from "@/components/islands/team/TeamsPanelWithProvider";
-import { db } from "@/lib/db";
+import MembersPanelWithProvider from "@/components/islands/member/MembersPanelWithProvider";
 
 const tab = Astro.url.searchParams.get("tab") ?? "teams";
 ---
@@ -25,7 +25,10 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
    {tab === "teams" && 
       <TeamsPanelWithProvider client:load />
    }
-   <!-- {tab === "members" && <MembersPanel />} -->
+
+   {tab === "members" && 
+      <MembersPanelWithProvider client:load />
+   }
 
    <!-- Members -->
    <!-- <div class="bg-slate-900 border border-slate-700 rounded-lg">

@@ -1,10 +1,10 @@
 import AppProviders from "@/components/islands/providers/AppProviders";
-import TeamsPanel from "@/components/islands/team/TeamsPanel";
+import MembersPanel from "@/components/islands/member/MembersPanel";
 
 export default function TeamsPanelWithProvider() {
   return (
     <AppProviders>
-      <TeamsPanel />
+      <MembersPanel />
     </AppProviders>
   );
 }
