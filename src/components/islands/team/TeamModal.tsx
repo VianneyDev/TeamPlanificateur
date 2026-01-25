@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTeam } from "@/lib/api/team";
 import { Plus } from "lucide-react";
 import {
-   Dialog,
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -11,24 +9,21 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/islands/ui/dialog";
+import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
 
 export default function TeamModal() {
   const [name, setName] = useState("");
-  const queryClient = useQueryClient();
+  const { mutate: createTeam, isPending } = useCreateTeam();
 
-  const mutation = useMutation({
-    mutationFn: createTeam,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
-      setName("");
-    },
-  });
+  const handleSubmit = () => {
+    createTeam({ name });
+  };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <div className="p-2 rounded-md hover:bg-slate-800">
-         <Plus size={18} />
+          <Plus size={18} />
         </div>
       </DialogTrigger>
 
@@ -48,11 +43,11 @@ export default function TeamModal() {
         />
         <DialogFooter>
           <button
-            onClick={() => mutation.mutate(name)}
-            disabled={!name || mutation.isPending}
+            onClick={handleSubmit}
+            disabled={!name || isPending}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {mutation.isPending ? "Création..." : "Créer"}
+            {isPending ? "Création..." : "Créer"}
           </button>
         </DialogFooter>
       </DialogContent>
