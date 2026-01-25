@@ -1,10 +1,10 @@
-import QueryProvider from "@/components/islands/providers/QueryProvider";
 import TeamsPanel from "./TeamsPanel";
+import AppProviders from "../providers/AppProviders";
 
 export default function TeamsPanelWithProvider() {
-   return (
-      <QueryProvider>
-         <TeamsPanel />
-      </QueryProvider>
-   );
+  return (
+    <AppProviders>
+      <TeamsPanel />
+    </AppProviders>
+  );
 }
