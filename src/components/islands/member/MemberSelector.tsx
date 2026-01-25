@@ -38,11 +38,7 @@ export default function MemberSelector() {
       return;
     }
     if (selectedTeamId) {
-      fetch("/api/members", {
-        headers: {
-          "x-team-id": selectedTeamId,
-        },
-      })
+      fetch(`/api/members?teamId=${selectedTeamId}`)
         .then((res) => res.json())
         .then((data) => setMembers(data));
     }
