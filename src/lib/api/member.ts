@@ -12,7 +12,7 @@ export async function fetchMembers(teamId?: string) {
 export async function createMember(data: {
   name: string;
   role: "member" | "manager";
-  teamId?: string[];
+  teamIds: string[];
 }) {
   const response = await fetch("/api/members", {
     method: "POST",

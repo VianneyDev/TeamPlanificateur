@@ -5,7 +5,7 @@ import { toast } from "sonner";
 type CreateMemberInput = {
   name: string;
   role: "member" | "manager";
-  teamId?: string[];
+  teamIds: string[];
 };
 
 export function useCreateMember() {

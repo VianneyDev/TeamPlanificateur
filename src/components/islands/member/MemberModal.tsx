@@ -27,7 +27,7 @@ export default function MemberModal({ teams }: { teams: any[] }) {
     mutate({
       name,
       role,
-      teamId: role === "manager" ? teamIds : teamIds,
+      teamIds,
     });
   };
 

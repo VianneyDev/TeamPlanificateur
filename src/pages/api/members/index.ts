@@ -31,11 +31,18 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  const { name, teamId, role } = body;
+  const { name, role } = body;
+  const teamIds = Array.isArray(body.teamIds)
+    ? body.teamIds
+    : Array.isArray(body.teamId)
+      ? body.teamId
+      : body.teamId
+        ? [body.teamId]
+        : [];
 
-  if (!name || !teamId) {
+  if (!name || teamIds.length === 0) {
     return new Response(
-      JSON.stringify({ error: "Name and teamId are required" }),
+      JSON.stringify({ error: "Name and at least one team are required" }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -43,18 +50,25 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  const member = await db.member.create({
-    data: {
-      name,
-      teamId,
-      ...(role && { role }),
-    },
-  });
+  const members = await Promise.all(
+    teamIds.map((teamId: string) =>
+      db.member.create({
+        data: {
+          name,
+          teamId,
+          ...(role && { role }),
+        },
+      })
+    )
+  );
 
-  return new Response(JSON.stringify(member), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify(members.length === 1 ? members[0] : members),
+    {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 };
 
 export const PUT: APIRoute = async ({ request }) => {
