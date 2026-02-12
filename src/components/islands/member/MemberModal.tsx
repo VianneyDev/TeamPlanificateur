@@ -12,7 +12,7 @@ import { useCreateMember } from "@/hooks/members/useCreateMember";
 
 export default function MemberModal({ teams }: { teams: any[] }) {
   const { mutate, isPending } = useCreateMember();
-
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState<"member" | "manager">("member");
   const [teamIds, setTeamIds] = useState<string[]>([]);
@@ -24,15 +24,21 @@ export default function MemberModal({ teams }: { teams: any[] }) {
   const canSubmit = name.trim() && (role === "manager" || teamIds.length > 0);
 
   const handleSubmit = () => {
-    mutate({
-      name,
-      role,
-      teamIds,
-    });
+    mutate(
+      { name, role, teamIds },
+      {
+        onSuccess: () => {
+          setOpen(false);
+          setName("");
+          setRole("member");
+          setTeamIds([]);
+        },
+      }
+    );
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild className="px-3 py-2 bg-slate-800 rounded">
         <div className="flex items-center justify-between border-b border-slate-700">
           <Plus size={18} />

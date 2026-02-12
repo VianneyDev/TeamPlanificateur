@@ -13,15 +13,18 @@ import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
 
 export default function TeamModal() {
   const { mutate: createTeam, isPending } = useCreateTeam();
-
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
 
   const handleSubmit = () => {
-    createTeam({ name });
+    createTeam(
+      { name },
+      { onSuccess: () => { setOpen(false); setName(""); } }
+    );
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="p-2 rounded-md hover:bg-slate-800">
           <Plus size={18} />
