@@ -11,6 +11,9 @@ export const GET: APIRoute = async ({ url }) => {
       ...(teamId && { teamId }),
       archived: false,
     },
+    include: {
+      team: true,
+    },
     orderBy: { name: "asc" },
   });
 
@@ -46,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -58,6 +61,9 @@ export const POST: APIRoute = async ({ request }) => {
           teamId,
           ...(role && { role }),
         },
+        include: {
+          team: true,
+        },
       })
     )
   );
@@ -67,7 +73,7 @@ export const POST: APIRoute = async ({ request }) => {
     {
       status: 201,
       headers: { "Content-Type": "application/json" },
-    },
+    }
   );
 };
 
