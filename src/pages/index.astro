@@ -11,7 +11,7 @@ const selectedMemberId = Astro.cookies.get("selectedMemberId")?.value;
 const selectedMember = selectedMemberId 
    ? await db.member.findUnique({
       where: { id: selectedMemberId },
-      include: { team: true },
+      include: { teams: true },
    })
    : null;
 ---

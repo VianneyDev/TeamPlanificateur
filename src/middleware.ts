@@ -7,7 +7,7 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
   if (memberId) {
     const member = await db.member.findUnique({
       where: { id: memberId },
-      include: { team: true },
+      include: { teams: true },
     });
 
     context.locals.member = member;

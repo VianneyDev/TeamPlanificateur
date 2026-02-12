@@ -6,10 +6,7 @@ declare namespace App {
       id: string;
       name: string;
       role: string;
-      team: {
-        id: string;
-        name: string;
-      };
+      teams: { id: string; name: string }[];
     } | null;
   }
 }

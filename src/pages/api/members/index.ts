@@ -8,11 +8,11 @@ export const GET: APIRoute = async ({ url }) => {
 
   const members = await db.member.findMany({
     where: {
-      ...(teamId && { teamId }),
+      ...(teamId && { teams: { some: { id: teamId } } }),
       archived: false,
     },
     include: {
-      team: true,
+      teams: true,
     },
     orderBy: { name: "asc" },
   });
@@ -53,23 +53,19 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  const members = await Promise.all(
-    teamIds.map((teamId: string) =>
-      db.member.create({
-        data: {
-          name,
-          teamId,
-          ...(role && { role }),
-        },
-        include: {
-          team: true,
-        },
-      })
-    )
-  );
+  const member = await db.member.create({
+    data: {
+      name,
+      ...(role && { role }),
+      teams: { connect: teamIds.map((id: string) => ({ id })) },
+    },
+    include: {
+      teams: true,
+    },
+  });
 
   return new Response(
-    JSON.stringify(members.length === 1 ? members[0] : members),
+    JSON.stringify(member),
     {
       status: 201,
       headers: { "Content-Type": "application/json" },

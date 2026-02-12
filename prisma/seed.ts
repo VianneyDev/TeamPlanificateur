@@ -21,7 +21,7 @@ async function main() {
       name: "Alice Martin",
       role: "member",
       isExternal: false,
-      teamId: team1.id,
+      teams: { connect: [{ id: team1.id }] },
     },
   });
   await db.member.create({
@@ -29,7 +29,7 @@ async function main() {
       name: "Bob Dupont",
       role: "member",
       isExternal: false,
-      teamId: team1.id,
+      teams: { connect: [{ id: team1.id }] },
     },
   });
   await db.member.create({
@@ -37,7 +37,7 @@ async function main() {
       name: "Charlie Bernard",
       role: "manager",
       isExternal: false,
-      teamId: team1.id,
+      teams: { connect: [{ id: team1.id }] },
     },
   });
   await db.member.create({
@@ -45,7 +45,7 @@ async function main() {
       name: "Diana Leroy",
       role: "member",
       isExternal: true,
-      teamId: team2.id,
+      teams: { connect: [{ id: team2.id }] },
     },
   });
   await db.member.create({
@@ -53,7 +53,7 @@ async function main() {
       name: "Eve Moreau",
       role: "member",
       isExternal: true,
-      teamId: team2.id,
+      teams: { connect: [{ id: team2.id }] },
     },
   });
   await db.member.create({
@@ -61,7 +61,7 @@ async function main() {
       name: "Frank Petit",
       role: "manager",
       isExternal: false,
-      teamId: team2.id,
+      teams: { connect: [{ id: team2.id }] },
     },
   });
   await db.member.create({
@@ -69,7 +69,7 @@ async function main() {
       name: "Grace Dubois",
       role: "member",
       isExternal: false,
-      teamId: team3.id,
+      teams: { connect: [{ id: team3.id }] },
     },
   });
 
