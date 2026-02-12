@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
+import type { MemberStatus } from "@/lib/api/member";
 import MemberModal from "@/components/islands/member/MemberModal";
 import MemberRowActions from "@/components/islands/member/MemberRowActions";
-import type { MemberStatus } from "@/lib/api/member";
 
 const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
   { value: "active", label: "Actifs" },

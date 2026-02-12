@@ -65,3 +65,7 @@ export async function archiveMember(id: string) {
 
   return response.json();
 }
+
+export async function restoreMember(id: string) {
+  return updateMember({ id, archived: false });
+}
