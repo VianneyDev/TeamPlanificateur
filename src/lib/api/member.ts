@@ -1,6 +1,5 @@
-export async function fetchMembers(teamId?: string) {
-  const url = teamId ? `/api/members?teamId=${teamId}` : "/api/members";
-  const response = await fetch(url);
+export async function fetchMembers(showArchived = false) {
+  const response = await fetch(`/api/members?archived=${showArchived}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch members");
@@ -45,6 +44,21 @@ export async function updateMember(data: {
 
   if (!response.ok) {
     throw new Error("Failed to update member");
+  }
+
+  return response.json();
+}
+
+export async function archiveMember(id: string) {
+  const response = await fetch(`/api/members/${id}/archive`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to archive member");
   }
 
   return response.json();

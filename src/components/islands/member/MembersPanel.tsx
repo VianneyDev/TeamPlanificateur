@@ -1,13 +1,14 @@
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import MemberModal from "@/components/islands/member/MemberModal";
+import MemberRowActions from "@/components/islands/member/MemberRowActions";
 
 type MembersPanelProps = {
-  teamId?: string;
+  showArchived: boolean;
 };
 
-export default function MembersPanel({ teamId }: MembersPanelProps) {
-  const { data: members, isLoading, error } = useMembers(teamId);
+export default function MembersPanel({ showArchived }: MembersPanelProps) {
+  const { data: members, isLoading, error } = useMembers(showArchived);
   const { data: teams = [], isLoading: teamsLodaing } = useTeams();
 
   if (isLoading) {
@@ -51,7 +52,17 @@ export default function MembersPanel({ teamId }: MembersPanelProps) {
               key={member.id}
               className="border-t border-slate-800 hover:bg-slate-800/40"
             >
-              <td className="px-4 py-3 text-white">{member.name}</td>
+              <td className="px-4 py-3 text-white">
+                <div className="flex items-center gap-2">
+                  {member.name}
+
+                  {member.archived && (
+                    <span className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded">
+                      Archivé
+                    </span>
+                  )}
+                </div>
+              </td>
 
               <td className="px-4 py-3 text-slate-300">
                 {member.teams?.length
@@ -64,7 +75,7 @@ export default function MembersPanel({ teamId }: MembersPanelProps) {
               </td>
 
               <td className="px-4 py-3 text-right">
-                {/* <MemberRowActions member={member} /> */}
+                <MemberRowActions member={member} />
               </td>
             </tr>
           ))}
