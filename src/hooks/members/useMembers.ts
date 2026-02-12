@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchMembers } from "@/lib/api/member";
+import { fetchMembers, type MemberStatus } from "@/lib/api/member";
 
-export function useMembers(showArchived: boolean) {
+export function useMembers(status: MemberStatus = "active") {
   return useQuery({
-    queryKey: ["members", showArchived],
-    queryFn: () => fetchMembers(showArchived),
+    queryKey: ["members", status],
+    queryFn: () => fetchMembers(status),
   });
 }

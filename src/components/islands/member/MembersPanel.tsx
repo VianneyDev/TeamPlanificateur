@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import MemberModal from "@/components/islands/member/MemberModal";
 import MemberRowActions from "@/components/islands/member/MemberRowActions";
+import type { MemberStatus } from "@/lib/api/member";
 
-type MembersPanelProps = {
-  showArchived: boolean;
-};
+const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
+  { value: "active", label: "Actifs" },
+  { value: "archived", label: "Archivés" },
+  { value: "all", label: "Tous" },
+];
 
-export default function MembersPanel({ showArchived }: MembersPanelProps) {
-  const { data: members, isLoading, error } = useMembers(showArchived);
-  const { data: teams = [], isLoading: teamsLodaing } = useTeams();
+export default function MembersPanel() {
+  const [status, setStatus] = useState<MemberStatus>("active");
+  const { data: members = [], isLoading, error } = useMembers(status);
+  const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
   if (isLoading) {
     return <div className="text-slate-400">Chargement des membres…</div>;
@@ -25,7 +30,24 @@ export default function MembersPanel({ showArchived }: MembersPanelProps) {
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <h2 className="text-lg font-semibold text-white">Membres</h2>
-        {!teamsLodaing && <MemberModal teams={teams} />}
+        {!teamsLoading && <MemberModal teams={teams} />}
+      </div>
+
+      <div className="flex gap-1 p-2 border-b border-slate-700">
+        {STATUS_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setStatus(opt.value)}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+              status === opt.value
+                ? "bg-slate-600 text-white"
+                : "text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       <table className="w-full text-sm">

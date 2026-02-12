@@ -5,12 +5,19 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
   const teamId = url.searchParams.get("teamId");
-  const showArchived = url.searchParams.get("archived") === "true";
+  const status = url.searchParams.get("status") ?? "active";
+
+  const archivedFilter =
+    status === "active"
+      ? { archived: false }
+      : status === "archived"
+        ? { archived: true }
+        : undefined;
 
   const members = await db.member.findMany({
     where: {
       ...(teamId && { teams: { some: { id: teamId } } }),
-      ...(showArchived && { archived: true }),
+      ...archivedFilter,
     },
     include: {
       teams: true,

@@ -1,5 +1,7 @@
-export async function fetchMembers(showArchived = false) {
-  const response = await fetch(`/api/members?archived=${showArchived}`);
+export type MemberStatus = "active" | "archived" | "all";
+
+export async function fetchMembers(status: MemberStatus = "active") {
+  const response = await fetch(`/api/members?status=${status}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch members");
