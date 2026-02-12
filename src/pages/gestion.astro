@@ -29,30 +29,4 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
    {tab === "members" && 
       <MembersPanelWithProvider client:load />
    }
-
-   <!-- Members -->
-   <!-- <div class="bg-slate-900 border border-slate-700 rounded-lg">
-      <div class="flex items-center justify-between p-4 border-b border-slate-700">
-        <h2 class="text-lg font-semibold text-white">Membres</h2>
-    
-        <div class="flex gap-2">
-          <select class="select">
-            <option>Toutes les équipes</option>
-          </select>
-          <button class="btn-primary">+ Ajouter</button>
-        </div>
-      </div>
-    
-      <table class="w-full text-sm">
-        <thead class="text-slate-400">
-          <tr class="border-b border-slate-700">
-            <th class="px-4 py-3 text-left">Nom</th>
-            <th class="px-4 py-3 text-left">Équipe</th>
-            <th class="px-4 py-3 text-left">Rôle</th>
-            <th class="px-4 py-3 text-left">Statut</th>
-            <th class="px-4 py-3 text-right"></th>
-          </tr>
-        </thead>
-      </table>
-   </div> -->
 </Layout>

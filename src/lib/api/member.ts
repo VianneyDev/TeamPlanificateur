@@ -11,8 +11,8 @@ export async function fetchMembers(teamId?: string) {
 
 export async function createMember(data: {
   name: string;
-  teamId: string;
-  role?: string;
+  role: "member" | "manager";
+  teamId?: string[];
 }) {
   const response = await fetch("/api/members", {
     method: "POST",

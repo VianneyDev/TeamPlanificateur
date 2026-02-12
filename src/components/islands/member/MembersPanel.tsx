@@ -1,4 +1,6 @@
 import { useMembers } from "@/hooks/members/useMembers";
+import { useTeams } from "@/hooks/teams/useTeams";
+import MemberModal from "@/components/islands/member/MemberModal";
 
 type MembersPanelProps = {
   teamId?: string;
@@ -6,6 +8,7 @@ type MembersPanelProps = {
 
 export default function MembersPanel({ teamId }: MembersPanelProps) {
   const { data: members, isLoading, error } = useMembers(teamId);
+  const { data: teams = [], isLoading: teamsLodaing } = useTeams();
 
   if (isLoading) {
     return <div className="text-slate-400">Chargement des membres…</div>;
@@ -21,8 +24,7 @@ export default function MembersPanel({ teamId }: MembersPanelProps) {
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <h2 className="text-lg font-semibold text-white">Membres</h2>
-
-        {/* modal MemberModal */}
+        {!teamsLodaing && <MemberModal teams={teams} />}
       </div>
 
       <table className="w-full text-sm">
