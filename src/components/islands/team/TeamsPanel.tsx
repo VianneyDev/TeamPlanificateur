@@ -1,16 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchTeams } from "@/lib/api/team";
+import { useTeams } from "@/hooks/teams/useTeams";
 import TeamModal from "@/components/islands/team/TeamModal";
 
 export default function TeamsPanel() {
-  const {
-    data: teams,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["teams"],
-    queryFn: fetchTeams,
-  });
+  const { data: teams, isLoading, error } = useTeams();
 
   if (isLoading) {
     return <div className="text-slate-400">Chargement...</div>;
@@ -24,7 +16,7 @@ export default function TeamsPanel() {
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <h2 className="text-lg font-semibold text-white">Équipes</h2>
-        <TeamModal />
+        {!isLoading && <TeamModal />}
       </div>
 
       <table className="w-full text-sm">

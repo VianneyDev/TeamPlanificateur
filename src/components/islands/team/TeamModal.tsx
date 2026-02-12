@@ -12,8 +12,9 @@ import {
 import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
 
 export default function TeamModal() {
-  const [name, setName] = useState("");
   const { mutate: createTeam, isPending } = useCreateTeam();
+
+  const [name, setName] = useState("");
 
   const handleSubmit = () => {
     createTeam({ name });
