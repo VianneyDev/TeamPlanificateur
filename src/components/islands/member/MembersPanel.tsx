@@ -54,7 +54,9 @@ export default function MembersPanel({ teamId }: MembersPanelProps) {
               <td className="px-4 py-3 text-white">{member.name}</td>
 
               <td className="px-4 py-3 text-slate-300">
-                {member.teams?.length ? member.teams.map((t: { name: string }) => t.name).join(", ") : "—"}
+                {member.teams?.length
+                  ? member.teams.map((t: { name: string }) => t.name).join(", ")
+                  : "—"}
               </td>
 
               <td className="px-4 py-3 text-slate-300 capitalize">

@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -57,20 +57,19 @@ export const POST: APIRoute = async ({ request }) => {
     data: {
       name,
       ...(role && { role }),
-      teams: { connect: teamIds.map((id: string) => ({ id })) },
+      teams: {
+        connect: teamIds.map((id: string) => ({ id })),
+      },
     },
     include: {
       teams: true,
     },
   });
 
-  return new Response(
-    JSON.stringify(member),
-    {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  return new Response(JSON.stringify(member), {
+    status: 201,
+    headers: { "Content-Type": "application/json" },
+  });
 };
 
 export const PUT: APIRoute = async ({ request }) => {
