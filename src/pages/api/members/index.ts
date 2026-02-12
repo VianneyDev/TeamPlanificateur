@@ -22,10 +22,27 @@ export const GET: APIRoute = async ({ url }) => {
     include: {
       teams: true,
     },
-    orderBy: { name: "asc" },
+    orderBy: [{ name: "asc" }, { archived: "asc" }, { updatedAt: "desc" }],
   });
 
-  return new Response(JSON.stringify(members), {
+  const sorted =
+    status === "archived"
+      ? [...members].sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )
+      : [...members].sort((a, b) => {
+          const teamA = a.teams.map((t) => t.name).sort()[0] ?? "";
+          const teamB = b.teams.map((t) => t.name).sort()[0] ?? "";
+          if (teamA !== teamB) return teamA.localeCompare(teamB);
+          if (a.name !== b.name) return a.name.localeCompare(b.name);
+          if (a.archived !== b.archived) return a.archived ? 1 : -1;
+          return (
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          );
+        });
+
+  return new Response(JSON.stringify(sorted), {
     headers: { "Content-Type": "application/json" },
   });
 };
