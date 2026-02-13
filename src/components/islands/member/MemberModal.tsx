@@ -45,11 +45,25 @@ export default function MemberModal({
     }
   }, [mode, member]);
 
-  const canSubmit = name.trim() && (role === "manager" || teamIds.length > 0);
+  const initialTeamIds = member?.teams?.map((t: any) => t.id) ?? [];
+  const teamIdsChanged =
+    teamIds.length !== initialTeamIds.length ||
+    [...teamIds].sort().join() !== [...initialTeamIds].sort().join();
+  const hasChanges =
+    !member ||
+    name.trim() !== (member.name ?? "").trim() ||
+    role !== member.role ||
+    teamIdsChanged;
+
+  const canSubmit =
+    name.trim() &&
+    teamIds.length > 0 &&
+    (mode !== "update" || hasChanges);
 
   const handleSubmit = () => {
     if (mode === "update" && member) {
       updateMember({ id: member.id, data: { name, role, teamIds } });
+      if (onClose) onClose();
     } else {
       mutate(
         { name, role, teamIds },
