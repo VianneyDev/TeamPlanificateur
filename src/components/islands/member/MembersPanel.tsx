@@ -13,6 +13,7 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
 
 export default function MembersPanel() {
   const [status, setStatus] = useState<MemberStatus>("active");
+  const [editingMember, setEditingMember] = useState<any | null>(null);
   const { data: members = [], isLoading, error } = useMembers(status);
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
@@ -97,12 +98,26 @@ export default function MembersPanel() {
               </td>
 
               <td className="px-4 py-3 text-right">
-                <MemberRowActions member={member} />
+                <MemberRowActions
+                  teams={teams}
+                  member={member}
+                  onEdit={(member: any) => setEditingMember(member)}
+                />
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {editingMember && (
+        <MemberModal
+          teams={teams}
+          mode="update"
+          member={editingMember}
+          open={true}
+          onClose={() => setEditingMember(null)}
+        />
+      )}
     </div>
   );
 }

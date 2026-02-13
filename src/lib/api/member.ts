@@ -51,6 +51,19 @@ export async function updateMember(data: {
   return response.json();
 }
 
+export async function patchMember(
+  id: string,
+  data: { name: string; role?: "member" | "manager"; teamIds?: string[] },
+) {
+  const response = await fetch(`/api/members/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to patch member");
+  return response.json();
+}
+
 export async function archiveMember(id: string) {
   const response = await fetch(`/api/members/${id}/archive`, {
     method: "POST",

@@ -9,10 +9,26 @@ import {
   DialogFooter,
 } from "@/components/islands/ui/dialog";
 import { useCreateMember } from "@/hooks/members/useCreateMember";
+import { useUpdateMember } from "@/hooks/members/useUpdateMember";
 
-export default function MemberModal({ teams }: { teams: any[] }) {
+type MemberModalProps = {
+  teams: any[];
+  mode?: "create" | "update";
+  member?: any;
+  open?: boolean;
+  onClose?: () => void;
+};
+
+export default function MemberModal({
+  teams,
+  mode = "create",
+  member,
+  open,
+  onClose,
+}: MemberModalProps) {
   const { mutate, isPending } = useCreateMember();
-  const [open, setOpen] = useState(false);
+  const { mutate: updateMember } = useUpdateMember();
+
   const [name, setName] = useState("");
   const [role, setRole] = useState<"member" | "manager">("member");
   const [teamIds, setTeamIds] = useState<string[]>([]);
@@ -21,33 +37,54 @@ export default function MemberModal({ teams }: { teams: any[] }) {
     setTeamIds([]);
   }, [role]);
 
+  useEffect(() => {
+    if (mode === "update" && member) {
+      setName(member.name);
+      setRole(member.role);
+      setTeamIds(member.teams.map((t: any) => t.id));
+    }
+  }, [mode, member]);
+
   const canSubmit = name.trim() && (role === "manager" || teamIds.length > 0);
 
   const handleSubmit = () => {
-    mutate(
-      { name, role, teamIds },
-      {
-        onSuccess: () => {
-          setOpen(false);
-          setName("");
-          setRole("member");
-          setTeamIds([]);
+    if (mode === "update" && member) {
+      updateMember({ id: member.id, data: { name, role, teamIds } });
+    } else {
+      mutate(
+        { name, role, teamIds },
+        {
+          onSuccess: () => {
+            if (onClose) onClose();
+            setName("");
+            setRole("member");
+            setTeamIds([]);
+          },
         },
-      }
-    );
+      );
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild className="px-3 py-2 bg-slate-800 rounded">
-        <div className="flex items-center justify-between border-b border-slate-700">
-          <Plus size={18} />
-        </div>
-      </DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value && onClose) onClose();
+      }}
+    >
+      {mode === "create" && (
+        <DialogTrigger asChild>
+          <button className="px-3 py-2 bg-slate-800 rounded">
+            <Plus size={18} />
+          </button>
+        </DialogTrigger>
+      )}
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nouveau membre</DialogTitle>
+          <DialogTitle>
+            {mode === "update" ? "Modifier le membre" : "Nouveau membre"}
+          </DialogTitle>
         </DialogHeader>
 
         <input
@@ -92,7 +129,7 @@ export default function MemberModal({ teams }: { teams: any[] }) {
                     setTeamIds((prev) =>
                       e.target.checked
                         ? [...prev, team.id]
-                        : prev.filter((id) => id !== team.id)
+                        : prev.filter((id) => id !== team.id),
                     )
                   }
                 />
@@ -108,7 +145,13 @@ export default function MemberModal({ teams }: { teams: any[] }) {
             disabled={!canSubmit || isPending}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {isPending ? "Création…" : "Créer"}
+            {mode === "update"
+              ? isPending
+                ? "Enregistrement…"
+                : "Enregistrer"
+              : isPending
+                ? "Création…"
+                : "Créer"}
           </button>
         </DialogFooter>
       </DialogContent>
