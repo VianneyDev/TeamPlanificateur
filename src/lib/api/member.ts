@@ -1,4 +1,11 @@
-export type MemberStatus = "active" | "archived" | "all";
+import type {
+  CreateMemberInput,
+  UpdateMemberInput,
+  PatchMemberInput,
+  MemberStatus,
+} from "@/lib/schemas";
+
+export type { MemberStatus };
 
 export async function fetchMembers(status: MemberStatus = "active") {
   const response = await fetch(`/api/members?status=${status}`);
@@ -10,11 +17,7 @@ export async function fetchMembers(status: MemberStatus = "active") {
   return response.json();
 }
 
-export async function createMember(data: {
-  name: string;
-  role: "member" | "manager";
-  teamIds: string[];
-}) {
+export async function createMember(data: CreateMemberInput) {
   const response = await fetch("/api/members", {
     method: "POST",
     headers: {
@@ -30,12 +33,7 @@ export async function createMember(data: {
   return response.json();
 }
 
-export async function updateMember(data: {
-  id: string;
-  name?: string;
-  role?: string;
-  archived?: boolean;
-}) {
+export async function updateMember(data: UpdateMemberInput) {
   const response = await fetch("/api/members", {
     method: "PUT",
     headers: {
@@ -51,10 +49,7 @@ export async function updateMember(data: {
   return response.json();
 }
 
-export async function patchMember(
-  id: string,
-  data: { name: string; role?: "member" | "manager"; teamIds?: string[] },
-) {
+export async function patchMember(id: string, data: PatchMemberInput) {
   const response = await fetch(`/api/members/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
