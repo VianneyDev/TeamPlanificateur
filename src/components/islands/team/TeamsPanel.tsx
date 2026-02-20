@@ -1,4 +1,5 @@
 import { useTeams } from "@/hooks/teams/useTeams";
+import type { Team } from "@/lib/types";
 import TeamModal from "@/components/islands/team/TeamModal";
 
 export default function TeamsPanel() {
@@ -27,8 +28,8 @@ export default function TeamsPanel() {
           </tr>
         </thead>
         <tbody>
-          {teams.map((team: any) => (
-            <tr>
+          {(teams ?? []).map((team: Team) => (
+            <tr key={team.id}>
               <td className="px-4 py-3">{team.name}</td>
               <td className="px-4 py-3">{team.members.length}</td>
             </tr>

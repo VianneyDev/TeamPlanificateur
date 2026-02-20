@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import type { MemberStatus } from "@/lib/api/member";
+import type { Member } from "@/lib/types";
 import MemberModal from "@/components/islands/member/MemberModal";
 import MemberRowActions from "@/components/islands/member/MemberRowActions";
 
@@ -13,7 +14,7 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
 
 export default function MembersPanel() {
   const [status, setStatus] = useState<MemberStatus>("active");
-  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
   const { data: members = [], isLoading, error } = useMembers(status);
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
@@ -70,7 +71,7 @@ export default function MembersPanel() {
             </tr>
           )}
 
-          {members.map((member: any) => (
+          {members.map((member: Member) => (
             <tr
               key={member.id}
               className="border-t border-slate-800 hover:bg-slate-800/40"
@@ -89,7 +90,7 @@ export default function MembersPanel() {
 
               <td className="px-4 py-3 text-slate-300">
                 {member.teams?.length
-                  ? member.teams.map((t: { name: string }) => t.name).join(", ")
+                  ? member.teams.map((t) => t.name).join(", ")
                   : "—"}
               </td>
 
@@ -101,7 +102,7 @@ export default function MembersPanel() {
                 <MemberRowActions
                   teams={teams}
                   member={member}
-                  onEdit={(member: any) => setEditingMember(member)}
+                  onEdit={(member: Member) => setEditingMember(member)}
                 />
               </td>
             </tr>

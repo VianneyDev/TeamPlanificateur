@@ -8,13 +8,14 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/islands/ui/dialog";
+import type { Member, Team } from "@/lib/types";
 import { useCreateMember } from "@/hooks/members/useCreateMember";
 import { useUpdateMember } from "@/hooks/members/useUpdateMember";
 
 type MemberModalProps = {
-  teams: any[];
+  teams: Team[];
   mode?: "create" | "update";
-  member?: any;
+  member?: Member;
   open?: boolean;
   onClose?: () => void;
 };
@@ -40,12 +41,12 @@ export default function MemberModal({
   useEffect(() => {
     if (mode === "update" && member) {
       setName(member.name);
-      setRole(member.role);
-      setTeamIds(member.teams.map((t: any) => t.id));
+      setRole(member.role as "member" | "manager");
+      setTeamIds(member.teams?.map((t) => t.id) ?? []);
     }
   }, [mode, member]);
 
-  const initialTeamIds = member?.teams?.map((t: any) => t.id) ?? [];
+  const initialTeamIds = member?.teams?.map((t) => t.id) ?? [];
   const teamIdsChanged =
     teamIds.length !== initialTeamIds.length ||
     [...teamIds].sort().join() !== [...initialTeamIds].sort().join();
@@ -56,9 +57,7 @@ export default function MemberModal({
     teamIdsChanged;
 
   const canSubmit =
-    name.trim() &&
-    teamIds.length > 0 &&
-    (mode !== "update" || hasChanges);
+    name.trim() && teamIds.length > 0 && (mode !== "update" || hasChanges);
 
   const handleSubmit = () => {
     if (mode === "update" && member) {

@@ -14,13 +14,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/islands/ui/dialog";
+import type { Member, Team } from "@/lib/types";
 import { useArchiveMember } from "@/hooks/members/useArchiveMember";
 import { useRestoreMember } from "@/hooks/members/useRestoreMember";
 
-export default function MemberRowActions({ teams, member, onEdit }: any) {
+interface MemberRowActionsProps {
+  teams: Team[];
+  member: Member;
+  onEdit: (member: Member) => void;
+}
+
+export default function MemberRowActions({
+  teams,
+  member,
+  onEdit,
+}: MemberRowActionsProps) {
   const { mutate: archive } = useArchiveMember();
   const { mutate: restore } = useRestoreMember();
-  const [confirmAction, setConfirmAction] = useState<"archive" | "restore" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "archive" | "restore" | null
+  >(null);
 
   const handleArchive = () => {
     archive(member.id);
@@ -60,7 +73,10 @@ export default function MemberRowActions({ teams, member, onEdit }: any) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={confirmAction === "archive"} onOpenChange={(open) => !open && setConfirmAction(null)}>
+      <Dialog
+        open={confirmAction === "archive"}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
         <DialogContent showCloseButton>
           <DialogHeader>
             <DialogTitle>Archiver ce membre ?</DialogTitle>
@@ -69,13 +85,28 @@ export default function MemberRowActions({ teams, member, onEdit }: any) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button type="button" className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800" onClick={() => setConfirmAction(null)}>Annuler</button>
-            <button type="button" className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white" onClick={handleArchive}>Archiver</button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              onClick={() => setConfirmAction(null)}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleArchive}
+            >
+              Archiver
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={confirmAction === "restore"} onOpenChange={(open) => !open && setConfirmAction(null)}>
+      <Dialog
+        open={confirmAction === "restore"}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
         <DialogContent showCloseButton>
           <DialogHeader>
             <DialogTitle>Restaurer ce membre ?</DialogTitle>
@@ -84,8 +115,20 @@ export default function MemberRowActions({ teams, member, onEdit }: any) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button type="button" className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800" onClick={() => setConfirmAction(null)}>Annuler</button>
-            <button type="button" className="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700" onClick={handleRestore}>Restaurer</button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              onClick={() => setConfirmAction(null)}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700"
+              onClick={handleRestore}
+            >
+              Restaurer
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -4,10 +4,13 @@ import type {
   PatchMemberInput,
   MemberStatus,
 } from "@/lib/schemas";
+import type { Member } from "@/lib/types";
 
 export type { MemberStatus };
 
-export async function fetchMembers(status: MemberStatus = "active") {
+export async function fetchMembers(
+  status: MemberStatus = "active",
+): Promise<Member[]> {
   const response = await fetch(`/api/members?status=${status}`);
 
   if (!response.ok) {
@@ -17,7 +20,7 @@ export async function fetchMembers(status: MemberStatus = "active") {
   return response.json();
 }
 
-export async function createMember(data: CreateMemberInput) {
+export async function createMember(data: CreateMemberInput): Promise<Member> {
   const response = await fetch("/api/members", {
     method: "POST",
     headers: {
@@ -33,7 +36,7 @@ export async function createMember(data: CreateMemberInput) {
   return response.json();
 }
 
-export async function updateMember(data: UpdateMemberInput) {
+export async function updateMember(data: UpdateMemberInput): Promise<Member> {
   const response = await fetch("/api/members", {
     method: "PUT",
     headers: {
@@ -49,7 +52,10 @@ export async function updateMember(data: UpdateMemberInput) {
   return response.json();
 }
 
-export async function patchMember(id: string, data: PatchMemberInput) {
+export async function patchMember(
+  id: string,
+  data: PatchMemberInput,
+): Promise<Member> {
   const response = await fetch(`/api/members/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -59,7 +65,9 @@ export async function patchMember(id: string, data: PatchMemberInput) {
   return response.json();
 }
 
-export async function archiveMember(id: string) {
+export async function archiveMember(
+  id: string,
+): Promise<{ success: boolean }> {
   const response = await fetch(`/api/members/${id}/archive`, {
     method: "POST",
     headers: {
@@ -74,6 +82,6 @@ export async function archiveMember(id: string) {
   return response.json();
 }
 
-export async function restoreMember(id: string) {
+export async function restoreMember(id: string): Promise<Member> {
   return updateMember({ id, archived: false });
 }
