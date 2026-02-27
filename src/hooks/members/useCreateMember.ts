@@ -1,12 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createMember } from "@/lib/api/member";
+import type { CreateMemberInput } from "@/lib/schemas";
 import { toast } from "sonner";
-
-type CreateMemberInput = {
-  name: string;
-  role: "member" | "manager";
-  teamIds: string[];
-};
 
 export function useCreateMember() {
   const queryClient = useQueryClient();
