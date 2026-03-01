@@ -15,3 +15,5 @@ export const UpdateTeamSchema = z.object({
 export const DeleteTeamSchema = z.object({
   id: z.string(),
 });
+
+export const TeamStatusSchema = z.enum(["active", "archived", "all"]);

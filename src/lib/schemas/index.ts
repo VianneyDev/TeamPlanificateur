@@ -10,6 +10,7 @@ import {
   UpdateTeamSchema,
   DeleteTeamSchema,
   TeamArchivedQuerySchema,
+  TeamStatusSchema,
 } from "./team";
 
 export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
@@ -20,3 +21,4 @@ export type CreateTeamInput = z.infer<typeof CreateTeamSchema>;
 export type UpdateTeamInput = z.infer<typeof UpdateTeamSchema>;
 export type DeleteTeamInput = z.infer<typeof DeleteTeamSchema>;
 export type TeamArchivedQuery = z.infer<typeof TeamArchivedQuerySchema>;
+export type TeamStatus = z.infer<typeof TeamStatusSchema>;

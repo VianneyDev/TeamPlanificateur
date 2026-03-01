@@ -10,7 +10,7 @@ import {
 import {
   CreateTeamSchema,
   DeleteTeamSchema,
-  TeamArchivedQuerySchema,
+  TeamStatusSchema,
   UpdateTeamSchema,
 } from "@/lib/schemas/team";
 
@@ -151,18 +151,24 @@ app.post("/members/:id/archive", async (c) => {
 });
 
 app.get("/teams", async (c) => {
-  const archivedQueryResult = TeamArchivedQuerySchema.safeParse(
-    c.req.query("archived"),
-  );
+  const statusResult = TeamStatusSchema.optional()
+    .transform((s) => s ?? "active")
+    .safeParse(c.req.query("status"));
 
-  if (!archivedQueryResult.success) {
-    return c.json({ error: "Invalid archived query parameter" }, 400);
+  if (!statusResult.success) {
+    return c.json({ error: "Invalid status query parameter" }, 400);
   }
 
-  const includeArchived = archivedQueryResult.data === "true";
+  const status = statusResult.data;
+  const where =
+    status === "active"
+      ? { archived: false }
+      : status === "archived"
+        ? { archived: true }
+        : {};
 
   const teams = await db.team.findMany({
-    where: includeArchived ? {} : { archived: false },
+    where,
     include: { members: true },
     orderBy: { name: "asc" },
   });

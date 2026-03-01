@@ -1,8 +1,14 @@
-import type { CreateTeamInput, UpdateTeamInput } from "@/lib/schemas";
+import type {
+  CreateTeamInput,
+  TeamStatus,
+  UpdateTeamInput,
+} from "@/lib/schemas";
 import type { Team } from "@/lib/types";
 
-export async function fetchTeams(): Promise<Team[]> {
-  const response = await fetch("/api/teams");
+export async function fetchTeams(
+  status: TeamStatus = "active",
+): Promise<Team[]> {
+  const response = await fetch(`/api/teams?status=${status}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch teams");
