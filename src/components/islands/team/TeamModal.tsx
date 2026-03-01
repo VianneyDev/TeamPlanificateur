@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import {
   Dialog,
@@ -9,34 +9,85 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/islands/ui/dialog";
+import type { Team } from "@/lib/types";
 import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
+import { useUpdateTeam } from "@/hooks/teams/useUpdateTeam";
 
-export default function TeamModal() {
-  const { mutate: createTeam, isPending } = useCreateTeam();
-  const [open, setOpen] = useState(false);
+type TeamModalProps = {
+  mode?: "create" | "update";
+  team?: Team;
+  open?: boolean;
+  onClose?: () => void;
+};
+
+export default function TeamModal({
+  mode = "create",
+  team,
+  open,
+  onClose,
+}: TeamModalProps) {
+  const { mutate: createTeam, isPending: isCreating } = useCreateTeam();
+  const { mutate: updateTeam, isPending: isUpdating } = useUpdateTeam();
+
   const [name, setName] = useState("");
 
+  useEffect(() => {
+    if (mode === "update" && team) {
+      setName(team.name);
+      return;
+    }
+    setName("");
+  }, [mode, team]);
+
+  const hasChanges = !team || name.trim() !== (team.name ?? "").trim();
+  const canSubmit = name.trim() && (mode !== "update" || hasChanges);
+  const isPending = isCreating || isUpdating;
+
   const handleSubmit = () => {
+    if (mode === "update" && team) {
+      updateTeam(
+        { id: team.id, data: { name: name.trim() } },
+        {
+          onSuccess: () => {
+            if (onClose) onClose();
+          },
+        },
+      );
+      return;
+    }
+
     createTeam(
-      { name },
-      { onSuccess: () => { setOpen(false); setName(""); } }
+      { name: name.trim() },
+      {
+        onSuccess: () => {
+          if (onClose) onClose();
+          setName("");
+        },
+      },
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <div className="p-2 rounded-md hover:bg-slate-800">
-          <Plus size={18} />
-        </div>
-      </DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value && onClose) onClose();
+      }}
+    >
+      {mode === "create" && (
+        <DialogTrigger asChild>
+          <button className="px-3 py-2 bg-slate-800 rounded">
+            <Plus size={18} />
+          </button>
+        </DialogTrigger>
+      )}
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ajouter une nouvelle équipe</DialogTitle>
-          <DialogDescription>
-            Entrez le nom de la nouvelle équipe&nbsp;:
-          </DialogDescription>
+          <DialogTitle>
+            {mode === "update" ? "Modifier l’équipe" : "Nouvelle équipe"}
+          </DialogTitle>
+          <DialogDescription>Entrez le nom de l’équipe.</DialogDescription>
         </DialogHeader>
 
         <input
@@ -48,10 +99,16 @@ export default function TeamModal() {
         <DialogFooter>
           <button
             onClick={handleSubmit}
-            disabled={!name || isPending}
+            disabled={!canSubmit || isPending}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
-            {isPending ? "Création..." : "Créer"}
+            {mode === "update"
+              ? isPending
+                ? "Enregistrement…"
+                : "Enregistrer"
+              : isPending
+                ? "Création…"
+                : "Créer"}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useTeams } from "@/hooks/teams/useTeams";
 import type { Team } from "@/lib/types";
 import TeamModal from "@/components/islands/team/TeamModal";
+import TeamRowActions from "@/components/islands/team/TeamRowActions";
 
 export default function TeamsPanel() {
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const { data: teams, isLoading, error } = useTeams();
 
   if (isLoading) {
@@ -25,6 +28,7 @@ export default function TeamsPanel() {
           <tr>
             <th className="px-4 py-3 text-left">Nom</th>
             <th className="px-4 py-3 text-left">Membres</th>
+            <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -32,10 +36,25 @@ export default function TeamsPanel() {
             <tr key={team.id}>
               <td className="px-4 py-3">{team.name}</td>
               <td className="px-4 py-3">{team.members.length}</td>
+              <td className="px-4 py-3 text-right">
+                <TeamRowActions
+                  team={team}
+                  onEdit={(team: Team) => setEditingTeam(team)}
+                />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {editingTeam && (
+        <TeamModal
+          mode="update"
+          team={editingTeam}
+          open={true}
+          onClose={() => setEditingTeam(null)}
+        />
+      )}
     </div>
   );
 }

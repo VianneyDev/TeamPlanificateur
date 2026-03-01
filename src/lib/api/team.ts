@@ -1,4 +1,4 @@
-import type { CreateTeamInput } from "@/lib/schemas";
+import type { CreateTeamInput, UpdateTeamInput } from "@/lib/schemas";
 import type { Team } from "@/lib/types";
 
 export async function fetchTeams(): Promise<Team[]> {
@@ -25,4 +25,28 @@ export async function createTeam(data: CreateTeamInput): Promise<Team> {
   }
 
   return response.json();
+}
+
+export async function updateTeam(data: UpdateTeamInput): Promise<Team> {
+  const response = await fetch("/api/teams", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update team");
+  }
+
+  return response.json();
+}
+
+export async function archiveTeam(id: string): Promise<Team> {
+  return updateTeam({ id, archived: true });
+}
+
+export async function restoreTeam(id: string): Promise<Team> {
+  return updateTeam({ id, archived: false });
 }
