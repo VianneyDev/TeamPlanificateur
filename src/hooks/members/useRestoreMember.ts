@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { restoreMember } from "@/lib/api/member";
+import type { Member } from "@/lib/types";
 import { toast } from "sonner";
 
 export function useRestoreMember() {
@@ -7,13 +8,66 @@ export function useRestoreMember() {
 
   return useMutation({
     mutationFn: (id: string) => restoreMember(id),
-    onSuccess: () => {
+
+    onMutate: async (id: string) => {
+      // stop toutes les requêtes en cours
+      await queryClient.cancelQueries({ queryKey: ["members"] });
+
+      // snapshot du cache pour rollback
+      const previousActive = queryClient.getQueryData<Member[]>([
+        "members",
+        "active",
+      ]);
+      const previousArchived = queryClient.getQueryData<Member[]>([
+        "members",
+        "archived",
+      ]);
+      const previousAll = queryClient.getQueryData<Member[]>([
+        "members",
+        "all",
+      ]);
+
+      const member = previousArchived?.find((m) => m.id === id);
+
+      if (!member) {
+        return { previousActive, previousArchived, previousAll };
+      }
+
+      // ARCHIVED > remove
+      queryClient.setQueryData<Member[]>(
+        ["members", "archived"],
+        (old: any[] = []) => old.filter((m) => m.id !== id),
+      );
+
+      // ACTIVE > add
+      queryClient.setQueryData<Member[]>(
+        ["members", "active"],
+        (old: any[] = []) => [{ ...member, archived: false }, ...old],
+      );
+
+      // ALL > update flag
+      queryClient.setQueryData<Member[]>(
+        ["members", "all"],
+        (old: any[] = []) =>
+          old.map((m) => (m.id === id ? { ...m, archived: false } : m)),
+      );
+
+      return { previousActive, previousArchived, previousAll };
+    },
+
+    onError: (_err, _id, context) => {
+      queryClient.setQueryData(["members", "active"], context?.previousActive);
+      queryClient.setQueryData(
+        ["members", "archived"],
+        context?.previousArchived,
+      );
+      queryClient.setQueryData(["members", "all"], context?.previousAll);
+    },
+
+    onSettled: () => {
       toast.success("Membre restauré");
-      queryClient.invalidateQueries({
-        queryKey: ["members"],
-        exact: false,
-      });
-      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      // synchronisation finale avec serveur
+      queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });
 }
