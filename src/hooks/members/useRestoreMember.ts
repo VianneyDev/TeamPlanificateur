@@ -36,19 +36,19 @@ export function useRestoreMember() {
       // ARCHIVED > remove
       queryClient.setQueryData<Member[]>(
         ["members", "archived"],
-        (old: any[] = []) => old.filter((m) => m.id !== id),
+        (old: Member[] | undefined = []) => old.filter((m) => m.id !== id),
       );
 
       // ACTIVE > add
       queryClient.setQueryData<Member[]>(
         ["members", "active"],
-        (old: any[] = []) => [{ ...member, archived: false }, ...old],
+        (old: Member[] | undefined = []) => [{ ...member, archived: false }, ...old],
       );
 
       // ALL > update flag
       queryClient.setQueryData<Member[]>(
         ["members", "all"],
-        (old: any[] = []) =>
+        (old: Member[] | undefined = []) =>
           old.map((m) => (m.id === id ? { ...m, archived: false } : m)),
       );
 

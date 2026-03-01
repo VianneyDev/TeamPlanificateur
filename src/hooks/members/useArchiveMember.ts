@@ -36,20 +36,20 @@ export function useArchiveMember() {
       // update active > on enlève le membre
       queryClient.setQueryData<Member[]>(
         ["members", "active"],
-        (old: any[] = []) => old.filter((m) => m.id !== id),
+        (old: Member[] | undefined = []) => old.filter((m) => m.id !== id),
       );
 
       // update all > on passe archived à true
       queryClient.setQueryData<Member[]>(
         ["members", "all"],
-        (old: any[] = []) =>
+        (old: Member[] | undefined = []) =>
           old.map((m) => (m.id === id ? { ...m, archived: true } : m)),
       );
 
       // update archived > on l'ajoute
       queryClient.setQueryData<Member[]>(
         ["members", "archived"],
-        (old: any[] = []) => [{ ...member, archived: true }, ...old],
+        (old: Member[] | undefined = []) => [{ ...member, archived: true }, ...old],
       );
 
       return { previousActive, previousArchived, previousAll };
