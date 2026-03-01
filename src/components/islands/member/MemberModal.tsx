@@ -35,8 +35,8 @@ export default function MemberModal({
   const [teamIds, setTeamIds] = useState<string[]>([]);
 
   useEffect(() => {
-    setTeamIds([]);
-  }, [role]);
+    if (mode !== "update") setTeamIds([]);
+  }, [role, mode]);
 
   useEffect(() => {
     if (mode === "update" && member) {
