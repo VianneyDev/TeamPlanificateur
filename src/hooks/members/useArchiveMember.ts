@@ -13,6 +13,7 @@ export function useArchiveMember() {
         queryKey: ["members"],
         exact: false,
       });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });
 }

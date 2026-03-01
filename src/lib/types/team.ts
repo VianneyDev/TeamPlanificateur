@@ -2,6 +2,12 @@ import type { Prisma } from "@prisma/client";
 
 export type Team = Prisma.TeamGetPayload<{
   include: {
-    members: true;
+    _count: {
+      select: {
+        members: {
+          where: { archived: false };
+        };
+      };
+    };
   };
 }>;

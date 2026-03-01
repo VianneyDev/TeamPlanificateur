@@ -165,11 +165,19 @@ app.get("/teams", async (c) => {
       ? { archived: false }
       : status === "archived"
         ? { archived: true }
-        : {};
+        : undefined;
 
   const teams = await db.team.findMany({
     where,
-    include: { members: true },
+    include: {
+      _count: {
+        select: {
+          members: {
+            where: { archived: false },
+          },
+        },
+      },
+    },
     orderBy: { name: "asc" },
   });
 

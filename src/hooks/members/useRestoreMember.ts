@@ -13,6 +13,7 @@ export function useRestoreMember() {
         queryKey: ["members"],
         exact: false,
       });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });
 }

@@ -77,7 +77,7 @@ export default function TeamsPanel() {
                 )}
               </td>
 
-              <td className="px-4 py-3">{team.members.length}</td>
+              <td className="px-4 py-3">{team._count.members}</td>
               <td className="px-4 py-3 text-right">
                 <TeamRowActions
                   team={team}
