@@ -10,8 +10,17 @@ export type { MemberStatus };
 
 export async function fetchMembers(
   status: MemberStatus = "active",
-): Promise<Member[]> {
-  const response = await fetch(`/api/members?status=${status}`);
+  page: number,
+  search: string,
+): Promise<{ data: Member[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+  const params = new URLSearchParams({
+    status,
+    page: String(page),
+    limit: "10",
+  });
+  if (search) params.set("search", search);
+
+  const response = await fetch(`/api/members?${params}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch members");
@@ -65,9 +74,7 @@ export async function patchMember(
   return response.json();
 }
 
-export async function archiveMember(
-  id: string,
-): Promise<{ success: boolean }> {
+export async function archiveMember(id: string): Promise<{ success: boolean }> {
   const response = await fetch(`/api/members/${id}/archive`, {
     method: "POST",
     headers: {

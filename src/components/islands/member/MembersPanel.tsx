@@ -15,8 +15,18 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
 export default function MembersPanel() {
   const [status, setStatus] = useState<MemberStatus>("active");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const { data: members = [], isLoading, error } = useMembers(status);
+
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const {
+    data,
+    isLoading,
+    error,
+  } = useMembers(status, page, search);
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
+
+  const membersList = data?.data ?? [];
+  const pagination = data?.pagination;
 
   if (isLoading) {
     return <div className="text-slate-400">Chargement des membres…</div>;
@@ -63,7 +73,7 @@ export default function MembersPanel() {
         </thead>
 
         <tbody>
-          {members.length === 0 && (
+          {membersList.length === 0 && (
             <tr>
               <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
                 Aucun membre trouvé
@@ -71,7 +81,7 @@ export default function MembersPanel() {
             </tr>
           )}
 
-          {members.map((member: Member) => (
+          {membersList.map((member: Member) => (
             <tr
               key={member.id}
               className="border-t border-slate-800 hover:bg-slate-800/40"
