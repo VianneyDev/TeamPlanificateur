@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import type { Member } from "@/lib/types";
 import {
   CreateMemberSchema,
   MemberStatusSchema,
@@ -24,6 +26,20 @@ app.get("/members", async (c) => {
   const statusResult = listMembersQuerySchema.safeParse(c.req.query("status"));
   const teamId = c.req.query("teamId");
 
+  const page = Number(c.req.query("page") ?? 1);
+  const limit = Number(c.req.query("limit") ?? 10);
+  const search = c.req.query("search");
+  const skip = (page - 1) * limit;
+
+  const searchFilter: Prisma.MemberWhereInput = search
+    ? {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      }
+    : {};
+
   if (!statusResult.success) {
     return c.json({ error: "Invalid status query parameter" }, 400);
   }
@@ -36,16 +52,27 @@ app.get("/members", async (c) => {
         ? { archived: true }
         : undefined;
 
-  const members = await db.member.findMany({
-    where: {
-      ...(teamId && { teams: { some: { id: teamId } } }),
-      ...archivedFilter,
-    },
-    include: { teams: true },
-    orderBy: [{ name: "asc" }, { archived: "asc" }, { updatedAt: "desc" }],
-  });
+  const where: Prisma.MemberWhereInput = {
+    ...(teamId && { teams: { some: { id: teamId } } }),
+    ...archivedFilter,
+    ...searchFilter,
+  };
 
-  const sorted =
+  const [members, total] = await Promise.all([
+    db.member.findMany({
+      where,
+      include: { teams: true },
+      orderBy: [{ name: "asc" }, { archived: "asc" }, { updatedAt: "desc" }],
+      skip,
+      take: limit,
+    }),
+
+    db.member.count({
+      where,
+    }),
+  ]);
+
+  const sorted: Member[] =
     status === "archived"
       ? [...members].sort(
           (a, b) =>
@@ -62,7 +89,15 @@ app.get("/members", async (c) => {
           );
         });
 
-  return c.json(sorted);
+  return c.json({
+    data: sorted,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 app.post("/members", zValidator("json", CreateMemberSchema), async (c) => {
