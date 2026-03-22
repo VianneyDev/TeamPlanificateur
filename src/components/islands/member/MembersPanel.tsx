@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
+import { useQueryState } from "@/hooks/useQueryState";
 import type { MemberStatus } from "@/lib/api/member";
 import type { Member } from "@/lib/types";
 import MemberModal from "@/components/islands/member/MemberModal";
@@ -13,16 +14,19 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
 ];
 
 export default function MembersPanel() {
-  const [status, setStatus] = useState<MemberStatus>("active");
+  const [status, setStatus] = useQueryState("status", "active");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [page, setPage] = useQueryState("page", "1");
+  const [search, setSearch] = useQueryState("search", "");
 
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const {
-    data,
-    isLoading,
-    error,
-  } = useMembers(status, page, search);
+  const statusTyped = status as MemberStatus;
+  const pageNumber = Number(page);
+
+  const { data, isLoading, error } = useMembers({
+    status: statusTyped,
+    page: pageNumber,
+    search,
+  });
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
   const membersList = data?.data ?? [];
@@ -42,6 +46,18 @@ export default function MembersPanel() {
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <h2 className="text-lg font-semibold text-white">Membres</h2>
+
+        <input
+          type="text"
+          placeholder="Rechercher..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage("1");
+          }}
+          className="bg-slate-800 px-3 py-2"
+        />
+
         {!teamsLoading && <MemberModal teams={teams} />}
       </div>
 
@@ -129,6 +145,40 @@ export default function MembersPanel() {
           onClose={() => setEditingMember(null)}
         />
       )}
+
+      <div className="flex justify-between p-4">
+        <button
+          disabled={pageNumber <= 1}
+          onClick={() =>
+            setPage((p) => String(Math.max(1, Number(p) - 1)))
+          }
+          className={pageNumber <= 1 ? "cursor-not-allowed" : "cursor-pointer"}
+        >
+          Précédent
+        </button>
+
+        <span>
+          Page {pagination?.page} / {pagination?.totalPages}
+        </span>
+
+        <button
+          disabled={
+            pagination?.totalPages != null &&
+            pageNumber >= pagination.totalPages
+          }
+          onClick={() =>
+            setPage((p) => String(Number(p) + 1))
+          }
+          className={
+            pagination?.totalPages != null &&
+            pageNumber >= pagination.totalPages
+              ? "cursor-not-allowed"
+              : "cursor-pointer"
+          }
+        >
+          Suivant
+        </button>
+      </div>
     </div>
   );
 }

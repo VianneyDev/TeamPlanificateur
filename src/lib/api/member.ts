@@ -12,7 +12,15 @@ export async function fetchMembers(
   status: MemberStatus = "active",
   page: number,
   search: string,
-): Promise<{ data: Member[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+): Promise<{
+  data: Member[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}> {
   const params = new URLSearchParams({
     status,
     page: String(page),
