@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useQueryState } from "@/hooks/useQueryState";
 import type { MemberStatus } from "@/lib/api/member";
 import type { Member } from "@/lib/types";
@@ -13,34 +15,76 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
   { value: "all", label: "Tous" },
 ];
 
+const SEARCH_DEBOUNCE_MS = 300;
+const FETCH_INDICATOR_DELAY_MS = 200;
+const INITIAL_SKELETON_ROWS = 4;
+
+function MembersTableSkeletonBody({ rows }: { rows: number }) {
+  const bar = (className: string) => (
+    <div
+      className={`rounded-md bg-slate-700/35 animate-pulse motion-reduce:animate-none ${className}`}
+    />
+  );
+  return (
+    <>
+      {Array.from({ length: rows }, (_, i) => (
+        <tr key={i} className="border-t border-slate-800/80">
+          <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-44")}</td>
+          <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-28")}</td>
+          <td className="px-4 py-3 align-middle">{bar("h-3.5 w-14")}</td>
+          <td className="px-4 py-3 text-right align-middle">
+            {bar("ml-auto h-7 max-w-14")}
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
 export default function MembersPanel() {
   const [status, setStatus] = useQueryState("status", "active");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [page, setPage] = useQueryState("page", "1");
-  const [search, setSearch] = useQueryState("search", "");
+  const [urlSearch, setUrlSearch] = useQueryState("search", "");
+  const [searchInput, setSearchInput] = useState(urlSearch);
+
+  const [debouncedSearch, flushSearch] = useDebounce(
+    searchInput,
+    SEARCH_DEBOUNCE_MS,
+  );
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+    flushSearch();
+  }, [urlSearch, flushSearch]);
+
+  useEffect(() => {
+    if (debouncedSearch !== urlSearch) {
+      setUrlSearch(debouncedSearch);
+      setPage((p) => (p === "1" ? p : "1"));
+    }
+  }, [debouncedSearch, urlSearch, setUrlSearch, setPage]);
 
   const statusTyped = status as MemberStatus;
   const pageNumber = Number(page);
 
-  const { data, isLoading, error } = useMembers({
+  const { data, isLoading, isFetching, error } = useMembers({
     status: statusTyped,
     page: pageNumber,
-    search,
+    search: debouncedSearch,
   });
+
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
   const membersList = data?.data ?? [];
   const pagination = data?.pagination;
 
-  if (isLoading) {
-    return <div className="text-slate-400">Chargement des membres…</div>;
-  }
+  const showFetchingOverlay = useDelayedFlag(
+    isFetching && !isLoading,
+    FETCH_INDICATOR_DELAY_MS,
+  );
 
-  if (error) {
-    return (
-      <div className="text-red-400">Erreur lors du chargement des membres</div>
-    );
-  }
+  const overlayRowCount = Math.max(1, membersList.length);
 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
@@ -50,16 +94,19 @@ export default function MembersPanel() {
         <input
           type="text"
           placeholder="Rechercher..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage("1");
-          }}
-          className="bg-slate-800 px-3 py-2"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          className="bg-slate-800 px-3 py-2 rounded border border-slate-600 text-white placeholder:text-slate-500"
         />
 
         {!teamsLoading && <MemberModal teams={teams} />}
       </div>
+
+      {error && (
+        <div className="px-4 py-3 text-sm text-red-400 border-b border-slate-700">
+          Erreur lors du chargement des membres
+        </div>
+      )}
 
       <div className="flex gap-1 p-2 border-b border-slate-700">
         {STATUS_OPTIONS.map((opt) => (
@@ -78,63 +125,87 @@ export default function MembersPanel() {
         ))}
       </div>
 
-      <table className="w-full text-sm">
-        <thead className="text-slate-400">
-          <tr>
-            <th className="px-4 py-3 text-left">Nom</th>
-            <th className="px-4 py-3 text-left">Équipe</th>
-            <th className="px-4 py-3 text-left">Role</th>
-            <th className="px-4 py-3 text-right">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {membersList.length === 0 && (
+      <div className="relative">
+        <table className="w-full text-sm">
+          <thead className="text-slate-400">
             <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
-                Aucun membre trouvé
-              </td>
+              <th className="px-4 py-3 text-left">Nom</th>
+              <th className="px-4 py-3 text-left">Équipe</th>
+              <th className="px-4 py-3 text-left">Role</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
-          )}
+          </thead>
 
-          {membersList.map((member: Member) => (
-            <tr
-              key={member.id}
-              className="border-t border-slate-800 hover:bg-slate-800/40"
-            >
-              <td className="px-4 py-3 text-white">
-                <div className="flex items-center gap-2">
-                  {member.name}
+          <tbody className="relative">
+            {isLoading ? (
+              <MembersTableSkeletonBody rows={INITIAL_SKELETON_ROWS} />
+            ) : (
+              <>
+                {membersList.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-4 py-6 text-center text-slate-400"
+                    >
+                      Aucun membre trouvé
+                    </td>
+                  </tr>
+                )}
 
-                  {member.archived && (
-                    <span className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded">
-                      Archivé
-                    </span>
-                  )}
-                </div>
-              </td>
+                {membersList.map((member: Member) => (
+                  <tr
+                    key={member.id}
+                    className="border-t border-slate-800 hover:bg-slate-800/40"
+                  >
+                    <td className="px-4 py-3 text-white">
+                      <div className="flex items-center gap-2">
+                        {member.name}
 
-              <td className="px-4 py-3 text-slate-300">
-                {member.teams?.length
-                  ? member.teams.map((t) => t.name).join(", ")
-                  : "—"}
-              </td>
+                        {member.archived && (
+                          <span className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded">
+                            Archivé
+                          </span>
+                        )}
+                      </div>
+                    </td>
 
-              <td className="px-4 py-3 text-slate-300 capitalize">
-                {member.role}
-              </td>
+                    <td className="px-4 py-3 text-slate-300">
+                      {member.teams?.length
+                        ? member.teams.map((t) => t.name).join(", ")
+                        : "—"}
+                    </td>
 
-              <td className="px-4 py-3 text-right">
-                <MemberRowActions
-                  teams={teams}
-                  member={member}
-                  onEdit={(member: Member) => setEditingMember(member)}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    <td className="px-4 py-3 text-slate-300 capitalize">
+                      {member.role}
+                    </td>
+
+                    <td className="px-4 py-3 text-right">
+                      <MemberRowActions
+                        teams={teams}
+                        member={member}
+                        onEdit={(member: Member) => setEditingMember(member)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+          </tbody>
+        </table>
+
+        {showFetchingOverlay && (
+          <div
+            className="absolute left-0 right-0 bottom-0 top-12 z-10 overflow-hidden bg-slate-900/45 backdrop-blur-[1px] pointer-events-none"
+            aria-hidden
+          >
+            <table className="w-full text-sm table-fixed">
+              <tbody>
+                <MembersTableSkeletonBody rows={overlayRowCount} />
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {editingMember && (
         <MemberModal
@@ -148,10 +219,9 @@ export default function MembersPanel() {
 
       <div className="flex justify-between p-4">
         <button
-          disabled={pageNumber <= 1}
-          onClick={() =>
-            setPage((p) => String(Math.max(1, Number(p) - 1)))
-          }
+          type="button"
+          disabled={pageNumber <= 1 || isLoading}
+          onClick={() => setPage((p) => String(Math.max(1, Number(p) - 1)))}
           className={pageNumber <= 1 ? "cursor-not-allowed" : "cursor-pointer"}
         >
           Précédent
@@ -162,13 +232,13 @@ export default function MembersPanel() {
         </span>
 
         <button
+          type="button"
           disabled={
-            pagination?.totalPages != null &&
-            pageNumber >= pagination.totalPages
+            isLoading ||
+            (pagination?.totalPages != null &&
+              pageNumber >= pagination.totalPages)
           }
-          onClick={() =>
-            setPage((p) => String(Number(p) + 1))
-          }
+          onClick={() => setPage((p) => String(Number(p) + 1))}
           className={
             pagination?.totalPages != null &&
             pageNumber >= pagination.totalPages
