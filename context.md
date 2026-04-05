@@ -134,4 +134,4 @@ Pas de monorepo : un seul paquet à la racine.
 ## État actuel & focus
 
 - Base solide côté **CRUD membres/équipes**, API cohérente, îlots React + TanStack Query
-- **En cours / court terme** : debounce sur la recherche membres (aujourd’hui la query string est mise à jour à chaque frappe) et amélioration du feedback visuel au chargement (skeleton, réduction du flicker)
+- **En cours / court terme** : Mise en place sur TeamsPanel des mêmes fonctionnalités que pour les membres avec gestion des tabs via url (ex: ?tab=teams&status=archived) pour éviter la refrech à chaque changement de tab, mise en place de la debounce sur la search et skeleton.

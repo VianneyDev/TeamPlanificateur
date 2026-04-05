@@ -5,10 +5,30 @@ import type {
 } from "@/lib/schemas";
 import type { Team } from "@/lib/types";
 
+export type TeamsListResponse = {
+  data: Team[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
 export async function fetchTeams(
   status: TeamStatus = "active",
-): Promise<Team[]> {
-  const response = await fetch(`/api/teams?status=${status}`);
+  page = 1,
+  search = "",
+  limit = 10,
+): Promise<TeamsListResponse> {
+  const params = new URLSearchParams({
+    status,
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) params.set("search", search);
+
+  const response = await fetch(`/api/teams?${params}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch teams");

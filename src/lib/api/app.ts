@@ -195,28 +195,60 @@ app.get("/teams", async (c) => {
   }
 
   const status = statusResult.data;
-  const where =
+  const page = Number(c.req.query("page") ?? 1);
+  const limit = Number(c.req.query("limit") ?? 10);
+  const search = c.req.query("search");
+  const skip = (page - 1) * limit;
+
+  const searchFilter: Prisma.TeamWhereInput = search
+    ? {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      }
+    : {};
+
+  const archivedFilter: Prisma.TeamWhereInput =
     status === "active"
       ? { archived: false }
       : status === "archived"
         ? { archived: true }
-        : undefined;
+        : {};
 
-  const teams = await db.team.findMany({
-    where,
-    include: {
-      _count: {
-        select: {
-          members: {
-            where: { archived: false },
+  const where: Prisma.TeamWhereInput = {
+    ...archivedFilter,
+    ...searchFilter,
+  };
+
+  const [teams, total] = await Promise.all([
+    db.team.findMany({
+      where,
+      include: {
+        _count: {
+          select: {
+            members: {
+              where: { archived: false },
+            },
           },
         },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+      skip,
+      take: limit,
+    }),
+    db.team.count({ where }),
+  ]);
 
-  return c.json(teams);
+  return c.json({
+    data: teams,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 app.post("/teams", zValidator("json", CreateTeamSchema), async (c) => {

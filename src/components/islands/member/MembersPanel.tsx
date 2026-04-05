@@ -19,6 +19,8 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
 const SEARCH_DEBOUNCE_MS = 300;
 const FETCH_INDICATOR_DELAY_MS = 200;
 const INITIAL_SKELETON_ROWS = 4;
+/** Liste équipes pour modales / actions (hors pagination tableau). */
+const TEAM_SELECT_LIMIT = 200;
 
 function MembersTableSkeletonBody({ rows }: { rows: number }) {
   const bar = (className: string) => (
@@ -75,7 +77,13 @@ export default function MembersPanel() {
     search: debouncedSearch,
   });
 
-  const { data: teams = [], isLoading: teamsLoading } = useTeams();
+  const { data: teamsData, isLoading: teamsLoading } = useTeams({
+    status: "active",
+    page: 1,
+    search: "",
+    limit: TEAM_SELECT_LIMIT,
+  });
+  const teams = teamsData?.data ?? [];
 
   const membersList = data?.data ?? [];
   const pagination = data?.pagination;
