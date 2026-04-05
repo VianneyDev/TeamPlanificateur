@@ -88,18 +88,26 @@ export default function MembersPanel() {
 
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
-      <div className="flex items-center justify-between p-4 border-b border-slate-700">
-        <h2 className="text-lg font-semibold text-white">Membres</h2>
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-slate-700">
+        <h2 className="text-lg font-semibold text-white shrink-0">Membres</h2>
 
-        <input
-          type="text"
-          placeholder="Rechercher..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          className="bg-slate-800 px-3 py-2 rounded border border-slate-600 text-white placeholder:text-slate-500"
-        />
+        <div className="flex min-w-0 justify-center px-2">
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full max-w-md bg-slate-800 px-3 py-2 rounded border border-slate-600 text-white placeholder:text-slate-500"
+          />
+        </div>
 
-        {!teamsLoading && <MemberModal teams={teams} />}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+          {teamsLoading ? (
+            <span className="invisible h-10 w-10 shrink-0" aria-hidden />
+          ) : (
+            <MemberModal teams={teams} />
+          )}
+        </div>
       </div>
 
       {error && (
