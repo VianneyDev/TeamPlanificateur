@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -92,13 +93,28 @@ export default function MembersPanel() {
         <h2 className="text-lg font-semibold text-white shrink-0">Membres</h2>
 
         <div className="flex min-w-0 justify-center px-2">
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full max-w-md bg-slate-800 px-3 py-2 rounded border border-slate-600 text-white placeholder:text-slate-500"
-          />
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full bg-slate-800 py-2 pl-3 pr-9 rounded border border-slate-600 text-white placeholder:text-slate-500"
+            />
+            {searchInput.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput("");
+                  flushSearch();
+                }}
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
+                aria-label="Effacer la recherche"
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex h-10 w-10 shrink-0 items-center justify-center">
