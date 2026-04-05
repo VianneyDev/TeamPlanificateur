@@ -12,6 +12,11 @@ import {
   TeamArchivedQuerySchema,
   TeamStatusSchema,
 } from "./team";
+import {
+  PaginationQuerySchema,
+  MAX_LIST_PAGE_SIZE,
+  parseListPagination,
+} from "./pagination";
 
 export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
@@ -22,3 +27,6 @@ export type UpdateTeamInput = z.infer<typeof UpdateTeamSchema>;
 export type DeleteTeamInput = z.infer<typeof DeleteTeamSchema>;
 export type TeamArchivedQuery = z.infer<typeof TeamArchivedQuerySchema>;
 export type TeamStatus = z.infer<typeof TeamStatusSchema>;
+export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
+export type ListPagination = z.infer<typeof parseListPagination>;
+export type MaxListPageSize = typeof MAX_LIST_PAGE_SIZE;

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
@@ -15,6 +16,7 @@ import {
   TeamStatusSchema,
   UpdateTeamSchema,
 } from "@/lib/schemas/team";
+import { parseListPagination } from "@/lib/schemas/pagination";
 
 const listMembersQuerySchema = MemberStatusSchema.optional().transform(
   (status) => status ?? "active",
@@ -25,9 +27,22 @@ const app = new Hono().basePath("/api");
 app.get("/members", async (c) => {
   const statusResult = listMembersQuerySchema.safeParse(c.req.query("status"));
   const teamId = c.req.query("teamId");
+  const paginationResult = parseListPagination({
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
 
-  const page = Number(c.req.query("page") ?? 1);
-  const limit = Number(c.req.query("limit") ?? 10);
+  if (!paginationResult.success) {
+    return c.json(
+      {
+        error: "Invalid pagination",
+        issues: z.treeifyError(paginationResult.error),
+      },
+      400,
+    );
+  }
+
+  const { page, limit } = paginationResult.data;
   const search = c.req.query("search");
   const skip = (page - 1) * limit;
 
@@ -195,8 +210,22 @@ app.get("/teams", async (c) => {
   }
 
   const status = statusResult.data;
-  const page = Number(c.req.query("page") ?? 1);
-  const limit = Number(c.req.query("limit") ?? 10);
+  const paginationResult = parseListPagination({
+    page: c.req.query("page"),
+    limit: c.req.query("limit"),
+  });
+
+  if (!paginationResult.success) {
+    return c.json(
+      {
+        error: "Invalid pagination",
+        issues: z.treeifyError(paginationResult.error),
+      },
+      400,
+    );
+  }
+
+  const { page, limit } = paginationResult.data;
   const search = c.req.query("search");
   const skip = (page - 1) * limit;
 
