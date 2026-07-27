@@ -1,0 +1,49 @@
+---
+description: Stack TPE — Astro 5 SSR, îlots React 19, Hono, Prisma, conventions du dépôt
+alwaysApply: false
+---
+
+# Team Planning Engine (TPE) — Astro + React
+
+## Identité
+
+- **Produit** : TPE / Team Planning Engine. **Package npm** : `eccentric-equinox` (ne pas confondre avec le libellé UI).
+- **Alias** : `@/*` → `./src/*`.
+- **Prérequis** : `DATABASE_URL`. **Dev** : `pnpm dev` (port **4321** par défaut).
+
+## Front Astro
+
+- Routes dans `src/pages/*.astro` ; pour le dynamique/utilisateur : `export const prerender = false`.
+- Coquille : `src/layouts/Layout.astro`. Middleware : `src/middleware.ts` ; contexte typé : `src/env.d.ts` (`Astro.locals`).
+
+## Îlots React
+
+- Interactivité (listes, modales, formulaires) : `src/components/islands/`, organisé par domaine (`member`, `team`, `providers`, `ui`).
+- Hydratation explicite : `client:load`, `client:visible`, etc. selon le besoin (éviter d’hydrater toute la page sans raison).
+- Providers TanStack Query : `src/components/islands/providers/AppProviders.tsx`.
+
+## Données client
+
+- **TanStack Query** : hooks dans `src/hooks/<domaine>/` ; appels `fetch("/api/...")`.
+- Mutations : optimistic updates quand c’est pertinent, comme dans le code existant.
+- État synchronisé avec l’URL : `src/hooks/useQueryState.ts` si besoin.
+
+## API
+
+- **Un seul point d’entrée** : `src/pages/api/[...path].ts` → délégation à Hono dans `src/lib/api/app.ts` (`basePath("/api")`).
+- Validation : Zod v4 dans `src/lib/schemas/` + `@hono/zod-validator`. Ne pas ajouter une deuxième stack API sans décision explicite.
+
+## Base de données
+
+- **Prisma 7** + PostgreSQL : `src/lib/db.ts`, schéma `prisma/schema.prisma`, adapter `@prisma/adapter-pg` + pool `pg`.
+
+## UI et conventions
+
+- **Tailwind v4**, Radix dans `src/components/islands/ui/`, toasts **Sonner**.
+- **UI (texte affiché)** : français. **Code** (identifiants, noms de fichiers) : anglais.
+- Typage strict ; éviter `any` sauf exception justifiée. Séparer UI / accès données / validation ; commentaires seulement si le code n’est pas clair.
+
+## Session et accès
+
+- Cookie **`selectedMemberId`** ; membre chargé dans **`Astro.locals.member`**.
+- **`/gestion`** : réservé aux managers (`role === "manager"`), sinon redirection.
