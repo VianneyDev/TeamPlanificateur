@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/islands/ui/select";
+import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
 
 interface Team {
   id: string;
@@ -17,7 +18,6 @@ interface Team {
 interface Member {
   id: string;
   name: string;
-  teamId: string;
 }
 
 export default function MemberSelector() {
@@ -27,9 +27,15 @@ export default function MemberSelector() {
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
   useEffect(() => {
-    fetch("/api/teams")
+    const params = new URLSearchParams({
+      status: "active",
+      page: "1",
+      limit: String(MAX_LIST_PAGE_SIZE),
+    });
+    fetch(`/api/teams?${params}`)
       .then((res) => res.json())
-      .then((data) => setTeams(data));
+      .then((payload: { data?: Team[] }) => setTeams(payload.data ?? []))
+      .catch(() => setTeams([]));
   }, []);
 
   useEffect(() => {
@@ -37,11 +43,16 @@ export default function MemberSelector() {
       setMembers([]);
       return;
     }
-    if (selectedTeamId) {
-      fetch(`/api/members?teamId=${selectedTeamId}`)
-        .then((res) => res.json())
-        .then((data) => setMembers(data));
-    }
+    const params = new URLSearchParams({
+      teamId: selectedTeamId,
+      status: "active",
+      page: "1",
+      limit: String(MAX_LIST_PAGE_SIZE),
+    });
+    fetch(`/api/members?${params}`)
+      .then((res) => res.json())
+      .then((payload: { data?: Member[] }) => setMembers(payload.data ?? []))
+      .catch(() => setMembers([]));
   }, [selectedTeamId]);
 
   const handleSelect = () => {
