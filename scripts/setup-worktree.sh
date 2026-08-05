@@ -9,6 +9,11 @@ if [ -f "$MAIN_REPO/.env" ] && [ ! -f ".env" ]; then
   echo "Copied .env from main repo"
 fi
 
+if [ -f "$MAIN_REPO/.env.test" ] && [ ! -f ".env.test" ]; then
+  cp "$MAIN_REPO/.env.test" ".env.test"
+  echo "Copied .env.test from main repo"
+fi
+
 # Optionnel : installer les deps si besoin (décommente si tu veux)
 # if [ -f "pnpm-lock.yaml" ]; then
 #   pnpm install
