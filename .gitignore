@@ -27,3 +27,4 @@ pnpm-debug.log*
 
 contexte.md
 .scratch/
+.env.test
