@@ -67,3 +67,16 @@ export async function archiveTeam(id: string): Promise<Team> {
 export async function restoreTeam(id: string): Promise<Team> {
   return updateTeam({ id, archived: false });
 }
+
+export async function deleteTeam(id: string): Promise<{ success: boolean }> {
+  const response = await fetch("/api/teams", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id }),
+  });
+
+  await throwIfNotOk(response, "Failed to delete team");
+  return response.json();
+}

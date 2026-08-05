@@ -16,6 +16,7 @@ import {
 } from "@/components/islands/ui/dialog";
 import type { Team } from "@/lib/types";
 import { useArchiveTeam } from "@/hooks/teams/useArchiveTeam";
+import { useDeleteTeam } from "@/hooks/teams/useDeleteTeam";
 import { useRestoreTeam } from "@/hooks/teams/useRestoreTeam";
 
 interface TeamRowActionsProps {
@@ -26,8 +27,9 @@ interface TeamRowActionsProps {
 export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
   const { mutate: archive } = useArchiveTeam();
   const { mutate: restore } = useRestoreTeam();
+  const { mutate: remove } = useDeleteTeam();
   const [confirmAction, setConfirmAction] = useState<
-    "archive" | "restore" | null
+    "archive" | "restore" | "delete" | null
   >(null);
 
   const handleArchive = () => {
@@ -37,6 +39,11 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
 
   const handleRestore = () => {
     restore(team.id);
+    setConfirmAction(null);
+  };
+
+  const handleDelete = () => {
+    remove(team.id);
     setConfirmAction(null);
   };
 
@@ -65,6 +72,10 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               Restaurer
             </DropdownMenuItem>
           )}
+
+          <DropdownMenuItem onClick={() => setConfirmAction("delete")}>
+            Supprimer
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -123,6 +134,37 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               onClick={handleRestore}
             >
               Restaurer
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={confirmAction === "delete"}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
+        <DialogContent showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Supprimer cette équipe ?</DialogTitle>
+            <DialogDescription>
+              Cette action est définitive. Impossible si des membres actifs
+              n’auraient plus d’équipe.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              type="button"
+              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              onClick={() => setConfirmAction(null)}
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDelete}
+            >
+              Supprimer
             </button>
           </DialogFooter>
         </DialogContent>
