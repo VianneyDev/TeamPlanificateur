@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { patchMember } from "@/lib/api/member";
+import { gestionErrorMessage } from "@/lib/gestion-errors";
 import type { Member } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -57,17 +58,23 @@ export function useUpdateMember() {
       return { previousActive, previousArchived, previousAll };
     },
 
-    onError: (_err, _variables, context) => {
+    onError: (error, _variables, context) => {
       queryClient.setQueryData(["members", "active"], context?.previousActive);
       queryClient.setQueryData(
         ["members", "archived"],
         context?.previousArchived,
       );
       queryClient.setQueryData(["members", "all"], context?.previousAll);
+      toast.error(
+        gestionErrorMessage(error, "Erreur lors de la mise à jour du membre"),
+      );
+    },
+
+    onSuccess: () => {
+      toast.success("Membre mis à jour");
     },
 
     onSettled: () => {
-      toast.success("Membre mis à jour");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });

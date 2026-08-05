@@ -4,6 +4,7 @@ import type {
   UpdateTeamInput,
 } from "@/lib/schemas";
 import type { Team } from "@/lib/types";
+import { throwIfNotOk } from "@/lib/api/errors";
 
 export type TeamsListResponse = {
   data: Team[];
@@ -29,11 +30,7 @@ export async function fetchTeams(
   if (search) params.set("search", search);
 
   const response = await fetch(`/api/teams?${params}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch teams");
-  }
-
+  await throwIfNotOk(response, "Failed to fetch teams");
   return response.json();
 }
 
@@ -46,10 +43,7 @@ export async function createTeam(data: CreateTeamInput): Promise<Team> {
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to create team");
-  }
-
+  await throwIfNotOk(response, "Failed to create team");
   return response.json();
 }
 
@@ -62,10 +56,7 @@ export async function updateTeam(data: UpdateTeamInput): Promise<Team> {
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to update team");
-  }
-
+  await throwIfNotOk(response, "Failed to update team");
   return response.json();
 }
 

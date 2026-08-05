@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { restoreMember } from "@/lib/api/member";
+import { gestionErrorMessage } from "@/lib/gestion-errors";
 import type { Member } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -55,18 +56,23 @@ export function useRestoreMember() {
       return { previousActive, previousArchived, previousAll };
     },
 
-    onError: (_err, _id, context) => {
+    onError: (error, _id, context) => {
       queryClient.setQueryData(["members", "active"], context?.previousActive);
       queryClient.setQueryData(
         ["members", "archived"],
         context?.previousArchived,
       );
       queryClient.setQueryData(["members", "all"], context?.previousAll);
+      toast.error(
+        gestionErrorMessage(error, "Erreur lors de la restauration du membre"),
+      );
+    },
+
+    onSuccess: () => {
+      toast.success("Membre restauré");
     },
 
     onSettled: () => {
-      toast.success("Membre restauré");
-      // synchronisation finale avec serveur
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
   });

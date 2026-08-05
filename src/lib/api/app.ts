@@ -18,6 +18,17 @@ import {
   UpdateTeamSchema,
 } from "@/lib/schemas/team";
 import { parseListPagination } from "@/lib/schemas/pagination";
+import {
+  MEMBER_REQUIRES_TEAM_CODE,
+  MEMBER_REQUIRES_TEAM_ERROR,
+  TEAM_WOULD_ORPHAN_MEMBERS_CODE,
+  TEAM_WOULD_ORPHAN_MEMBERS_ERROR,
+} from "@/lib/member-team-codes";
+import {
+  activeMemberHasNonArchivedTeam,
+  countActiveTeamsAmong,
+  findActiveMembersOrphanedWithoutTeam,
+} from "@/lib/member-team-invariant";
 
 const listMembersQuerySchema = MemberStatusSchema.optional().transform(
   (status) => status ?? "active",
@@ -136,8 +147,15 @@ app.post("/members", zValidator("json", CreateMemberSchema), async (c) => {
         ? [String((body as Record<string, unknown>).teamId)]
         : []);
 
-  if (teamIds.length === 0) {
-    return c.json({ error: "Name and at least one team are required" }, 400);
+  const activeTeamCount = await countActiveTeamsAmong(teamIds);
+  if (activeTeamCount === 0) {
+    return c.json(
+      {
+        error: MEMBER_REQUIRES_TEAM_ERROR,
+        code: MEMBER_REQUIRES_TEAM_CODE,
+      },
+      400,
+    );
   }
 
   const member = await db.member.create({
@@ -157,6 +175,19 @@ app.post("/members", zValidator("json", CreateMemberSchema), async (c) => {
 
 app.put("/members", zValidator("json", UpdateMemberSchema), async (c) => {
   const body = c.req.valid("json");
+
+  if (body.archived === false) {
+    const hasTeam = await activeMemberHasNonArchivedTeam(body.id);
+    if (!hasTeam) {
+      return c.json(
+        {
+          error: MEMBER_REQUIRES_TEAM_ERROR,
+          code: MEMBER_REQUIRES_TEAM_CODE,
+        },
+        400,
+      );
+    }
+  }
 
   const member = await db.member.update({
     where: { id: body.id },
@@ -178,12 +209,36 @@ app.patch("/members/:id", zValidator("json", PatchMemberSchema), async (c) => {
     return c.json({ error: "ID is required" }, 400);
   }
 
+  if (body.teamIds !== undefined) {
+    const existing = await db.member.findUnique({
+      where: { id },
+      select: { archived: true },
+    });
+
+    if (!existing) {
+      return c.json({ error: "Member not found" }, 404);
+    }
+
+    if (!existing.archived) {
+      const activeTeamCount = await countActiveTeamsAmong(body.teamIds);
+      if (activeTeamCount === 0) {
+        return c.json(
+          {
+            error: MEMBER_REQUIRES_TEAM_ERROR,
+            code: MEMBER_REQUIRES_TEAM_CODE,
+          },
+          400,
+        );
+      }
+    }
+  }
+
   const updated = await db.member.update({
     where: { id },
     data: {
       name: body.name,
       role: body.role,
-      ...(body.teamIds && {
+      ...(body.teamIds !== undefined && {
         teams: {
           set: body.teamIds.map((teamId) => ({ id: teamId })),
         },
@@ -305,6 +360,19 @@ app.post("/teams", zValidator("json", CreateTeamSchema), async (c) => {
 app.put("/teams", zValidator("json", UpdateTeamSchema), async (c) => {
   const body = c.req.valid("json");
 
+  if (body.archived === true) {
+    const orphans = await findActiveMembersOrphanedWithoutTeam(body.id);
+    if (orphans.length > 0) {
+      return c.json(
+        {
+          error: TEAM_WOULD_ORPHAN_MEMBERS_ERROR,
+          code: TEAM_WOULD_ORPHAN_MEMBERS_CODE,
+        },
+        400,
+      );
+    }
+  }
+
   const team = await db.team.update({
     where: { id: body.id },
     data: {
@@ -319,6 +387,17 @@ app.put("/teams", zValidator("json", UpdateTeamSchema), async (c) => {
 
 app.delete("/teams", zValidator("json", DeleteTeamSchema), async (c) => {
   const body = c.req.valid("json");
+
+  const orphans = await findActiveMembersOrphanedWithoutTeam(body.id);
+  if (orphans.length > 0) {
+    return c.json(
+      {
+        error: TEAM_WOULD_ORPHAN_MEMBERS_ERROR,
+        code: TEAM_WOULD_ORPHAN_MEMBERS_CODE,
+      },
+      400,
+    );
+  }
 
   await db.team.delete({ where: { id: body.id } });
 
