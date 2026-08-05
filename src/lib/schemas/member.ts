@@ -6,6 +6,7 @@ export const MemberSchema = z.object({
   name: z.string().min(2, "Minimum 2 caractères"),
   role: roleEnum,
   teamIds: z.array(z.string()).optional(),
+  isExternal: z.boolean().optional(),
 });
 
 export const CreateMemberSchema = MemberSchema;
@@ -24,3 +25,11 @@ export const PatchMemberSchema = z.object({
 });
 
 export const MemberStatusSchema = z.enum(["active", "archived", "all"]);
+
+/** Query flag for GET /members?isExternal=true|false */
+export const MemberExternalQuerySchema = z
+  .enum(["true", "false"])
+  .optional()
+  .transform((value) =>
+    value === "true" ? true : value === "false" ? false : undefined,
+  );

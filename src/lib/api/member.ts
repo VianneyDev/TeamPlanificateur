@@ -12,6 +12,7 @@ export async function fetchMembers(
   status: MemberStatus = "active",
   page: number,
   search: string,
+  options?: { isExternal?: boolean },
 ): Promise<{
   data: Member[];
   pagination: {
@@ -27,6 +28,9 @@ export async function fetchMembers(
     limit: "10",
   });
   if (search) params.set("search", search);
+  if (options?.isExternal !== undefined) {
+    params.set("isExternal", String(options.isExternal));
+  }
 
   const response = await fetch(`/api/members?${params}`);
 

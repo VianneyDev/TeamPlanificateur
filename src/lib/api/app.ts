@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import type { Member } from "@/lib/types";
 import {
   CreateMemberSchema,
+  MemberExternalQuerySchema,
   MemberStatusSchema,
   PatchMemberSchema,
   UpdateMemberSchema,
@@ -26,6 +27,9 @@ const app = new Hono().basePath("/api");
 
 app.get("/members", async (c) => {
   const statusResult = listMembersQuerySchema.safeParse(c.req.query("status"));
+  const externalResult = MemberExternalQuerySchema.safeParse(
+    c.req.query("isExternal"),
+  );
   const teamId = c.req.query("teamId");
   const paginationResult = parseListPagination({
     page: c.req.query("page"),
@@ -59,7 +63,12 @@ app.get("/members", async (c) => {
     return c.json({ error: "Invalid status query parameter" }, 400);
   }
 
+  if (!externalResult.success) {
+    return c.json({ error: "Invalid isExternal query parameter" }, 400);
+  }
+
   const status = statusResult.data;
+  const isExternal = externalResult.data;
   const archivedFilter =
     status === "active"
       ? { archived: false }
@@ -71,6 +80,7 @@ app.get("/members", async (c) => {
     ...(teamId && { teams: { some: { id: teamId } } }),
     ...archivedFilter,
     ...searchFilter,
+    ...(isExternal !== undefined && { isExternal }),
   };
 
   const [members, total] = await Promise.all([
@@ -134,6 +144,7 @@ app.post("/members", zValidator("json", CreateMemberSchema), async (c) => {
     data: {
       name: body.name,
       ...(body.role && { role: body.role }),
+      ...(body.isExternal !== undefined && { isExternal: body.isExternal }),
       teams: {
         connect: teamIds.map((id) => ({ id })),
       },

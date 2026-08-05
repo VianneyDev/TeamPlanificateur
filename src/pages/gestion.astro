@@ -29,4 +29,8 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
    {tab === "members" && 
       <MembersPanelWithProvider client:load />
    }
+
+   {tab === "externes" && 
+      <MembersPanelWithProvider client:load externalOnly />
+   }
 </Layout>

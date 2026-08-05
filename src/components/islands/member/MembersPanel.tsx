@@ -44,7 +44,14 @@ function MembersTableSkeletonBody({ rows }: { rows: number }) {
   );
 }
 
-export default function MembersPanel() {
+type MembersPanelProps = {
+  /** When true, lists only External Members and creates them as external. */
+  externalOnly?: boolean;
+};
+
+export default function MembersPanel({
+  externalOnly = false,
+}: MembersPanelProps) {
   const [status, setStatus] = useQueryState("status", "active");
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [page, setPage] = useQueryState("page", "1");
@@ -75,6 +82,7 @@ export default function MembersPanel() {
     status: statusTyped,
     page: pageNumber,
     search: debouncedSearch,
+    ...(externalOnly ? { isExternal: true } : {}),
   });
 
   const { data: teamsData, isLoading: teamsLoading } = useTeams({
@@ -95,10 +103,18 @@ export default function MembersPanel() {
 
   const overlayRowCount = Math.max(1, membersList.length);
 
+  const title = externalOnly ? "Externes" : "Membres";
+  const emptyLabel = externalOnly
+    ? "Aucun externe trouvé"
+    : "Aucun membre trouvé";
+  const errorLabel = externalOnly
+    ? "Erreur lors du chargement des externes"
+    : "Erreur lors du chargement des membres";
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-lg">
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-slate-700">
-        <h2 className="text-lg font-semibold text-white shrink-0">Membres</h2>
+        <h2 className="text-lg font-semibold text-white shrink-0">{title}</h2>
 
         <div className="flex min-w-0 justify-center px-2">
           <div className="relative w-full max-w-md">
@@ -129,14 +145,14 @@ export default function MembersPanel() {
           {teamsLoading ? (
             <span className="invisible h-10 w-10 shrink-0" aria-hidden />
           ) : (
-            <MemberModal teams={teams} />
+            <MemberModal teams={teams} defaultIsExternal={externalOnly} />
           )}
         </div>
       </div>
 
       {error && (
         <div className="px-4 py-3 text-sm text-red-400 border-b border-slate-700">
-          Erreur lors du chargement des membres
+          {errorLabel}
         </div>
       )}
 
@@ -179,7 +195,7 @@ export default function MembersPanel() {
                       colSpan={4}
                       className="px-4 py-6 text-center text-slate-400"
                     >
-                      Aucun membre trouvé
+                      {emptyLabel}
                     </td>
                   </tr>
                 )}
@@ -246,6 +262,7 @@ export default function MembersPanel() {
           member={editingMember}
           open={true}
           onClose={() => setEditingMember(null)}
+          defaultIsExternal={externalOnly}
         />
       )}
 
