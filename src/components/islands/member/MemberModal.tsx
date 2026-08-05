@@ -18,6 +18,8 @@ type MemberModalProps = {
   member?: Member;
   open?: boolean;
   onClose?: () => void;
+  /** Applied on create (e.g. Externes tab). */
+  defaultIsExternal?: boolean;
 };
 
 export default function MemberModal({
@@ -26,6 +28,7 @@ export default function MemberModal({
   member,
   open,
   onClose,
+  defaultIsExternal = false,
 }: MemberModalProps) {
   const { mutate, isPending } = useCreateMember();
   const { mutate: updateMember } = useUpdateMember();
@@ -65,7 +68,12 @@ export default function MemberModal({
       if (onClose) onClose();
     } else {
       mutate(
-        { name, role, teamIds },
+        {
+          name,
+          role,
+          teamIds,
+          ...(defaultIsExternal ? { isExternal: true } : {}),
+        },
         {
           onSuccess: () => {
             if (onClose) onClose();
@@ -96,7 +104,13 @@ export default function MemberModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {mode === "update" ? "Modifier le membre" : "Nouveau membre"}
+            {mode === "update"
+              ? defaultIsExternal
+                ? "Modifier l'externe"
+                : "Modifier le membre"
+              : defaultIsExternal
+                ? "Nouvel externe"
+                : "Nouveau membre"}
           </DialogTitle>
         </DialogHeader>
 
