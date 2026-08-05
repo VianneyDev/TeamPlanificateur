@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    // Loads .env.test and refuses to target the same host as .env (dev).
+    setupFiles: ["./tests/setup-env.ts"],
   },
   resolve: {
     alias: {

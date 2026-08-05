@@ -14,7 +14,7 @@ Dashboard pour la gestion d’équipes et de membres. Les managers administrent 
 - **UI** : React 19 (îlots), Tailwind CSS v4 (`@tailwindcss/vite`), composants Radix (`src/components/islands/ui/`) + `class-variance-authority`, `tailwind-merge`, `clsx`, toasts **Sonner**
 - **API** : Hono (`basePath("/api")`), validation `@hono/zod-validator`
 - **Données client** : TanStack Query (fetch, cache, optimistic updates sur les mutations)
-- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL`)
+- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL`). Les tests Vitest utilisent `.env.test` (branche Neon dédiée), pas `.env` - voir `docs/adr/0002-test-database-neon-branch.md`.
 - **Validation** : Zod v4 — schémas partagés dans `src/lib/schemas/`
 
 ## Flux de données (résumé)

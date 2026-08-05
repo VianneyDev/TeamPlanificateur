@@ -9,7 +9,8 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:api": "vitest run tests/api"
+    "test:api": "vitest run tests/api",
+    "db:migrate:test": "node --import ./scripts/load-env-test.mjs ./node_modules/prisma/build/index.js migrate deploy"
   },
   "dependencies": {
     "@astrojs/node": "^9.5.3",
