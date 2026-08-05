@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { archiveTeam } from "@/lib/api/team";
+import { gestionErrorMessage } from "@/lib/gestion-errors";
 import type { Team } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -47,17 +48,23 @@ export function useArchiveTeam() {
       return { previousActive, previousArchived, previousAll };
     },
 
-    onError: (_err, _id, context) => {
+    onError: (error, _id, context) => {
       queryClient.setQueryData(["teams", "active"], context?.previousActive);
       queryClient.setQueryData(
         ["teams", "archived"],
         context?.previousArchived,
       );
       queryClient.setQueryData(["teams", "all"], context?.previousAll);
+      toast.error(
+        gestionErrorMessage(error, "Erreur lors de l’archivage de l’équipe"),
+      );
+    },
+
+    onSuccess: () => {
+      toast.success("Équipe archivée");
     },
 
     onSettled: () => {
-      toast.success("Équipe archivée");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });

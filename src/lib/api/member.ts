@@ -5,6 +5,7 @@ import type {
   MemberStatus,
 } from "@/lib/schemas";
 import type { Member } from "@/lib/types";
+import { throwIfNotOk } from "@/lib/api/errors";
 
 export type { MemberStatus };
 
@@ -33,11 +34,7 @@ export async function fetchMembers(
   }
 
   const response = await fetch(`/api/members?${params}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch members");
-  }
-
+  await throwIfNotOk(response, "Failed to fetch members");
   return response.json();
 }
 
@@ -50,10 +47,7 @@ export async function createMember(data: CreateMemberInput): Promise<Member> {
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to create member");
-  }
-
+  await throwIfNotOk(response, "Failed to create member");
   return response.json();
 }
 
@@ -66,10 +60,7 @@ export async function updateMember(data: UpdateMemberInput): Promise<Member> {
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to update member");
-  }
-
+  await throwIfNotOk(response, "Failed to update member");
   return response.json();
 }
 
@@ -82,7 +73,7 @@ export async function patchMember(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to patch member");
+  await throwIfNotOk(response, "Failed to patch member");
   return response.json();
 }
 
@@ -94,10 +85,7 @@ export async function archiveMember(id: string): Promise<{ success: boolean }> {
     },
   });
 
-  if (!response.ok) {
-    throw new Error("Failed to archive member");
-  }
-
+  await throwIfNotOk(response, "Failed to archive member");
   return response.json();
 }
 

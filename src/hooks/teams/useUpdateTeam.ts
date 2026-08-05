@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateTeam } from "@/lib/api/team";
+import { gestionErrorMessage } from "@/lib/gestion-errors";
 import type { Team } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -80,17 +81,23 @@ export function useUpdateTeam() {
       return { previousActive, previousArchived, previousAll };
     },
 
-    onError: (_err, _variables, context) => {
+    onError: (error, _variables, context) => {
       queryClient.setQueryData(["teams", "active"], context?.previousActive);
       queryClient.setQueryData(
         ["teams", "archived"],
         context?.previousArchived,
       );
       queryClient.setQueryData(["teams", "all"], context?.previousAll);
+      toast.error(
+        gestionErrorMessage(error, "Erreur lors de la mise à jour de l’équipe"),
+      );
+    },
+
+    onSuccess: () => {
+      toast.success("Équipe mise à jour");
     },
 
     onSettled: () => {
-      toast.success("Équipe mise à jour");
       queryClient.invalidateQueries({ queryKey: ["teams"] });
     },
   });

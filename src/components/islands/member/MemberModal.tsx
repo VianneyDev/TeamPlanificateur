@@ -64,8 +64,14 @@ export default function MemberModal({
 
   const handleSubmit = () => {
     if (mode === "update" && member) {
-      updateMember({ id: member.id, data: { name, role, teamIds } });
-      if (onClose) onClose();
+      updateMember(
+        { id: member.id, data: { name, role, teamIds } },
+        {
+          onSuccess: () => {
+            if (onClose) onClose();
+          },
+        },
+      );
     } else {
       mutate(
         {
