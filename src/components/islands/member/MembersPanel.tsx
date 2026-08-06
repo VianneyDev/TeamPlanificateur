@@ -4,7 +4,7 @@ import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
-import { useQueryState } from "@/hooks/useQueryState";
+import { applyQueryStates, useQueryState } from "@/hooks/useQueryState";
 import type { MemberStatus } from "@/lib/api/member";
 import type { Member } from "@/lib/types";
 import MemberModal from "@/components/islands/member/MemberModal";
@@ -47,15 +47,22 @@ function MembersTableSkeletonBody({ rows }: { rows: number }) {
 type MembersPanelProps = {
   /** When true, lists only External Members and creates them as external. */
   externalOnly?: boolean;
+  /** SSR snapshots from Astro so first paint matches the request URL. */
+  initialStatus?: string;
+  initialPage?: string;
+  initialSearch?: string;
 };
 
 export default function MembersPanel({
   externalOnly = false,
+  initialStatus = "active",
+  initialPage = "1",
+  initialSearch = "",
 }: MembersPanelProps) {
-  const [status, setStatus] = useQueryState("status", "active");
+  const [status] = useQueryState("status", "active", initialStatus);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
-  const [page, setPage] = useQueryState("page", "1");
-  const [urlSearch, setUrlSearch] = useQueryState("search", "");
+  const [page, setPage] = useQueryState("page", "1", initialPage);
+  const [urlSearch, setUrlSearch] = useQueryState("search", "", initialSearch);
   const [searchInput, setSearchInput] = useState(urlSearch);
 
   const [debouncedSearch, flushSearch] = useDebounce(
@@ -161,7 +168,12 @@ export default function MembersPanel({
           <button
             key={opt.value}
             type="button"
-            onClick={() => setStatus(opt.value)}
+            onClick={() => {
+              applyQueryStates([
+                { key: "status", value: opt.value, defaultValue: "active" },
+                { key: "page", value: "1", defaultValue: "1" },
+              ]);
+            }}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               status === opt.value
                 ? "bg-slate-600 text-white"

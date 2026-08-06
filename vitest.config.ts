@@ -1,16 +1,31 @@
 import path from "node:path";
 import { defineConfig } from "vitest/config";
 
+const alias = {
+  "@": path.resolve(__dirname, "./src"),
+};
+
 export default defineConfig({
+  resolve: { alias },
   test: {
-    environment: "node",
-    include: ["tests/**/*.test.ts"],
-    // Loads .env.test and refuses to target the same host as .env (dev).
-    setupFiles: ["./tests/setup-env.ts"],
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    projects: [
+      {
+        resolve: { alias },
+        test: {
+          name: "api",
+          environment: "node",
+          include: ["tests/api/**/*.test.ts"],
+          setupFiles: ["./tests/setup-env.ts"],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "unit",
+          environment: "jsdom",
+          include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
+        },
+      },
+    ],
   },
 });
