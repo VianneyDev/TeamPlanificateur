@@ -201,6 +201,53 @@ describe("Monthly Worked Days API", () => {
     );
   });
 
+  it("rejects days above the calendar length of the month", async () => {
+    // April always has 30 days; 2026-04 is in the past relative to 2026-08.
+    const putRes = await apiRequest("/api/monthly-worked-days", {
+      method: "PUT",
+      actingMemberId: externalMemberId,
+      body: {
+        memberId: externalMemberId,
+        year: 2026,
+        month: 4,
+        days: 31,
+      },
+    });
+
+    expect(putRes.status).toBe(400);
+    const body = await putRes.json();
+    expect(body).toEqual(
+      expect.objectContaining({
+        code: "DAYS_EXCEED_MONTH",
+        error: expect.stringMatching(/30/),
+      }),
+    );
+  });
+
+  it("accepts the maximum calendar days for the month", async () => {
+    const putRes = await apiRequest("/api/monthly-worked-days", {
+      method: "PUT",
+      actingMemberId: externalMemberId,
+      body: {
+        memberId: externalMemberId,
+        year: 2026,
+        month: 4,
+        days: 30,
+      },
+    });
+
+    expect(putRes.status).toBe(200);
+    const saved = (await putRes.json()) as MonthlyWorkedDaysBody;
+    expect(saved).toEqual(
+      expect.objectContaining({
+        memberId: externalMemberId,
+        year: 2026,
+        month: 4,
+        days: 30,
+      }),
+    );
+  });
+
   it("rejects Monthly Worked Days for a non-external Member", async () => {
     const putRes = await apiRequest("/api/monthly-worked-days", {
       method: "PUT",

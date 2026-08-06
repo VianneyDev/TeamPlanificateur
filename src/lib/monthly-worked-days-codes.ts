@@ -9,3 +9,9 @@ export const MEMBER_NOT_EXTERNAL_ERROR =
 export const MEMBER_ARCHIVED_CODE = "MEMBER_ARCHIVED";
 export const MEMBER_ARCHIVED_ERROR =
   "Monthly Worked Days cannot be declared for an Archived Member";
+
+export const DAYS_EXCEED_MONTH_CODE = "DAYS_EXCEED_MONTH";
+
+export function daysExceedMonthError(maxDays: number): string {
+  return `Monthly Worked Days cannot exceed ${maxDays} for this calendar month`;
+}

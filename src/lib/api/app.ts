@@ -33,9 +33,13 @@ import {
   isManager,
   resolveActingMember,
 } from "@/lib/api/acting-member";
-import { UpsertMonthlyWorkedDaysSchema } from "@/lib/schemas/monthly-worked-days";
+import {
+  UpsertMonthlyWorkedDaysSchema,
+  isDaysExceedMonthIssue,
+} from "@/lib/schemas/monthly-worked-days";
 import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
 import {
+  DAYS_EXCEED_MONTH_CODE,
   FUTURE_MONTH_NOT_ALLOWED_CODE,
   FUTURE_MONTH_NOT_ALLOWED_ERROR,
   MEMBER_ARCHIVED_CODE,
@@ -454,7 +458,27 @@ app.get("/monthly-worked-days", async (c) => {
 
 app.put(
   "/monthly-worked-days",
-  zValidator("json", UpsertMonthlyWorkedDaysSchema),
+  zValidator("json", UpsertMonthlyWorkedDaysSchema, (result, c) => {
+    if (!result.success) {
+      const exceed = result.error.issues.find(isDaysExceedMonthIssue);
+      if (exceed) {
+        return c.json(
+          {
+            error: exceed.message,
+            code: DAYS_EXCEED_MONTH_CODE,
+          },
+          400,
+        );
+      }
+      return c.json(
+        {
+          error: "Invalid body",
+          issues: z.treeifyError(result.error),
+        },
+        400,
+      );
+    }
+  }),
   async (c) => {
     const acting = await resolveActingMember(c);
     if (!acting || acting.archived) {

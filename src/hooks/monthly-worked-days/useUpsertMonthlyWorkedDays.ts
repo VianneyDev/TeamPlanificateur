@@ -15,6 +15,9 @@ function upsertErrorMessage(error: unknown): string {
     if (error.code === "MEMBER_ARCHIVED") {
       return "Impossible de déclarer pour un membre archivé";
     }
+    if (error.code === "DAYS_EXCEED_MONTH") {
+      return "Le nombre de jours dépasse la longueur du mois";
+    }
     return error.message;
   }
   return "Erreur lors de l'enregistrement";

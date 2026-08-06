@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useMonthlyWorkedDays } from "@/hooks/monthly-worked-days/useMonthlyWorkedDays";
 import { useUpsertMonthlyWorkedDays } from "@/hooks/monthly-worked-days/useUpsertMonthlyWorkedDays";
@@ -6,6 +6,10 @@ import {
   formatMonthLabel,
   listDeclarableMonths,
 } from "@/lib/monthly-worked-days-ui";
+import {
+  daysInMonth,
+  isWorkedDaysInRange,
+} from "@/lib/monthly-worked-days-rules";
 import type { MonthlyWorkedDays } from "@/lib/types";
 
 type MonthlyWorkedDaysPanelProps = {
@@ -23,11 +27,14 @@ export default function MonthlyWorkedDaysPanel({
   isExternal,
 }: MonthlyWorkedDaysPanelProps) {
   const defaultMemberId = isExternal ? actingMemberId : "";
+  const formRef = useRef<HTMLFormElement>(null);
+
   const [memberId, setMemberId] = useState(defaultMemberId);
   const [yearMonth, setYearMonth] = useState(
     () => `${MONTH_OPTIONS[0].year}-${MONTH_OPTIONS[0].month}`,
   );
   const [days, setDays] = useState("0");
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
   const listFilterMemberId = isManager ? undefined : actingMemberId;
 
@@ -77,39 +84,105 @@ export default function MonthlyWorkedDaysPanel({
     return { year: Number(yearStr), month: Number(monthStr) };
   }, [yearMonth]);
 
-  const canSubmit =
-    Boolean(memberId) &&
-    Number.isInteger(Number(days)) &&
-    Number(days) >= 0 &&
-    Number(days) <= 31;
+  const maxDays = daysInMonth(
+    selectedYearMonth.year,
+    selectedYearMonth.month,
+  );
+  const daysNumber = Number(days);
+  const daysValid =
+    days.trim() !== "" &&
+    Number.isInteger(daysNumber) &&
+    isWorkedDaysInRange(
+      selectedYearMonth.year,
+      selectedYearMonth.month,
+      daysNumber,
+    );
+  const daysError =
+    days.trim() !== "" && Number.isInteger(daysNumber) && daysNumber > maxDays
+      ? `Maximum ${maxDays} jours pour ce mois`
+      : days.trim() !== "" && !Number.isInteger(daysNumber)
+        ? "Entrez un nombre entier"
+        : null;
+
+  const canSubmit = Boolean(memberId) && daysValid;
+
+  const selectedMemberName = useMemo(() => {
+    if (!memberId) return null;
+    const fromExternals = externals.find((m) => m.id === memberId)?.name;
+    if (fromExternals) return fromExternals;
+    const fromRows = rows.find((r) => r.memberId === memberId)?.member?.name;
+    return fromRows ?? null;
+  }, [memberId, externals, rows]);
+
+  const isCorrection = editingRowId !== null;
+  const formTitle = isCorrection
+    ? `Correction - ${selectedMemberName ?? "membre"}, ${formatMonthLabel(selectedYearMonth.year, selectedYearMonth.month)}`
+    : "Déclarer ou corriger";
+
+  const resetForm = () => {
+    setEditingRowId(null);
+    setMemberId(defaultMemberId);
+    setYearMonth(`${MONTH_OPTIONS[0].year}-${MONTH_OPTIONS[0].month}`);
+    setDays("0");
+  };
+
+  const fillFromRow = (row: MonthlyWorkedDays) => {
+    setEditingRowId(row.id);
+    setMemberId(row.memberId);
+    setYearMonth(`${row.year}-${row.month}`);
+    setDays(String(row.days));
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    if (days === "") return;
+    const n = Number(days);
+    if (!Number.isInteger(n)) return;
+    if (n > maxDays) setDays(String(maxDays));
+  }, [maxDays, days]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit || !memberId) return;
 
-    mutate({
-      memberId,
-      year: selectedYearMonth.year,
-      month: selectedYearMonth.month,
-      days: Number(days),
-    });
-  };
-
-  const fillFromRow = (row: MonthlyWorkedDays) => {
-    setMemberId(row.memberId);
-    setYearMonth(`${row.year}-${row.month}`);
-    setDays(String(row.days));
+    mutate(
+      {
+        memberId,
+        year: selectedYearMonth.year,
+        month: selectedYearMonth.month,
+        days: daysNumber,
+      },
+      {
+        onSuccess: () => {
+          setEditingRowId(null);
+        },
+      },
+    );
   };
 
   return (
     <div className="space-y-8">
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
-        className="max-w-xl space-y-4 rounded-lg border border-slate-700 bg-slate-900/50 p-5"
+        className={`max-w-xl space-y-4 rounded-lg border p-5 ${
+          isCorrection
+            ? "border-blue-500 bg-slate-900/80 ring-1 ring-blue-500/40"
+            : "border-slate-700 bg-slate-900/50"
+        }`}
       >
-        <h2 className="text-lg font-semibold text-white">
-          Déclarer ou corriger
-        </h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-lg font-semibold text-white">{formTitle}</h2>
+          {isCorrection && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="shrink-0 text-sm text-slate-300 underline-offset-2 hover:text-white hover:underline"
+            >
+              Annuler
+            </button>
+          )}
+        </div>
 
         {isManager && (
           <label className="block space-y-1 text-sm">
@@ -159,17 +232,22 @@ export default function MonthlyWorkedDaysPanel({
         </label>
 
         <label className="block space-y-1 text-sm">
-          <span className="text-slate-300">Jours travaillés</span>
+          <span className="text-slate-300">Jours travaillés (0–{maxDays})</span>
           <input
             type="number"
             min={0}
-            max={31}
+            max={maxDays}
             step={1}
-            className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
+            className={`w-full rounded border bg-slate-800 px-3 py-2 text-slate-100 ${
+              daysError ? "border-red-500" : "border-slate-600"
+            }`}
             value={days}
             onChange={(e) => setDays(e.target.value)}
             required
           />
+          {daysError && (
+            <span className="block text-xs text-red-400">{daysError}</span>
+          )}
         </label>
 
         <button
@@ -177,7 +255,11 @@ export default function MonthlyWorkedDaysPanel({
           disabled={!canSubmit || isPending}
           className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
         >
-          {isPending ? "Enregistrement…" : "Enregistrer"}
+          {isPending
+            ? "Enregistrement…"
+            : isCorrection
+              ? "Mettre à jour"
+              : "Enregistrer"}
         </button>
       </form>
 
@@ -208,31 +290,42 @@ export default function MonthlyWorkedDaysPanel({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-t border-slate-800 text-slate-200"
-                  >
-                    {isManager && (
+                {rows.map((row) => {
+                  const isActive = editingRowId === row.id;
+                  return (
+                    <tr
+                      key={row.id}
+                      className={`border-t text-slate-200 ${
+                        isActive
+                          ? "border-blue-500/40 bg-blue-600/15"
+                          : "border-slate-800"
+                      }`}
+                    >
+                      {isManager && (
+                        <td className="px-4 py-3">
+                          {row.member?.name ?? row.memberId}
+                        </td>
+                      )}
                       <td className="px-4 py-3">
-                        {row.member?.name ?? row.memberId}
+                        {formatMonthLabel(row.year, row.month)}
                       </td>
-                    )}
-                    <td className="px-4 py-3">
-                      {formatMonthLabel(row.year, row.month)}
-                    </td>
-                    <td className="px-4 py-3">{row.days}</td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        className="text-blue-400 hover:text-blue-300"
-                        onClick={() => fillFromRow(row)}
-                      >
-                        Modifier
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="px-4 py-3">{row.days}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          className={
+                            isActive
+                              ? "font-medium text-blue-300"
+                              : "text-blue-400 hover:text-blue-300"
+                          }
+                          onClick={() => fillFromRow(row)}
+                        >
+                          Modifier
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
