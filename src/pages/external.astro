@@ -1,0 +1,26 @@
+---
+export const prerender = false;
+
+import Layout from "@/layouts/Layout.astro";
+import MonthlyWorkedDaysPanelWithProvider from "@/components/islands/monthly-worked-days/MonthlyWorkedDaysPanelWithProvider";
+
+const member = Astro.locals.member;
+---
+
+<Layout title="Jours travaillés">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-white mb-2">Jours travaillés</h1>
+    <p class="text-slate-400">
+      Déclarez ou corrigez le volume mensuel des membres externes (mois courant et passés uniquement).
+    </p>
+  </div>
+
+  {member && (
+    <MonthlyWorkedDaysPanelWithProvider
+      client:load
+      actingMemberId={member.id}
+      isManager={member.role === "manager"}
+      isExternal={member.isExternal}
+    />
+  )}
+</Layout>

@@ -29,6 +29,20 @@ import {
   countActiveTeamsAmong,
   findActiveMembersOrphanedWithoutTeam,
 } from "@/lib/member-team-invariant";
+import {
+  isManager,
+  resolveActingMember,
+} from "@/lib/api/acting-member";
+import { UpsertMonthlyWorkedDaysSchema } from "@/lib/schemas/monthly-worked-days";
+import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
+import {
+  FUTURE_MONTH_NOT_ALLOWED_CODE,
+  FUTURE_MONTH_NOT_ALLOWED_ERROR,
+  MEMBER_ARCHIVED_CODE,
+  MEMBER_ARCHIVED_ERROR,
+  MEMBER_NOT_EXTERNAL_CODE,
+  MEMBER_NOT_EXTERNAL_ERROR,
+} from "@/lib/monthly-worked-days-codes";
 
 const listMembersQuerySchema = MemberStatusSchema.optional().transform(
   (status) => status ?? "active",
@@ -403,6 +417,125 @@ app.delete("/teams", zValidator("json", DeleteTeamSchema), async (c) => {
 
   return c.json({ success: true });
 });
+
+app.get("/monthly-worked-days", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  const memberIdFilter = c.req.query("memberId");
+  const manager = isManager(acting);
+
+  if (!manager && !acting.isExternal) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  if (memberIdFilter && !manager && memberIdFilter !== acting.id) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const where: Prisma.MonthlyWorkedDaysWhereInput = manager
+    ? {
+        ...(memberIdFilter && { memberId: memberIdFilter }),
+      }
+    : { memberId: acting.id };
+
+  const rows = await db.monthlyWorkedDays.findMany({
+    where,
+    include: {
+      member: { select: { id: true, name: true, isExternal: true } },
+    },
+    orderBy: [{ year: "desc" }, { month: "desc" }],
+  });
+
+  return c.json({ data: rows });
+});
+
+app.put(
+  "/monthly-worked-days",
+  zValidator("json", UpsertMonthlyWorkedDaysSchema),
+  async (c) => {
+    const acting = await resolveActingMember(c);
+    if (!acting || acting.archived) {
+      return c.json({ error: "Acting Member required" }, 401);
+    }
+
+    const body = c.req.valid("json");
+    const manager = isManager(acting);
+
+    if (!manager && body.memberId !== acting.id) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    if (!manager && !acting.isExternal) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    if (isFutureMonth(body.year, body.month)) {
+      return c.json(
+        {
+          error: FUTURE_MONTH_NOT_ALLOWED_ERROR,
+          code: FUTURE_MONTH_NOT_ALLOWED_CODE,
+        },
+        400,
+      );
+    }
+
+    const target = await db.member.findUnique({
+      where: { id: body.memberId },
+      select: { id: true, isExternal: true, archived: true },
+    });
+
+    if (!target) {
+      return c.json({ error: "Member not found" }, 404);
+    }
+
+    if (target.archived) {
+      return c.json(
+        {
+          error: MEMBER_ARCHIVED_ERROR,
+          code: MEMBER_ARCHIVED_CODE,
+        },
+        400,
+      );
+    }
+
+    if (!target.isExternal) {
+      return c.json(
+        {
+          error: MEMBER_NOT_EXTERNAL_ERROR,
+          code: MEMBER_NOT_EXTERNAL_CODE,
+        },
+        400,
+      );
+    }
+
+    const row = await db.monthlyWorkedDays.upsert({
+      where: {
+        memberId_year_month: {
+          memberId: body.memberId,
+          year: body.year,
+          month: body.month,
+        },
+      },
+      create: {
+        memberId: body.memberId,
+        year: body.year,
+        month: body.month,
+        days: body.days,
+      },
+      update: {
+        days: body.days,
+      },
+      include: {
+        member: { select: { id: true, name: true, isExternal: true } },
+      },
+    });
+
+    return c.json(row);
+  },
+);
 
 app.post("/logout", (c) => {
   c.header("Set-Cookie", "selectedMemberId=; Path=/; Max-Age=0");
