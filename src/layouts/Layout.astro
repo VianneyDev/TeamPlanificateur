@@ -27,9 +27,11 @@ const isActive = (path: string) => pathname === path;
             <a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
                <span>Dashboard</span>
             </a>
-            <a href="/external" class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}>
-               <span>Jours travaillés</span>
-            </a>
+            {member && (member.isExternal || member.role === "manager") && (
+              <a href="/external" class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}>
+                <span>Jours travaillés</span>
+              </a>
+            )}
             {member && member.role === "manager" ? (
               <a href="/gestion" class={`nav-item ${isActive("/gestion") ? "nav-item-active" : ""}`}>
                 <span>Gestion</span>

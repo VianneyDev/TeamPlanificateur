@@ -13,7 +13,7 @@ export async function fetchMembers(
   status: MemberStatus = "active",
   page: number,
   search: string,
-  options?: { isExternal?: boolean },
+  options?: { isExternal?: boolean; limit?: number },
 ): Promise<{
   data: Member[];
   pagination: {
@@ -26,7 +26,7 @@ export async function fetchMembers(
   const params = new URLSearchParams({
     status,
     page: String(page),
-    limit: "10",
+    limit: String(options?.limit ?? 10),
   });
   if (search) params.set("search", search);
   if (options?.isExternal !== undefined) {

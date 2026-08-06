@@ -22,5 +22,12 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
     }
   }
 
+  if (context.url.pathname === "/external") {
+    const member = context.locals.member;
+    if (!member || (!member.isExternal && member.role !== "manager")) {
+      return context.redirect("/");
+    }
+  }
+
   return next();
 };

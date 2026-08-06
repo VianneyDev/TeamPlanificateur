@@ -6,6 +6,8 @@ declare namespace App {
       id: string;
       name: string;
       role: string;
+      isExternal: boolean;
+      archived: boolean;
       teams: { id: string; name: string }[];
     } | null;
   }
