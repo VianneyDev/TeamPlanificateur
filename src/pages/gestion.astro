@@ -6,6 +6,14 @@ import TeamsPanelWithProvider from "@/components/islands/team/TeamsPanelWithProv
 import MembersPanelWithProvider from "@/components/islands/member/MembersPanelWithProvider";
 
 const tab = Astro.url.searchParams.get("tab") ?? "teams";
+
+const membersStatus = Astro.url.searchParams.get("status") ?? "active";
+const membersPage = Astro.url.searchParams.get("page") ?? "1";
+const membersSearch = Astro.url.searchParams.get("search") ?? "";
+
+const teamsStatus = Astro.url.searchParams.get("teamsStatus") ?? "active";
+const teamsPage = Astro.url.searchParams.get("teamsPage") ?? "1";
+const teamsSearch = Astro.url.searchParams.get("teamsSearch") ?? "";
 ---
 
 <Layout title="Gestion d'équipe et membres">
@@ -23,14 +31,30 @@ const tab = Astro.url.searchParams.get("tab") ?? "teams";
    </div>
 
    {tab === "teams" && 
-      <TeamsPanelWithProvider client:load />
+      <TeamsPanelWithProvider
+         client:load
+         initialTeamsStatus={teamsStatus}
+         initialTeamsPage={teamsPage}
+         initialTeamsSearch={teamsSearch}
+      />
    }
 
    {tab === "members" && 
-      <MembersPanelWithProvider client:load />
+      <MembersPanelWithProvider
+         client:load
+         initialStatus={membersStatus}
+         initialPage={membersPage}
+         initialSearch={membersSearch}
+      />
    }
 
    {tab === "externes" && 
-      <MembersPanelWithProvider client:load externalOnly />
+      <MembersPanelWithProvider
+         client:load
+         externalOnly
+         initialStatus={membersStatus}
+         initialPage={membersPage}
+         initialSearch={membersSearch}
+      />
    }
 </Layout>

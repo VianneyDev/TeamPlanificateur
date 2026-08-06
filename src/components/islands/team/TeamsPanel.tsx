@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
-import { useQueryState } from "@/hooks/useQueryState";
+import { applyQueryStates, useQueryState } from "@/hooks/useQueryState";
 import type { TeamStatus } from "@/lib/schemas";
 import type { Team } from "@/lib/types";
 import TeamModal from "@/components/islands/team/TeamModal";
@@ -41,11 +41,34 @@ function TeamsTableSkeletonBody({ rows }: { rows: number }) {
   );
 }
 
-export default function TeamsPanel() {
-  const [teamsStatus, setTeamsStatus] = useQueryState("teamsStatus", "active");
+type TeamsPanelProps = {
+  /** SSR snapshots from Astro so first paint matches the request URL. */
+  initialTeamsStatus?: string;
+  initialTeamsPage?: string;
+  initialTeamsSearch?: string;
+};
+
+export default function TeamsPanel({
+  initialTeamsStatus = "active",
+  initialTeamsPage = "1",
+  initialTeamsSearch = "",
+}: TeamsPanelProps) {
+  const [teamsStatus] = useQueryState(
+    "teamsStatus",
+    "active",
+    initialTeamsStatus,
+  );
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
-  const [teamsPage, setTeamsPage] = useQueryState("teamsPage", "1");
-  const [urlTeamsSearch, setUrlTeamsSearch] = useQueryState("teamsSearch", "");
+  const [teamsPage, setTeamsPage] = useQueryState(
+    "teamsPage",
+    "1",
+    initialTeamsPage,
+  );
+  const [urlTeamsSearch, setUrlTeamsSearch] = useQueryState(
+    "teamsSearch",
+    "",
+    initialTeamsSearch,
+  );
   const [searchInput, setSearchInput] = useState(urlTeamsSearch);
 
   const [debouncedSearch, flushSearch] = useDebounce(
@@ -131,7 +154,16 @@ export default function TeamsPanel() {
           <button
             key={opt.value}
             type="button"
-            onClick={() => setTeamsStatus(opt.value)}
+            onClick={() => {
+              applyQueryStates([
+                {
+                  key: "teamsStatus",
+                  value: opt.value,
+                  defaultValue: "active",
+                },
+                { key: "teamsPage", value: "1", defaultValue: "1" },
+              ]);
+            }}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               teamsStatus === opt.value
                 ? "bg-slate-600 text-white"
