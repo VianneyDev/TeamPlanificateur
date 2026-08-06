@@ -41,12 +41,36 @@ export default function MonthlyWorkedDaysPanel({
     search: "",
     isExternal: true,
     limit: EXTERNAL_MEMBERS_LIMIT,
+    enabled: isManager,
   });
 
   const { mutate, isPending } = useUpsertMonthlyWorkedDays();
 
   const rows = data?.data ?? [];
   const externals = externalsData?.data ?? [];
+
+  const monthOptions = useMemo(() => {
+    const byKey = new Map(
+      MONTH_OPTIONS.map((option) => [
+        `${option.year}-${option.month}`,
+        option,
+      ]),
+    );
+    for (const row of rows) {
+      const key = `${row.year}-${row.month}`;
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          year: row.year,
+          month: row.month,
+          label: formatMonthLabel(row.year, row.month),
+        });
+      }
+    }
+    return [...byKey.values()].sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+  }, [rows]);
 
   const selectedYearMonth = useMemo(() => {
     const [yearStr, monthStr] = yearMonth.split("-");
@@ -123,7 +147,7 @@ export default function MonthlyWorkedDaysPanel({
             value={yearMonth}
             onChange={(e) => setYearMonth(e.target.value)}
           >
-            {MONTH_OPTIONS.map((option) => (
+            {monthOptions.map((option) => (
               <option
                 key={`${option.year}-${option.month}`}
                 value={`${option.year}-${option.month}`}

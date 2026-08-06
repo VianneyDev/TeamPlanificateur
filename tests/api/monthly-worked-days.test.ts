@@ -320,6 +320,66 @@ describe("Monthly Worked Days API", () => {
     );
   });
 
+  it("lets a Manager External correct another External Member's declaration", async () => {
+    const putRes = await apiRequest("/api/monthly-worked-days", {
+      method: "PUT",
+      actingMemberId: managerExternalId,
+      body: {
+        memberId: otherExternalId,
+        year: past.year,
+        month: past.month,
+        days: 9,
+      },
+    });
+
+    expect(putRes.status).toBe(200);
+    const saved = (await putRes.json()) as MonthlyWorkedDaysBody;
+    expect(saved).toEqual(
+      expect.objectContaining({
+        memberId: otherExternalId,
+        days: 9,
+      }),
+    );
+  });
+
+  it("rejects Monthly Worked Days for an Archived External Member", async () => {
+    const archivedRes = await apiRequest("/api/members", {
+      method: "POST",
+      body: {
+        name: `${suffix}-archived-external`,
+        role: "member",
+        teamIds: [teamId],
+        isExternal: true,
+      },
+    });
+    expect(archivedRes.status).toBe(201);
+    const archivedId = ((await archivedRes.json()) as MemberBody).id;
+
+    const archiveRes = await apiRequest(`/api/members/${archivedId}/archive`, {
+      method: "POST",
+    });
+    expect(archiveRes.status).toBe(200);
+
+    const putRes = await apiRequest("/api/monthly-worked-days", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: {
+        memberId: archivedId,
+        year: past.year,
+        month: past.month,
+        days: 4,
+      },
+    });
+
+    expect(putRes.status).toBe(400);
+    const body = await putRes.json();
+    expect(body).toEqual(
+      expect.objectContaining({
+        code: "MEMBER_ARCHIVED",
+      }),
+    );
+  });
+
   it("requires an Acting Member", async () => {
     const putRes = await apiRequest("/api/monthly-worked-days", {
       method: "PUT",
