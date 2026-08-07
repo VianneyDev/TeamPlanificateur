@@ -41,6 +41,7 @@ import {
   DayOffYearSchema,
   ToggleDayOffSchema,
 } from "@/lib/schemas/day-off";
+import { enumerateCalendarDates } from "@/lib/day-off-range";
 import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
 import {
   DAYS_EXCEED_MONTH_CODE,
@@ -443,12 +444,41 @@ app.get("/days-off", async (c) => {
     `${String(year + 1).padStart(4, "0")}-01-01T00:00:00.000Z`,
   );
 
+  const manager = isManager(acting);
+  let memberFilter: Prisma.MemberWhereInput = { archived: false };
+
+  if (!manager) {
+    const actingWithTeams = await db.member.findUnique({
+      where: { id: acting.id },
+      select: {
+        teams: {
+          where: { archived: false },
+          select: { id: true },
+        },
+      },
+    });
+    const teamIds = actingWithTeams?.teams.map((team) => team.id) ?? [];
+
+    memberFilter = {
+      archived: false,
+      OR: [
+        { id: acting.id },
+        ...(teamIds.length > 0
+          ? [{ teams: { some: { id: { in: teamIds } } } }]
+          : []),
+      ],
+    };
+  }
+
   const daysOff = await db.dayOff.findMany({
     where: {
-      memberId: acting.id,
       date: { gte: start, lt: end },
+      member: memberFilter,
     },
-    orderBy: { date: "asc" },
+    include: {
+      member: { select: { id: true, name: true } },
+    },
+    orderBy: [{ date: "asc" }, { memberId: "asc" }],
   });
 
   return c.json({ data: daysOff });
@@ -473,12 +503,97 @@ app.put(
       );
     }
 
-    const { date: calendarDate } = c.req.valid("json");
+    const body = c.req.valid("json");
+    const targetMemberId = body.memberId ?? acting.id;
+    const manager = isManager(acting);
+
+    if (targetMemberId !== acting.id && !manager) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const target =
+      targetMemberId === acting.id
+        ? acting
+        : await db.member.findUnique({
+            where: { id: targetMemberId },
+            select: {
+              id: true,
+              name: true,
+              role: true,
+              isExternal: true,
+              archived: true,
+            },
+          });
+
+    if (!target) {
+      return c.json({ error: "Member not found" }, 404);
+    }
+
+    if (target.archived) {
+      return c.json(
+        {
+          error: "Day Offs cannot be created for an Archived Member",
+          code: "MEMBER_ARCHIVED",
+        },
+        400,
+      );
+    }
+
+    if (body.from && body.to) {
+      const calendarDates = enumerateCalendarDates(body.from, body.to);
+      const dates = calendarDates.map(
+        (calendarDate) => new Date(`${calendarDate}T00:00:00.000Z`),
+      );
+      const existing = await db.dayOff.findMany({
+        where: {
+          memberId: target.id,
+          date: { in: dates },
+        },
+      });
+
+      const allActive = existing.length === calendarDates.length;
+
+      if (allActive) {
+        await db.dayOff.deleteMany({
+          where: {
+            memberId: target.id,
+            date: { in: dates },
+          },
+        });
+        return c.json({ active: false, dayOffs: [] });
+      }
+
+      const existingKeys = new Set(
+        existing.map((dayOff) => dayOff.date.toISOString().slice(0, 10)),
+      );
+      const missing = calendarDates.filter((date) => !existingKeys.has(date));
+
+      if (missing.length > 0) {
+        await db.dayOff.createMany({
+          data: missing.map((calendarDate) => ({
+            memberId: target.id,
+            date: new Date(`${calendarDate}T00:00:00.000Z`),
+          })),
+        });
+      }
+
+      const dayOffs = await db.dayOff.findMany({
+        where: {
+          memberId: target.id,
+          date: { in: dates },
+        },
+        orderBy: { date: "asc" },
+      });
+
+      return c.json({ active: true, dayOffs });
+    }
+
+    const calendarDate = body.date!;
     const date = new Date(`${calendarDate}T00:00:00.000Z`);
     const existing = await db.dayOff.findUnique({
       where: {
         memberId_date: {
-          memberId: acting.id,
+          memberId: target.id,
           date,
         },
       },
@@ -492,7 +607,7 @@ app.put(
     const dayOff = await db.dayOff.create({
       data: {
         date,
-        memberId: acting.id,
+        memberId: target.id,
       },
     });
 
