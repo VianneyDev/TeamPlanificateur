@@ -3,8 +3,11 @@ import { useMembers } from "@/hooks/members/useMembers";
 import { useMonthlyWorkedDays } from "@/hooks/monthly-worked-days/useMonthlyWorkedDays";
 import { useUpsertMonthlyWorkedDays } from "@/hooks/monthly-worked-days/useUpsertMonthlyWorkedDays";
 import {
+  daysInputAfterBlur,
+  daysInputAfterFocus,
   formatMonthLabel,
   listDeclarableMonths,
+  normalizeWorkedDaysInput,
 } from "@/lib/monthly-worked-days-ui";
 import {
   daysInMonth,
@@ -242,7 +245,9 @@ export default function MonthlyWorkedDaysPanel({
               daysError ? "border-red-500" : "border-slate-600"
             }`}
             value={days}
-            onChange={(e) => setDays(e.target.value)}
+            onFocus={() => setDays((current) => daysInputAfterFocus(current))}
+            onBlur={() => setDays((current) => daysInputAfterBlur(current))}
+            onChange={(e) => setDays(normalizeWorkedDaysInput(e.target.value))}
             required
           />
           {daysError && (

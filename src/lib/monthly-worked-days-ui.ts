@@ -1,3 +1,20 @@
+/** Strip a residual leading zero while typing (e.g. "010" → "10"). */
+export function normalizeWorkedDaysInput(raw: string): string {
+  if (raw === "") return "";
+  if (!/^\d+$/.test(raw)) return raw;
+  return raw.replace(/^0+(?=\d)/, "");
+}
+
+/** Clear default zero on focus so the next digits are not prefixed. */
+export function daysInputAfterFocus(current: string): string {
+  return current === "0" ? "" : current;
+}
+
+/** Restore zero when the field is left blank after focus. */
+export function daysInputAfterBlur(current: string): string {
+  return current.trim() === "" ? "0" : current;
+}
+
 const MONTH_LABELS_FR = [
   "Janvier",
   "Février",
