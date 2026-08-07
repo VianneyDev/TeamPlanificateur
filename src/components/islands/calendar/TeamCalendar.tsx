@@ -1,14 +1,20 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDaysOff } from "@/hooks/days-off/useDaysOff";
 import { useToggleDayOff } from "@/hooks/days-off/useToggleDayOff";
+import { useMembers } from "@/hooks/members/useMembers";
 import {
   currentYearMonth,
   shiftMonth,
 } from "@/lib/calendar/month-navigation";
+import { groupDayOffsByDate } from "@/lib/day-off-calendar";
+import { orderedCalendarRange } from "@/lib/day-off-range";
+import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
 
 type TeamCalendarProps = {
+  actingMemberId: string;
   actingMemberName: string;
+  isManager: boolean;
 };
 
 const MONTH_YEAR_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
@@ -45,26 +51,114 @@ function monthDays(year: number, month: number) {
 }
 
 export default function TeamCalendar({
+  actingMemberId,
   actingMemberName,
+  isManager,
 }: TeamCalendarProps) {
   const [yearMonth, setYearMonth] = useState(currentYearMonth);
   const { year, month } = yearMonth;
+  const [editTargetId, setEditTargetId] = useState(actingMemberId);
+  const [rangeAnchor, setRangeAnchor] = useState<string | null>(null);
+  const [rangeHover, setRangeHover] = useState<string | null>(null);
+  const rangeAnchorRef = useRef<string | null>(null);
+  const rangeHoverRef = useRef<string | null>(null);
+  const editTargetIdRef = useRef(editTargetId);
+
   const { data, isLoading, isFetching, error, refetch } = useDaysOff(year);
   const toggle = useToggleDayOff(year);
 
-  const activeDates = useMemo(
-    () => new Set((data?.data ?? []).map((dayOff) => dayOff.date.slice(0, 10))),
-    [data],
+  useEffect(() => {
+    rangeAnchorRef.current = rangeAnchor;
+  }, [rangeAnchor]);
+
+  useEffect(() => {
+    rangeHoverRef.current = rangeHover;
+  }, [rangeHover]);
+
+  useEffect(() => {
+    editTargetIdRef.current = editTargetId;
+  }, [editTargetId]);
+  const { data: membersData, isLoading: membersLoading } = useMembers({
+    status: "active",
+    page: 1,
+    search: "",
+    limit: MAX_LIST_PAGE_SIZE,
+    enabled: isManager,
+  });
+
+  const members = membersData?.data ?? [];
+  const editTargetName =
+    members.find((member) => member.id === editTargetId)?.name ??
+    (editTargetId === actingMemberId ? actingMemberName : "membre sélectionné");
+
+  const dayOffsByDate = useMemo(
+    () =>
+      groupDayOffsByDate(data?.data ?? [], actingMemberId, editTargetId),
+    [actingMemberId, data, editTargetId],
   );
+
+  const previewRange = useMemo(() => {
+    if (!rangeAnchor || !rangeHover) return null;
+    return orderedCalendarRange(rangeAnchor, rangeHover);
+  }, [rangeAnchor, rangeHover]);
+
   const currentDate = todayKey();
   const days = monthDays(year, month);
   const monthLabel = MONTH_YEAR_FORMATTER.format(
     new Date(Date.UTC(year, month, 1)),
   );
 
-  const handleToggle = (date: string) => {
-    if (toggle.isPending) return;
-    toggle.mutate({ date });
+  useEffect(() => {
+    if (!rangeAnchor) return;
+
+    const finish = () => {
+      const anchor = rangeAnchorRef.current;
+      if (!anchor) return;
+      const end = rangeHoverRef.current ?? anchor;
+      const { from, to } = orderedCalendarRange(anchor, end);
+      const memberId = editTargetIdRef.current;
+
+      setRangeAnchor(null);
+      setRangeHover(null);
+      rangeAnchorRef.current = null;
+      rangeHoverRef.current = null;
+
+      if (toggle.isPending) return;
+
+      if (from === to) {
+        toggle.mutate({ date: from, memberId });
+      } else {
+        toggle.mutate({ from, to, memberId });
+      }
+    };
+
+    const cancel = () => {
+      setRangeAnchor(null);
+      setRangeHover(null);
+      rangeAnchorRef.current = null;
+      rangeHoverRef.current = null;
+    };
+
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [rangeAnchor, toggle]);
+
+  const handlePointerDown = (key: string) => {
+    if (isLoading || Boolean(error) || toggle.isPending) return;
+    rangeAnchorRef.current = key;
+    rangeHoverRef.current = key;
+    setRangeAnchor(key);
+    setRangeHover(key);
+  };
+
+  const handlePointerEnter = (key: string) => {
+    if (!rangeAnchorRef.current || toggle.isPending) return;
+    rangeHoverRef.current = key;
+    setRangeHover(key);
   };
 
   return (
@@ -75,8 +169,22 @@ export default function TeamCalendar({
             Calendrier mensuel
           </h2>
           <p className="mt-1 text-sm text-slate-400">
-            Cliquez sur une date pour ajouter ou retirer un jour de repos pour{" "}
-            <span className="font-medium text-slate-200">{actingMemberName}</span>.
+            Cliquez pour basculer un jour, ou glissez pour une plage continue (
+            {isManager ? (
+              <>
+                édition pour{" "}
+                <span className="font-medium text-slate-200">{editTargetName}</span>
+              </>
+            ) : (
+              <>
+                vos jours de repos (
+                <span className="font-medium text-slate-200">
+                  {actingMemberName}
+                </span>
+                )
+              </>
+            )}
+            ).
           </p>
         </div>
 
@@ -105,11 +213,55 @@ export default function TeamCalendar({
         </div>
       </div>
 
+      {isManager && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+          <label
+            htmlFor="day-off-edit-target"
+            className="text-sm font-medium text-slate-300"
+          >
+            Membre à éditer
+          </label>
+          <select
+            id="day-off-edit-target"
+            value={editTargetId}
+            onChange={(event) => setEditTargetId(event.target.value)}
+            disabled={membersLoading || toggle.isPending}
+            className="max-w-md rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+          >
+            {!members.some((member) => member.id === actingMemberId) && (
+              <option value={actingMemberId}>{actingMemberName}</option>
+            )}
+            {members.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.name}
+                {member.id === actingMemberId ? " (vous)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
         <span className="inline-flex items-center gap-2">
           <span className="size-3 rounded-sm bg-blue-500" aria-hidden="true" />
-          Jour de repos
+          Vos jours de repos
         </span>
+        <span className="inline-flex items-center gap-2">
+          <span
+            className="size-3 rounded-sm bg-amber-500/70"
+            aria-hidden="true"
+          />
+          Autres membres
+        </span>
+        {isManager && editTargetId !== actingMemberId && (
+          <span className="inline-flex items-center gap-2">
+            <span
+              className="size-3 rounded-sm bg-sky-600"
+              aria-hidden="true"
+            />
+            Cible d'édition
+          </span>
+        )}
         <span className="inline-flex items-center gap-2">
           <span
             className="size-3 rounded-sm border border-blue-400"
@@ -142,7 +294,7 @@ export default function TeamCalendar({
 
       <article className="mx-auto w-full max-w-xl rounded-xl border border-slate-700 bg-slate-900/50 p-4 shadow-sm">
         <div
-          className="grid grid-cols-7 gap-1"
+          className="grid grid-cols-7 gap-1 select-none"
           aria-label={monthLabel}
         >
           {WEEKDAYS.map((weekday, index) => (
@@ -161,41 +313,75 @@ export default function TeamCalendar({
             }
 
             const key = dateKey(year, month, day);
-            const active = activeDates.has(key);
+            const entry = dayOffsByDate.get(key);
+            const primary = entry?.primary ?? false;
+            const editTargetOff = entry?.editTargetOff ?? false;
+            const others = entry?.others ?? [];
+            const secondary = others.length > 0;
             const isToday = key === currentDate;
             const weekday = new Date(Date.UTC(year, month, day)).getUTCDay();
             const isWeekend = weekday === 0 || weekday === 6;
             const formattedDate = DATE_FORMATTER.format(
               new Date(Date.UTC(year, month, day)),
             );
+            const inPreview =
+              previewRange !== null &&
+              key >= previewRange.from &&
+              key <= previewRange.to;
+            const otherNames = others.map((member) => member.name).join(", ");
 
             return (
               <button
                 key={key}
                 type="button"
-                onClick={() => handleToggle(key)}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  handlePointerDown(key);
+                }}
+                onPointerEnter={() => handlePointerEnter(key)}
                 disabled={isLoading || Boolean(error) || toggle.isPending}
-                aria-pressed={active}
-                aria-label={
-                  active
-                    ? `Retirer le jour de repos du ${formattedDate}`
-                    : `Ajouter un jour de repos le ${formattedDate}`
-                }
+                aria-pressed={editTargetOff}
+                aria-label={[
+                  primary
+                    ? `Jour de repos pour ${actingMemberName} le ${formattedDate}`
+                    : `Jour ouvrable le ${formattedDate}`,
+                  secondary ? `aussi en repos : ${otherNames}` : null,
+                  editTargetId !== actingMemberId
+                    ? editTargetOff
+                      ? `cible d'édition (${editTargetName}) en repos`
+                      : `cible d'édition (${editTargetName}) disponible`
+                    : null,
+                  "Cliquer ou glisser pour modifier",
+                ]
+                  .filter(Boolean)
+                  .join(". ")}
+                title={secondary ? `Aussi en repos : ${otherNames}` : undefined}
                 className={[
-                  "aspect-square rounded-md text-sm font-medium transition",
+                  "relative aspect-square rounded-md text-sm font-medium transition",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
                   "disabled:cursor-wait disabled:opacity-60",
-                  active
+                  primary
                     ? "bg-blue-600 text-white shadow-sm hover:bg-blue-500"
-                    : isWeekend
-                      ? "bg-slate-800/70 text-slate-400 hover:bg-slate-700 hover:text-white"
-                      : "text-slate-200 hover:bg-slate-700",
+                    : editTargetOff
+                      ? "bg-sky-600/80 text-white shadow-sm hover:bg-sky-500"
+                      : secondary
+                        ? "bg-amber-500/25 text-amber-50 hover:bg-amber-500/40"
+                        : isWeekend
+                          ? "bg-slate-800/70 text-slate-400 hover:bg-slate-700 hover:text-white"
+                          : "text-slate-200 hover:bg-slate-700",
                   isToday
                     ? "ring-1 ring-blue-400 ring-offset-1 ring-offset-slate-900"
                     : "",
+                  inPreview ? "ring-2 ring-sky-300/80" : "",
                 ].join(" ")}
               >
                 {day}
+                {secondary && (
+                  <span
+                    className="absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-amber-400"
+                    aria-hidden="true"
+                  />
+                )}
               </button>
             );
           })}

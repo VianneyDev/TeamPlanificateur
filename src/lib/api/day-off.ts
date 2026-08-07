@@ -1,5 +1,9 @@
 import type { ToggleDayOffInput } from "@/lib/schemas";
-import type { DayOff, ToggleDayOffResult } from "@/lib/types";
+import type {
+  DayOff,
+  ToggleDayOffRangeResult,
+  ToggleDayOffResult,
+} from "@/lib/types";
 import { throwIfNotOk } from "@/lib/api/errors";
 
 export async function fetchDaysOff(
@@ -12,7 +16,7 @@ export async function fetchDaysOff(
 
 export async function toggleDayOff(
   data: ToggleDayOffInput,
-): Promise<ToggleDayOffResult> {
+): Promise<ToggleDayOffResult | ToggleDayOffRangeResult> {
   const response = await fetch("/api/days-off/toggle", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -20,4 +24,10 @@ export async function toggleDayOff(
   });
   await throwIfNotOk(response, "Failed to toggle Day Off");
   return response.json();
+}
+
+export function isRangeToggleResult(
+  result: ToggleDayOffResult | ToggleDayOffRangeResult,
+): result is ToggleDayOffRangeResult {
+  return "dayOffs" in result;
 }
