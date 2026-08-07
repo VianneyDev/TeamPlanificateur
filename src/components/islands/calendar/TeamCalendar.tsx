@@ -47,8 +47,8 @@ function monthDays(year: number, month: number) {
 export default function TeamCalendar({
   actingMemberName,
 }: TeamCalendarProps) {
-  const [view, setView] = useState(currentYearMonth);
-  const { year, month } = view;
+  const [yearMonth, setYearMonth] = useState(currentYearMonth);
+  const { year, month } = yearMonth;
   const { data, isLoading, isFetching, error, refetch } = useDaysOff(year);
   const toggle = useToggleDayOff(year);
 
@@ -83,7 +83,7 @@ export default function TeamCalendar({
         <div className="flex items-center gap-2 self-start rounded-lg border border-slate-700 bg-slate-950/70 p-1 sm:self-auto">
           <button
             type="button"
-            onClick={() => setView((value) => shiftMonth(value, -1))}
+            onClick={() => setYearMonth((value) => shiftMonth(value, -1))}
             className="rounded-md p-2 text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-40"
             aria-label="Afficher le mois précédent"
             disabled={toggle.isPending}
@@ -95,7 +95,7 @@ export default function TeamCalendar({
           </span>
           <button
             type="button"
-            onClick={() => setView((value) => shiftMonth(value, 1))}
+            onClick={() => setYearMonth((value) => shiftMonth(value, 1))}
             className="rounded-md p-2 text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-40"
             aria-label="Afficher le mois suivant"
             disabled={toggle.isPending}
