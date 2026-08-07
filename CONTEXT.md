@@ -33,7 +33,7 @@ A full calendar day on which a Member is not working, with no leave category. Ow
 _Avoid_: Leave, vacation, PTO, half-day (demi-journée is not a Day Off in this model)
 
 **Team Calendar**:
-The annual view of Day Offs. For a non-manager, the union of Day Offs of Members in their Teams. For a Manager, Day Offs across the organisation. The Acting Member's Day Offs are primary in each cell; other Members' Day Offs appear secondary.
+The monthly view of Day Offs (navigate month by month). For a non-manager, the union of Day Offs of Members in their Teams. For a Manager, Day Offs across the organisation. The Acting Member's Day Offs are primary in each cell; other Members' Day Offs appear secondary.
 _Avoid_: Org calendar, global calendar (Managers see org-wide; that is still the Team Calendar surface, not a separate product concept)
 
 **Monthly Worked Days**:

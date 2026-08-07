@@ -6,7 +6,7 @@
 
 ## Produit
 
-Dashboard pour la gestion d’équipes et de membres. Les managers administrent équipes et membres. À terme : employés externes saisissent les jours travaillés par mois ; tous les membres gèrent jours off et congés dans un calendrier annuel.
+Dashboard pour la gestion d’équipes et de membres. Les managers administrent équipes et membres. À terme : employés externes saisissent les jours travaillés par mois ; tous les membres gèrent jours off et congés dans un calendrier mensuel.
 
 ## Stack technique
 
