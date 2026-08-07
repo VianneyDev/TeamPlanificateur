@@ -5,6 +5,8 @@ import { useUpsertMonthlyWorkedDays } from "@/hooks/monthly-worked-days/useUpser
 import {
   formatMonthLabel,
   listDeclarableMonths,
+  normalizeWorkedDaysInput,
+  shouldReplaceDaysInputValue,
 } from "@/lib/monthly-worked-days-ui";
 import {
   daysInMonth,
@@ -33,8 +35,14 @@ export default function MonthlyWorkedDaysPanel({
   const [yearMonth, setYearMonth] = useState(
     () => `${MONTH_OPTIONS[0].year}-${MONTH_OPTIONS[0].month}`,
   );
-  const [days, setDays] = useState("0");
+  const [days, setDays] = useState("");
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
+
+  const clearLoneZeroInput = (input: HTMLInputElement) => {
+    // Sync DOM clear beats the click caret: setState alone still lets "5"+"0" → "50"/"05".
+    input.value = "";
+    setDays("");
+  };
 
   const listFilterMemberId = isManager ? undefined : actingMemberId;
 
@@ -123,7 +131,7 @@ export default function MonthlyWorkedDaysPanel({
     setEditingRowId(null);
     setMemberId(defaultMemberId);
     setYearMonth(`${MONTH_OPTIONS[0].year}-${MONTH_OPTIONS[0].month}`);
-    setDays("0");
+    setDays("");
   };
 
   const fillFromRow = (row: MonthlyWorkedDays) => {
@@ -238,11 +246,24 @@ export default function MonthlyWorkedDaysPanel({
             min={0}
             max={maxDays}
             step={1}
+            placeholder="0"
             className={`w-full rounded border bg-slate-800 px-3 py-2 text-slate-100 ${
               daysError ? "border-red-500" : "border-slate-600"
             }`}
             value={days}
-            onChange={(e) => setDays(e.target.value)}
+            onFocus={(e) => {
+              if (shouldReplaceDaysInputValue(e.currentTarget.value)) {
+                clearLoneZeroInput(e.currentTarget);
+              }
+            }}
+            onMouseUp={(e) => {
+              // mouseup runs after focus and places the caret beside "0", undoing select/clear.
+              if (shouldReplaceDaysInputValue(e.currentTarget.value)) {
+                e.preventDefault();
+                clearLoneZeroInput(e.currentTarget);
+              }
+            }}
+            onChange={(e) => setDays(normalizeWorkedDaysInput(e.target.value))}
             required
           />
           {daysError && (

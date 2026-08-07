@@ -1,3 +1,15 @@
+/** Strip a residual leading zero while typing (e.g. "010" → "10"). */
+export function normalizeWorkedDaysInput(raw: string): string {
+  if (raw === "") return "";
+  if (!/^\d+$/.test(raw)) return raw;
+  return raw.replace(/^0+(?=\d)/, "");
+}
+
+/** True when the visible value is a lone zero that must be replaced, not edited around. */
+export function shouldReplaceDaysInputValue(current: string): boolean {
+  return current === "0";
+}
+
 const MONTH_LABELS_FR = [
   "Janvier",
   "Février",
