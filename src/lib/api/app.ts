@@ -37,6 +37,10 @@ import {
   UpsertMonthlyWorkedDaysSchema,
   isDaysExceedMonthIssue,
 } from "@/lib/schemas/monthly-worked-days";
+import {
+  DayOffYearSchema,
+  ToggleDayOffSchema,
+} from "@/lib/schemas/day-off";
 import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
 import {
   DAYS_EXCEED_MONTH_CODE,
@@ -421,6 +425,80 @@ app.delete("/teams", zValidator("json", DeleteTeamSchema), async (c) => {
 
   return c.json({ success: true });
 });
+
+app.get("/days-off", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  const yearResult = DayOffYearSchema.safeParse(c.req.query("year"));
+  if (!yearResult.success) {
+    return c.json({ error: "Invalid year query parameter" }, 400);
+  }
+
+  const year = yearResult.data;
+  const start = new Date(`${String(year).padStart(4, "0")}-01-01T00:00:00.000Z`);
+  const end = new Date(
+    `${String(year + 1).padStart(4, "0")}-01-01T00:00:00.000Z`,
+  );
+
+  const daysOff = await db.dayOff.findMany({
+    where: {
+      memberId: acting.id,
+      date: { gte: start, lt: end },
+    },
+    orderBy: { date: "asc" },
+  });
+
+  return c.json({ data: daysOff });
+});
+
+app.put(
+  "/days-off/toggle",
+  zValidator("json", ToggleDayOffSchema),
+  async (c) => {
+    const acting = await resolveActingMember(c);
+    if (!acting) {
+      return c.json({ error: "Acting Member required" }, 401);
+    }
+
+    if (acting.archived) {
+      return c.json(
+        {
+          error: "Day Offs cannot be created for an Archived Member",
+          code: "MEMBER_ARCHIVED",
+        },
+        400,
+      );
+    }
+
+    const { date: calendarDate } = c.req.valid("json");
+    const date = new Date(`${calendarDate}T00:00:00.000Z`);
+    const existing = await db.dayOff.findUnique({
+      where: {
+        memberId_date: {
+          memberId: acting.id,
+          date,
+        },
+      },
+    });
+
+    if (existing) {
+      await db.dayOff.delete({ where: { id: existing.id } });
+      return c.json({ active: false, dayOff: null });
+    }
+
+    const dayOff = await db.dayOff.create({
+      data: {
+        date,
+        memberId: acting.id,
+      },
+    });
+
+    return c.json({ active: true, dayOff });
+  },
+);
 
 app.get("/monthly-worked-days", async (c) => {
   const acting = await resolveActingMember(c);

@@ -2,24 +2,21 @@
 export const prerender = false;
 
 import Layout from "@/layouts/Layout.astro";
-import Calendar from "@/components/calendar/Calendar.astro";
 import MemberSelector from "@/components/islands/member/MemberSelector";
-import { db } from "@/lib/db";
+import TeamCalendarWithProvider from "@/components/islands/calendar/TeamCalendarWithProvider";
 
-const selectedMemberId = Astro.cookies.get("selectedMemberId")?.value;
-
-const selectedMember = selectedMemberId 
-   ? await db.member.findUnique({
-      where: { id: selectedMemberId },
-      include: { teams: true },
-   })
-   : null;
+const selectedMember =
+   Astro.locals.member && !Astro.locals.member.archived
+      ? Astro.locals.member
+      : null;
 ---
 
-<Layout>
+<Layout title="Calendrier d'équipe">
    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white">Dashboard</h1>
-      <p class="text-slate-400 mt-1">Vue d'ensemble de votre planning d'équipe</p>
+      <h1 class="text-3xl font-bold text-white">Calendrier d'équipe</h1>
+      <p class="text-slate-400 mt-1">
+         Consultez et gérez vos jours de repos sur l'année.
+      </p>
    </div>
 
    {!selectedMember && (
@@ -29,9 +26,9 @@ const selectedMember = selectedMemberId
    )}
 
    {selectedMember && (
-      <div class="mb-8 flex items-center justify-between rounded-lg bg-slate-700 px-4 py-3">
-        Yooo
-      </div>
-    )}
-    
+      <TeamCalendarWithProvider
+         actingMemberName={selectedMember.name}
+         client:load
+      />
+   )}
 </Layout> 

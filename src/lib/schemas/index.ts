@@ -19,6 +19,7 @@ import {
   parseListPagination,
 } from "./pagination";
 import { UpsertMonthlyWorkedDaysSchema } from "./monthly-worked-days";
+import { ToggleDayOffSchema } from "./day-off";
 
 export type CreateMemberInput = z.infer<typeof CreateMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof UpdateMemberSchema>;
@@ -36,3 +37,4 @@ export type MaxListPageSize = typeof MAX_LIST_PAGE_SIZE;
 export type UpsertMonthlyWorkedDaysInput = z.infer<
   typeof UpsertMonthlyWorkedDaysSchema
 >;
+export type ToggleDayOffInput = z.infer<typeof ToggleDayOffSchema>;
