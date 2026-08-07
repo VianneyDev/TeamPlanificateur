@@ -5,14 +5,9 @@ export function normalizeWorkedDaysInput(raw: string): string {
   return raw.replace(/^0+(?=\d)/, "");
 }
 
-/** Clear default zero on focus so the next digits are not prefixed. */
-export function daysInputAfterFocus(current: string): string {
-  return current === "0" ? "" : current;
-}
-
-/** Restore zero when the field is left blank after focus. */
-export function daysInputAfterBlur(current: string): string {
-  return current.trim() === "" ? "0" : current;
+/** True when the visible value is a lone zero that must be replaced, not edited around. */
+export function shouldReplaceDaysInputValue(current: string): boolean {
+  return current === "0";
 }
 
 const MONTH_LABELS_FR = [

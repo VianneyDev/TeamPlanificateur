@@ -1,20 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
-  daysInputAfterBlur,
-  daysInputAfterFocus,
   normalizeWorkedDaysInput,
+  shouldReplaceDaysInputValue,
 } from "@/lib/monthly-worked-days-ui";
 
 describe("normalizeWorkedDaysInput", () => {
-  it("keeps an empty string so the field can be cleared while typing", () => {
+  it("keeps an empty string so the field can stay blank with a placeholder", () => {
     expect(normalizeWorkedDaysInput("")).toBe("");
   });
 
-  it("keeps a lone zero", () => {
+  it("keeps a lone zero when the user intentionally types zero", () => {
     expect(normalizeWorkedDaysInput("0")).toBe("0");
   });
 
-  it("strips a leading zero so typing 10 after a default 0 does not show 010", () => {
+  it("strips a leading zero so 010 becomes 10", () => {
     expect(normalizeWorkedDaysInput("010")).toBe("10");
     expect(normalizeWorkedDaysInput("01")).toBe("1");
   });
@@ -25,23 +24,13 @@ describe("normalizeWorkedDaysInput", () => {
   });
 });
 
-describe("daysInputAfterFocus", () => {
-  it("clears a default zero so the next keystrokes are not prefixed", () => {
-    expect(daysInputAfterFocus("0")).toBe("");
+describe("shouldReplaceDaysInputValue", () => {
+  it("flags a lone zero so focus/mouseup can clear it before the next keystroke", () => {
+    expect(shouldReplaceDaysInputValue("0")).toBe(true);
   });
 
-  it("keeps a non-zero value for correction", () => {
-    expect(daysInputAfterFocus("10")).toBe("10");
-  });
-});
-
-describe("daysInputAfterBlur", () => {
-  it("restores zero when the field is left empty", () => {
-    expect(daysInputAfterBlur("")).toBe("0");
-    expect(daysInputAfterBlur("   ")).toBe("0");
-  });
-
-  it("keeps a typed value", () => {
-    expect(daysInputAfterBlur("10")).toBe("10");
+  it("leaves empty and non-zero values alone", () => {
+    expect(shouldReplaceDaysInputValue("")).toBe(false);
+    expect(shouldReplaceDaysInputValue("10")).toBe(false);
   });
 });
