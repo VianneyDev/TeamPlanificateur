@@ -14,18 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/islands/ui/dialog";
-import type { Member, Team } from "@/lib/types";
+import type { Member } from "@/lib/types";
 import { useArchiveMember } from "@/hooks/members/useArchiveMember";
 import { useRestoreMember } from "@/hooks/members/useRestoreMember";
 
 interface MemberRowActionsProps {
-  teams: Team[];
   member: Member;
   onEdit: (member: Member) => void;
 }
 
 export default function MemberRowActions({
-  teams,
   member,
   onEdit,
 }: MemberRowActionsProps) {
