@@ -12,4 +12,4 @@ API tests hit a real Postgres via Prisma. Running them against the local `.env` 
 
 Vitest loads `.env.test` in `tests/setup-env.ts` (not `.env`). The setup fails fast if `.env.test` is missing or targets the same Neon endpoint as `.env`. `pnpm db:migrate:test` uses `scripts/load-env-test.mjs` with `override: true` so a shell `DATABASE_URL` cannot accidentally point migrate at dev. Do not commit `.env.test`.
 
-CI ephemeral branches are out of scope; this is a local stable test branch only.
+Locally, keep using this **stable** dedicated test branch. CI uses a separate **ephemeral** Neon branch per PR (create on open/sync, delete on close) - see `.github/workflows/ci.yml` and the README CI section.
