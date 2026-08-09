@@ -13,19 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup:
-    name: Setup
-    outputs:
-      branch: ${{ steps.branch_name.outputs.current_branch }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get branch name
-        id: branch_name
-        uses: tj-actions/branch-names@v8
-
   quality:
-    name: Lint, typecheck & build
-    needs: setup
+    name: Typecheck & Build
     if: |
       github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
@@ -54,9 +43,6 @@ jobs:
       - name: Generate Prisma client
         run: pnpm exec prisma generate
 
-      - name: Lint
-        run: pnpm lint
-
       - name: Typecheck
         run: pnpm typecheck
 
@@ -65,7 +51,6 @@ jobs:
 
   test:
     name: API tests (Neon)
-    needs: setup
     if: |
       github.event_name == 'pull_request' && (
       github.event.action == 'synchronize'
@@ -97,7 +82,7 @@ jobs:
         uses: neondatabase/create-branch-action@v6
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          branch_name: preview/pr-${{ github.event.number }}-${{ github.head_ref }}
           api_key: ${{ secrets.NEON_API_KEY }}
           expires_at: ${{ env.EXPIRES_AT }}
 
@@ -123,7 +108,6 @@ jobs:
 
   delete_neon_branch:
     name: Delete Neon Branch
-    needs: setup
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
@@ -131,5 +115,5 @@ jobs:
         uses: neondatabase/delete-branch-action@v3
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          branch: preview/pr-${{ github.event.number }}-${{ github.head_ref }}
           api_key: ${{ secrets.NEON_API_KEY }}

@@ -40,7 +40,7 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm preview`         | Preview your build locally, before deploying     |
 | `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI                     |
-| `pnpm lint` / `pnpm typecheck` | TypeScript check (`tsc --noEmit`; no separate ESLint yet) |
+| `pnpm typecheck`       | TypeScript check (`tsc --noEmit`)                |
 | `pnpm test` / `pnpm test:api` | Run Vitest (API tests against Neon test branch) |
 | `pnpm db:migrate:test` | Apply Prisma migrations to the Neon test branch  |
 
@@ -48,7 +48,7 @@ All commands are run from the root of the project, from a terminal:
 
 PRs run [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
-1. **Lint / typecheck / build** (no database) - `pnpm lint`, `pnpm typecheck`, `pnpm build`
+1. **Typecheck & build** (no database) - `pnpm typecheck`, `pnpm build`
 2. **API tests** - create an ephemeral Neon branch `preview/pr-<number>-<branch>`, apply Prisma migrations with the **direct (unpooled)** connection string, then `pnpm test`
 3. **Cleanup** - on PR close, delete that Neon branch (required to stay under Neon branch quotas)
 
