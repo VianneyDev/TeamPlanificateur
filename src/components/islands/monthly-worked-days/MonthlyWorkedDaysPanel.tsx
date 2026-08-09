@@ -61,8 +61,11 @@ export default function MonthlyWorkedDaysPanel({
 
   const { mutate, isPending } = useUpsertMonthlyWorkedDays();
 
-  const rows = data?.data ?? [];
-  const externals = externalsData?.data ?? [];
+  const rows = useMemo(() => data?.data ?? [], [data?.data]);
+  const externals = useMemo(
+    () => externalsData?.data ?? [],
+    [externalsData?.data],
+  );
 
   const monthOptions = useMemo(() => {
     const byKey = new Map(

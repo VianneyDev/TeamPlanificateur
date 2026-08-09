@@ -241,7 +241,6 @@ export default function MembersPanel({
 
                     <td className="px-4 py-3 text-right">
                       <MemberRowActions
-                        teams={teams}
                         member={member}
                         onEdit={(member: Member) => setEditingMember(member)}
                       />
