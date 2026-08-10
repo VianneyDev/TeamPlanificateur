@@ -11,9 +11,9 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
-    // Prebundle island deps at startup so Vite does not re-optimize mid-session
-    // when MemberSelector (logout gate) first loads Radix/Select - that race
-    // 404s stale chunk-*.js and leaves the island unhydrated.
+    // Prebundle island client deps at startup. Astro loads islands dynamically,
+    // so Vite cannot discover these imports during the initial dep crawl and
+    // would otherwise re-optimize mid-session (stale chunk 404s, failed hydration).
     optimizeDeps: {
       include: [
         "@radix-ui/react-dialog",
