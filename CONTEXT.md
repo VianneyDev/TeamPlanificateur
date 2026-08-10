@@ -17,7 +17,7 @@ A Member with role `manager`. Administers all Teams and Members in the organisat
 _Avoid_: Admin (UI may say « admin » colloquially; the domain term is Manager)
 
 **External Member**:
-A Member flagged `isExternal`. Declares their own Monthly Worked Days and Day Offs (self-service); other Managers may correct. Compatible with role `manager` (a Manager External has both admin powers and their own declarations).
+A Member flagged `isExternal`. Declares their own Monthly Worked Days (self-service); other Managers may correct. Day Offs follow the same V2 rules as other Members (Leave Request if non-manager; Manager bypass if role is manager). Compatible with role `manager` (a Manager External has both admin powers and their own declarations).
 _Avoid_: Contractor, freelance (unless those labels become explicit product concepts later)
 
 **Team**:
@@ -29,11 +29,15 @@ A soft-removed state on a Member or Team. Archived Members and Teams stay in Ges
 _Avoid_: Deleted (hard delete is a separate, rarer operation — Teams can be deleted; Members are archived)
 
 **Day Off**:
-A full calendar day on which a Member is not working, with no leave category. Owned by that Member; any Manager may create or change it. Created or removed one day at a time or as a contiguous date range (range applies a homogeneous toggle: if every day in the range is already a Day Off, clear all; otherwise set all to Day Off). On the Team Calendar, visible to Members who share at least one Team with the owner (Managers see the whole organisation).
-_Avoid_: Leave, vacation, PTO, half-day (demi-journée is not a Day Off in this model)
+A full calendar day on which a Member is not working, with no leave category. Owned by that Member. Represents an **effective** absence only: created when a Manager approves a Leave Request, or created/changed directly by any Manager (admin correction, immediate). Non-manager Members do not create Day Offs themselves; they may clear their own Day Offs freely (V2). On the Team Calendar, visible to Members who share at least one Team with the owner (Managers see the whole organisation).
+_Avoid_: Leave, vacation, PTO, half-day (demi-journée is not a Day Off in this model), pending request (that is a Leave Request)
+
+**Leave Request**:
+A Member's submitted request to take one or more full calendar days off. Created by a non-manager Acting Member after confirming a selection (CTA). Awaited by any Manager, who may approve or reject the request **as a whole** (no partial dates; no reject reason in V2). Approval materializes Day Offs for all requested dates; rejection creates none. Approval must not materialize Day Offs if the requesting Member is Archived at decision time. The requesting Member may withdraw a pending Leave Request freely. Distinct from a Day Off: a pending request is not yet an effective absence. On the Team Calendar, pending requests use a distinct style and are visible only to the requesting Member and to Managers — not to other Members. Feedback is in-app only (request lists + calendar state); no email/push.
+_Avoid_: Day Off, draft selection (unsubmitted UI state is not persisted as a Leave Request until the Member confirms), notification
 
 **Team Calendar**:
-The monthly view of Day Offs (navigate month by month). For a non-manager, the union of Day Offs of Members in their Teams. For a Manager, Day Offs across the organisation. The Acting Member's Day Offs are primary in each cell; other Members' Day Offs appear secondary.
+The monthly view of Day Offs (navigate month by month). For a non-manager, the union of Day Offs of Members in their Teams. For a Manager, Day Offs across the organisation. The Acting Member's Day Offs are primary in each cell; other Members' Day Offs appear secondary and **nominative** (who is off is visible, not only that someone is off). Pending Leave Requests appear with a distinct style for the requester and for Managers only. Weekends (Saturday, Sunday) are shown but not selectable; range selection and day counts skip them. Leave Request / Day Off writes reject weekend dates (V2).
 _Avoid_: Org calendar, global calendar (Managers see org-wide; that is still the Team Calendar surface, not a separate product concept)
 
 **Monthly Worked Days**:
