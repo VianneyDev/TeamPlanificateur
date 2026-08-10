@@ -11,5 +11,20 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
+    // Prebundle island client deps at startup. Astro loads islands dynamically,
+    // so Vite cannot discover these imports during the initial dep crawl and
+    // would otherwise re-optimize mid-session (stale chunk 404s, failed hydration).
+    optimizeDeps: {
+      include: [
+        "@radix-ui/react-dialog",
+        "@radix-ui/react-select",
+        "@tanstack/react-query",
+        "clsx",
+        "lucide-react",
+        "radix-ui",
+        "sonner",
+        "tailwind-merge",
+      ],
+    },
   },
 });
