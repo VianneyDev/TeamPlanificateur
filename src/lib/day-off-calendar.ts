@@ -6,6 +6,18 @@ export type DayOffCellMembers = {
   others: { id: string; name: string }[];
 };
 
+/** Initials for nominative secondary Day Off chips on the Team Calendar. */
+export function memberInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toLocaleUpperCase("fr-FR");
+  }
+  const first = parts[0][0] ?? "";
+  const last = parts[parts.length - 1][0] ?? "";
+  return `${first}${last}`.toLocaleUpperCase("fr-FR");
+}
+
 /** Group list Day Offs by calendar date for Team Calendar cells. */
 export function groupDayOffsByDate(
   daysOff: DayOff[],

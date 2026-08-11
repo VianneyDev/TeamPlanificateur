@@ -7,7 +7,10 @@ import {
   currentYearMonth,
   shiftMonth,
 } from "@/lib/calendar/month-navigation";
-import { groupDayOffsByDate } from "@/lib/day-off-calendar";
+import {
+  groupDayOffsByDate,
+  memberInitials,
+} from "@/lib/day-off-calendar";
 import {
   enumerateWeekdayDates,
   isWeekendDate,
@@ -269,7 +272,7 @@ export default function TeamCalendar({
             className="size-3 rounded-sm bg-amber-500/70"
             aria-hidden="true"
           />
-          Autres membres
+          Autres membres (initiales)
         </span>
         {isManager && editTargetId !== actingMemberId && (
           <span className="inline-flex items-center gap-2">
@@ -407,12 +410,22 @@ export default function TeamCalendar({
                   inPreview ? "ring-2 ring-sky-300/80" : "",
                 ].join(" ")}
               >
-                {day}
+                <span className="relative z-10">{day}</span>
                 {secondary && (
                   <span
-                    className="absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full bg-amber-400"
+                    className="absolute inset-x-0.5 bottom-0.5 flex max-h-[42%] flex-wrap items-end justify-center gap-0.5 overflow-hidden"
                     aria-hidden="true"
-                  />
+                  >
+                    {others.map((member) => (
+                      <span
+                        key={member.id}
+                        title={member.name}
+                        className="rounded-[2px] bg-amber-500/90 px-0.5 text-[0.55rem] leading-tight font-semibold tracking-tight text-amber-950"
+                      >
+                        {memberInitials(member.name)}
+                      </span>
+                    ))}
+                  </span>
                 )}
               </button>
             );
