@@ -27,7 +27,7 @@ export default function PendingLeaveRequests({
       <div>
         <h2
           id="a-valider-heading"
-          className="text-lg font-semibold text-foreground"
+          className="text-base font-semibold text-foreground"
         >
           À valider
         </h2>
@@ -77,12 +77,12 @@ export default function PendingLeaveRequests({
             return (
               <li
                 key={request.id}
-                className="rounded-xl border border-border bg-card px-4 py-3"
+                className="rounded-lg border border-border bg-muted/40 px-4 py-3"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
-                      {memberName} — {request.dates.length} jour
+                      {memberName} - {request.dates.length} jour
                       {request.dates.length > 1 ? "s" : ""}
                     </p>
                     <p className="text-sm text-muted-foreground">{datesLabel}</p>
@@ -92,7 +92,7 @@ export default function PendingLeaveRequests({
                       type="button"
                       onClick={() => approve.mutate(request.id)}
                       disabled={decisionPending}
-                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-foreground transition hover:brightness-105 disabled:opacity-50"
+                      className="btn-primary"
                     >
                       Approuver
                     </button>
@@ -100,7 +100,7 @@ export default function PendingLeaveRequests({
                       type="button"
                       onClick={() => reject.mutate(request.id)}
                       disabled={decisionPending}
-                      className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
+                      className="btn-outline"
                     >
                       Refuser
                     </button>

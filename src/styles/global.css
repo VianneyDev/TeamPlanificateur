@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 @theme inline {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -45,9 +46,43 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Dark default — elevated ops chrome (readable density, one blue accent) */
 :root {
-  /* Canon enterprise dashboard: light, restrained, one blue accent */
   --radius: 0.5rem;
+  --background: #22252c;
+  --foreground: #f4f4f5;
+  --card: #2c3039;
+  --card-foreground: #f4f4f5;
+  --popover: #2c3039;
+  --popover-foreground: #f4f4f5;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #383d48;
+  --secondary-foreground: #f4f4f5;
+  --muted: #383d48;
+  --muted-foreground: #b8bcc6;
+  --accent: #2f3d5c;
+  --accent-foreground: #d2e0ff;
+  --destructive: #f87171;
+  --border: #454b58;
+  --input: #454b58;
+  --ring: #2563eb;
+  --chart-1: #2563eb;
+  --chart-2: #2dd4bf;
+  --chart-3: #fbbf24;
+  --chart-4: #a78bfa;
+  --chart-5: #fb7185;
+  --sidebar: #2c3039;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #383d48;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #454b58;
+  --sidebar-ring: #2563eb;
+}
+
+:root.light {
   --background: #f7f7f5;
   --foreground: #111111;
   --card: #ffffff;
@@ -101,15 +136,58 @@
 }
 
 .tab {
-  @apply px-4 py-2 text-sm font-medium text-muted-foreground border-b-2 border-transparent cursor-pointer transition;
+  @apply px-4 py-2.5 text-sm font-medium text-muted-foreground border-b-2 border-transparent cursor-pointer transition;
 }
 .tab:hover {
   @apply text-foreground border-border;
 }
 .tab-active {
-  @apply px-4 py-2 text-sm font-medium text-foreground border-b-2 border-primary cursor-pointer;
+  @apply px-4 py-2.5 text-sm font-medium text-foreground border-b-2 border-primary cursor-pointer;
 }
 
 .panel {
-  @apply rounded-lg border border-border bg-card shadow-sm;
+  @apply rounded-xl border border-border bg-card shadow-sm;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:brightness-110 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-40 disabled:pointer-events-none;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center rounded-md bg-red-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-800 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.filter-chip {
+  @apply px-3 py-1.5 rounded-md text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted;
+}
+.filter-chip-active {
+  @apply bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground hover:brightness-110;
+}
+
+.badge-archived {
+  @apply inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground;
+}
+
+.badge-role {
+  @apply inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground;
+}
+
+.badge-external {
+  @apply inline-flex items-center rounded-md border border-primary/25 bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground;
+}
+
+.field {
+  @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+}
+
+.pager-btn {
+  @apply inline-flex items-center justify-center rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-40 disabled:pointer-events-none;
 }

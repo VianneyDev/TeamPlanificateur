@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import MyLeaveRequests from "@/components/islands/calendar/MyLeaveRequests";
 import PendingLeaveRequests from "@/components/islands/calendar/PendingLeaveRequests";
@@ -40,7 +40,7 @@ const DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: "UTC",
 });
-const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
+const WEEKDAYS = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
 
 function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -161,6 +161,9 @@ export default function TeamCalendar({
   const monthLabel = MONTH_YEAR_FORMATTER.format(
     new Date(Date.UTC(year, month, 1)),
   );
+  const nowMonth = currentYearMonth();
+  const viewingCurrentMonth =
+    year === nowMonth.year && month === nowMonth.month;
 
   const mutationPending =
     toggle.isPending || createLeaveRequest.isPending;
@@ -263,9 +266,9 @@ export default function TeamCalendar({
           <div>
             <h2
               id="calendar-heading"
-              className="text-base font-semibold text-foreground"
+              className="text-base font-semibold capitalize text-foreground"
             >
-              Calendrier mensuel
+              {monthLabel}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {isManager ? (
@@ -290,28 +293,37 @@ export default function TeamCalendar({
             </p>
           </div>
 
-          <div className="flex items-center gap-1 self-start rounded-md border border-border bg-background p-0.5 sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setYearMonth((value) => shiftMonth(value, -1))}
-              className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
-              aria-label="Afficher le mois précédent"
-              disabled={mutationPending}
-            >
-              <ChevronLeft className="size-4" aria-hidden="true" />
-            </button>
-            <span className="min-w-36 text-center text-sm font-semibold capitalize text-foreground">
-              {monthLabel}
-            </span>
-            <button
-              type="button"
-              onClick={() => setYearMonth((value) => shiftMonth(value, 1))}
-              className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
-              aria-label="Afficher le mois suivant"
-              disabled={mutationPending}
-            >
-              <ChevronRight className="size-4" aria-hidden="true" />
-            </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {!viewingCurrentMonth && (
+              <button
+                type="button"
+                onClick={() => setYearMonth(currentYearMonth())}
+                disabled={mutationPending}
+                className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+              >
+                Aujourd&apos;hui
+              </button>
+            )}
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/50 p-0.5">
+              <button
+                type="button"
+                onClick={() => setYearMonth((value) => shiftMonth(value, -1))}
+                className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                aria-label="Afficher le mois précédent"
+                disabled={mutationPending}
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setYearMonth((value) => shiftMonth(value, 1))}
+                className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                aria-label="Afficher le mois suivant"
+                disabled={mutationPending}
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -357,7 +369,7 @@ export default function TeamCalendar({
                 type="button"
                 onClick={() => setDraftDates([])}
                 disabled={createLeaveRequest.isPending}
-                className="rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
+                className="btn-outline"
               >
                 Annuler
               </button>
@@ -365,7 +377,7 @@ export default function TeamCalendar({
                 type="button"
                 onClick={handleSubmitDraft}
                 disabled={createLeaveRequest.isPending}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
+                className="btn-primary"
               >
                 Demander {draftDates.length} jour
                 {draftDates.length > 1 ? "s" : ""}
@@ -386,6 +398,17 @@ export default function TeamCalendar({
             />
             Demande en attente
           </span>
+          {!isManager && (
+            <span className="inline-flex items-center gap-2">
+              <span
+                className="flex size-3 items-center justify-center rounded-sm border-2 border-primary bg-primary/20"
+                aria-hidden="true"
+              >
+                <span className="size-1 rounded-[1px] bg-primary" />
+              </span>
+              Sélection (à confirmer)
+            </span>
+          )}
           <span className="inline-flex items-center gap-2">
             <span
               className="size-3 rounded-sm bg-amber-500/80"
@@ -404,9 +427,11 @@ export default function TeamCalendar({
           )}
           <span className="inline-flex items-center gap-2">
             <span
-              className="size-3 rounded-sm border border-primary"
+              className="text-[0.65rem] font-semibold text-foreground underline decoration-primary decoration-2 underline-offset-2"
               aria-hidden="true"
-            />
+            >
+              11
+            </span>
             Aujourd&apos;hui
           </span>
           {(isLoading || isFetching) && (
@@ -430,7 +455,7 @@ export default function TeamCalendar({
           </div>
         )}
 
-        <article className="w-full rounded-lg border border-border bg-background p-3 sm:p-4">
+        <article className="w-full rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
           <div
             className="grid grid-cols-7 gap-1 select-none"
             aria-label={monthLabel}
@@ -447,7 +472,13 @@ export default function TeamCalendar({
 
             {days.map((day, index) => {
               if (day === null) {
-                return <span key={`empty-${index}`} aria-hidden="true" />;
+                return (
+                  <span
+                    key={`empty-${index}`}
+                    className="aspect-square rounded-md bg-muted/40"
+                    aria-hidden="true"
+                  />
+                );
               }
 
               const key = dateKey(year, month, day);
@@ -464,10 +495,27 @@ export default function TeamCalendar({
                 new Date(Date.UTC(year, month, day)),
               );
               const inPreview = previewWeekdays?.has(key) ?? false;
+              const isSelected = inDraft || inPreview;
               const otherNames = others.map((member) => member.name).join(", ");
               const selectionBlocked =
                 isLoading || Boolean(error) || mutationPending;
               const interactionBlocked = selectionBlocked || isWeekend;
+
+              const fillClass = isWeekend
+                ? "cursor-default bg-muted/80 text-muted-foreground disabled:opacity-100"
+                : isSelected
+                  ? primary
+                    ? "bg-primary text-primary-foreground shadow-sm ring-2 ring-primary-foreground/40"
+                    : "border-2 border-primary bg-primary/20 font-semibold text-foreground shadow-sm hover:bg-primary/25"
+                  : primary
+                    ? "bg-primary text-primary-foreground shadow-sm hover:brightness-105"
+                    : isPending
+                      ? "border border-dashed border-primary/40 bg-accent text-accent-foreground hover:bg-accent/80"
+                      : editTargetOff
+                        ? "bg-sky-600 text-white shadow-sm hover:bg-sky-500"
+                        : secondary
+                          ? "bg-amber-500/20 text-amber-100 hover:bg-amber-500/30 light:bg-amber-100 light:text-amber-950 light:hover:bg-amber-200"
+                          : "bg-card text-foreground hover:bg-muted";
 
               return (
                 <button
@@ -480,7 +528,13 @@ export default function TeamCalendar({
                   onPointerEnter={() => handlePointerEnter(key)}
                   disabled={interactionBlocked}
                   aria-disabled={interactionBlocked}
-                  aria-pressed={isWeekend ? undefined : editTargetOff}
+                  aria-pressed={
+                    isWeekend
+                      ? undefined
+                      : isManager
+                        ? editTargetOff
+                        : inDraft
+                  }
                   aria-label={[
                     isWeekend
                       ? `Week-end le ${formattedDate}, non sélectionnable`
@@ -489,6 +543,12 @@ export default function TeamCalendar({
                         : isPending
                           ? `Demande en attente pour ${actingMemberName} le ${formattedDate}`
                           : `Jour ouvrable le ${formattedDate}`,
+                    !isWeekend && isSelected
+                      ? isManager
+                        ? "inclus dans la plage en cours"
+                        : "sélectionné pour la demande, à confirmer"
+                      : null,
+                    !isWeekend && isToday ? "aujourd'hui" : null,
                     !isWeekend && secondary
                       ? `aussi en repos : ${otherNames}`
                       : null,
@@ -522,22 +582,31 @@ export default function TeamCalendar({
                     selectionBlocked && !isWeekend
                       ? "disabled:cursor-wait disabled:opacity-60"
                       : "",
-                    isWeekend
-                      ? "cursor-default bg-muted text-muted-foreground disabled:opacity-100"
-                      : primary
-                        ? "bg-primary text-primary-foreground shadow-sm hover:brightness-105"
-                        : isPending
-                          ? "border border-dashed border-primary/40 bg-accent text-accent-foreground hover:bg-accent/80"
-                          : editTargetOff
-                            ? "bg-sky-600 text-white shadow-sm hover:bg-sky-500"
-                            : secondary
-                              ? "bg-amber-100 text-amber-950 hover:bg-amber-200"
-                              : "text-foreground hover:bg-muted",
-                    isToday ? "ring-1 ring-primary ring-offset-1 ring-offset-background" : "",
-                    inPreview || inDraft ? "ring-2 ring-primary/50" : "",
+                    fillClass,
+                    isToday && !isSelected ? "font-semibold" : "",
                   ].join(" ")}
                 >
-                  <span className="relative z-10">{day}</span>
+                  <span
+                    className={[
+                      "relative z-10",
+                      isToday
+                        ? "underline decoration-primary decoration-2 underline-offset-[3px]"
+                        : "",
+                      isToday && (primary || isSelected)
+                        ? "decoration-primary-foreground/90"
+                        : "",
+                    ].join(" ")}
+                  >
+                    {day}
+                  </span>
+                  {isSelected && !primary && !isWeekend && (
+                    <span
+                      className="absolute top-0.5 right-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm"
+                      aria-hidden="true"
+                    >
+                      <Check className="size-2.5 stroke-[3]" />
+                    </span>
+                  )}
                   {secondary && (
                     <span
                       className="absolute inset-x-0.5 bottom-0.5 flex max-h-[42%] flex-wrap items-end justify-center gap-0.5 overflow-hidden"

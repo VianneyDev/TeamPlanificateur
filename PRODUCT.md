@@ -47,6 +47,7 @@ Single-organisation internal planning: shared Team Calendar (nominative Day Offs
 - Domain terms from `CONTEXT.md` must not be replaced by avoided synonyms unless the glossary is updated.
 - **Visual stance (binding):** enterprise **Operate dashboard** - clean, restrained, familiar to anyone who has used modern internal tools. Do not pursue fantastical, metaphorical, or high-concept art directions (paper roster worlds, teletext, transit murals, arcade, etc.). Recruiter-safe: the first viewport should feel like a serious product, not a design stunt.
 - Prefer clarity, hierarchy, and craft over novelty. Expression lives in precise spacing, type, and state - not in a gimmick.
+- **Theme:** dark by default (ops chrome), with an explicit light-mode toggle. Both themes must stay sober and consistent.
 - **Craft bar:** sit alongside **Linear** and **Notion** in finish quality (hierarchy, density, calm chrome) - not as visual clones.
 - Category path: **canon** (standard dashboard ops), executed at full fidelity.
 - No separate brand kit beyond the in-app wordmark.

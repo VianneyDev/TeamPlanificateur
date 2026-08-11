@@ -25,34 +25,25 @@ interface TeamRowActionsProps {
 }
 
 export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
-  const { mutate: archive } = useArchiveTeam();
-  const { mutate: restore } = useRestoreTeam();
-  const { mutate: remove } = useDeleteTeam();
+  const { mutate: archive, isPending: isArchiving } = useArchiveTeam();
+  const { mutate: restore, isPending: isRestoring } = useRestoreTeam();
+  const { mutate: remove, isPending: isDeleting } = useDeleteTeam();
   const [confirmAction, setConfirmAction] = useState<
     "archive" | "restore" | "delete" | null
   >(null);
 
-  const handleArchive = () => {
-    archive(team.id);
-    setConfirmAction(null);
-  };
-
-  const handleRestore = () => {
-    restore(team.id);
-    setConfirmAction(null);
-  };
-
-  const handleDelete = () => {
-    remove(team.id);
-    setConfirmAction(null);
-  };
+  const decisionPending = isArchiving || isRestoring || isDeleting;
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button>
-            <MoreHorizontal size={18} />
+          <button
+            type="button"
+            className="btn-ghost size-8 p-0"
+            aria-label={`Actions pour ${team.name}`}
+          >
+            <MoreHorizontal size={18} aria-hidden />
           </button>
         </DropdownMenuTrigger>
 
@@ -73,7 +64,10 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
             </DropdownMenuItem>
           )}
 
-          <DropdownMenuItem onClick={() => setConfirmAction("delete")}>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => setConfirmAction("delete")}
+          >
             Supprimer
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -81,29 +75,35 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
 
       <Dialog
         open={confirmAction === "archive"}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+        onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="bg-card">
           <DialogHeader>
             <DialogTitle>Archiver cette équipe ?</DialogTitle>
             <DialogDescription>
-              L’équipe sera archivée et n’apparaîtra plus dans la liste active.
+              L’équipe quittera la liste active. Vous pourrez la restaurer plus
+              tard.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"
-              className="px-3 py-2 rounded border border-border hover:bg-muted"
+              className="btn-outline"
+              disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-foreground"
-              onClick={handleArchive}
+              className="btn-primary"
+              disabled={decisionPending}
+              aria-busy={isArchiving}
+              onClick={() =>
+                archive(team.id, { onSuccess: () => setConfirmAction(null) })
+              }
             >
-              Archiver
+              {isArchiving ? "Archivage…" : "Archiver"}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -111,29 +111,34 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
 
       <Dialog
         open={confirmAction === "restore"}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+        onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="bg-card">
           <DialogHeader>
             <DialogTitle>Restaurer cette équipe ?</DialogTitle>
             <DialogDescription>
               L’équipe réapparaîtra dans la liste des équipes actives.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"
-              className="px-3 py-2 rounded border border-border hover:bg-muted"
+              className="btn-outline"
+              disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-muted hover:bg-muted"
-              onClick={handleRestore}
+              className="btn-primary"
+              disabled={decisionPending}
+              aria-busy={isRestoring}
+              onClick={() =>
+                restore(team.id, { onSuccess: () => setConfirmAction(null) })
+              }
             >
-              Restaurer
+              {isRestoring ? "Restauration…" : "Restaurer"}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -141,30 +146,35 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
 
       <Dialog
         open={confirmAction === "delete"}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+        onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="bg-card">
           <DialogHeader>
             <DialogTitle>Supprimer cette équipe ?</DialogTitle>
             <DialogDescription>
-              Cette action est définitive. Impossible si des membres actifs
-              n’auraient plus d’équipe.
+              Action définitive. Impossible si des membres actifs n’auraient
+              plus d’équipe.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"
-              className="px-3 py-2 rounded border border-border hover:bg-muted"
+              className="btn-outline"
+              disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-foreground"
-              onClick={handleDelete}
+              className="btn-danger"
+              disabled={decisionPending}
+              aria-busy={isDeleting}
+              onClick={() =>
+                remove(team.id, { onSuccess: () => setConfirmAction(null) })
+              }
             >
-              Supprimer
+              {isDeleting ? "Suppression…" : "Supprimer"}
             </button>
           </DialogFooter>
         </DialogContent>

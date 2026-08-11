@@ -30,7 +30,7 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
       <div>
         <h2
           id="mes-demandes-heading"
-          className="text-lg font-semibold text-foreground"
+          className="text-base font-semibold text-foreground"
         >
           Mes demandes
         </h2>
@@ -78,13 +78,13 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
             return (
               <li
                 key={request.id}
-                className="rounded-xl border border-border bg-card px-4 py-3"
+                className="rounded-lg border border-border bg-muted/40 px-4 py-3"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-foreground">
                       {request.dates.length} jour
-                      {request.dates.length > 1 ? "s" : ""} —{" "}
+                      {request.dates.length > 1 ? "s" : ""} -{" "}
                       {STATUS_LABELS[status] ?? status}
                     </p>
                     <p className="text-sm text-muted-foreground">{datesLabel}</p>
@@ -94,7 +94,7 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
                       type="button"
                       onClick={() => withdraw.mutate(request.id)}
                       disabled={withdraw.isPending}
-                      className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
+                      className="btn-outline"
                     >
                       Retirer
                     </button>

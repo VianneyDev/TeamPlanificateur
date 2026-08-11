@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
@@ -58,6 +58,7 @@ export default function TeamsPanel({
     "active",
     initialTeamsStatus,
   );
+  const [createOpen, setCreateOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamsPage, setTeamsPage] = useQueryState(
     "teamsPage",
@@ -91,7 +92,7 @@ export default function TeamsPanel({
   const statusTyped = teamsStatus as TeamStatus;
   const pageNumber = Number(teamsPage);
 
-  const { data, isLoading, isFetching, error } = useTeams({
+  const { data, isLoading, isFetching, error, refetch } = useTeams({
     status: statusTyped,
     page: pageNumber,
     search: debouncedSearch,
@@ -109,47 +110,63 @@ export default function TeamsPanel({
   const overlayRowCount = Math.max(1, teamsList.length);
 
   return (
-    <div className="bg-card border border-border rounded-lg">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground shrink-0">Équipes</h2>
+    <div className="panel overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:gap-3 sm:p-5">
+        <h2 className="sr-only">Équipes</h2>
 
-        <div className="flex min-w-0 justify-center px-2">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-muted py-2 pl-3 pr-9 rounded border border-border text-foreground placeholder:text-muted-foreground"
-            />
-            {searchInput.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput("");
-                  flushSearch();
-                }}
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                aria-label="Effacer la recherche"
-              >
-                <X size={16} strokeWidth={2} />
-              </button>
-            )}
-          </div>
+        <div className="relative min-w-0 flex-1 sm:max-w-md">
+          <input
+            type="search"
+            placeholder="Rechercher…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="field pr-9"
+            aria-label="Rechercher une équipe"
+          />
+          {searchInput.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput("");
+                flushSearch();
+              }}
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Effacer la recherche"
+            >
+              <X size={16} strokeWidth={2} />
+            </button>
+          )}
         </div>
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-          <TeamModal />
-        </div>
+        <button
+          type="button"
+          className="btn-primary w-full gap-1.5 sm:ml-auto sm:w-auto"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus size={16} aria-hidden />
+          Nouvelle équipe
+        </button>
       </div>
 
       {error && (
-        <div className="px-4 py-3 text-sm text-red-400 border-b border-border">
-          Erreur lors du chargement des équipes
+        <div
+          role="alert"
+          className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+        >
+          <span className="text-sm text-destructive">
+            Impossible de charger les équipes.
+          </span>
+          <button
+            type="button"
+            className="btn-outline shrink-0"
+            onClick={() => refetch()}
+          >
+            Réessayer
+          </button>
         </div>
       )}
 
-      <div className="flex gap-1 p-2 border-b border-border">
+      <div className="flex flex-wrap gap-1 border-b border-border p-2 sm:px-3">
         {STATUS_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -164,24 +181,31 @@ export default function TeamsPanel({
                 { key: "teamsPage", value: "1", defaultValue: "1" },
               ]);
             }}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              teamsStatus === opt.value
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:text-muted-foreground hover:bg-muted"
-            }`}
+            className={`filter-chip ${teamsStatus === opt.value ? "filter-chip-active" : ""}`}
+            aria-pressed={teamsStatus === opt.value}
           >
             {opt.label}
           </button>
         ))}
       </div>
 
-      <div className="relative">
+      <div className="relative overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 text-left">Nom</th>
-              <th className="px-4 py-3 text-left">Membres</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+          <caption className="sr-only">Liste des équipes</caption>
+          <thead>
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
+                Nom
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
+                Membres
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-right font-medium sm:px-5"
+              >
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
 
@@ -192,11 +216,21 @@ export default function TeamsPanel({
               <>
                 {teamsList.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={3}
-                      className="px-4 py-6 text-center text-muted-foreground"
-                    >
-                      Aucune équipe trouvée
+                    <td colSpan={3} className="px-4 py-10 sm:px-5">
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          Aucune équipe pour ce filtre. Créez une équipe pour y
+                          rattacher des membres.
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-primary gap-1.5"
+                          onClick={() => setCreateOpen(true)}
+                        >
+                          <Plus size={16} aria-hidden />
+                          Nouvelle équipe
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -204,23 +238,22 @@ export default function TeamsPanel({
                 {teamsList.map((team: Team) => (
                   <tr
                     key={team.id}
-                    className="border-t border-border hover:bg-muted/40"
+                    className="border-b border-border last:border-b-0 hover:bg-muted/35"
                   >
-                    <td className="px-4 py-3 text-foreground">
-                      {team.name}
-
-                      {team.archived && (
-                        <span className="ml-2 text-xs bg-red-900 text-red-300 px-2 py-1 rounded">
-                          Archivé
-                        </span>
-                      )}
+                    <td className="px-4 py-3 text-foreground sm:px-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{team.name}</span>
+                        {team.archived && (
+                          <span className="badge-archived">Archivée</span>
+                        )}
+                      </div>
                     </td>
 
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <td className="px-4 py-3 tabular-nums text-muted-foreground sm:px-5">
                       {team._count.members ?? 0}
                     </td>
 
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right sm:px-5">
                       <TeamRowActions
                         team={team}
                         onEdit={(team: Team) => setEditingTeam(team)}
@@ -235,10 +268,10 @@ export default function TeamsPanel({
 
         {showFetchingOverlay && (
           <div
-            className="absolute left-0 right-0 bottom-0 top-12 z-10 overflow-hidden bg-card/45 backdrop-blur-[1px] pointer-events-none"
+            className="pointer-events-none absolute bottom-0 left-0 right-0 top-10 z-10 overflow-hidden bg-card/50 backdrop-blur-[1px]"
             aria-hidden
           >
-            <table className="w-full text-sm table-fixed">
+            <table className="w-full table-fixed text-sm">
               <tbody>
                 <TeamsTableSkeletonBody rows={overlayRowCount} />
               </tbody>
@@ -246,6 +279,12 @@ export default function TeamsPanel({
           </div>
         )}
       </div>
+
+      <TeamModal
+        mode="create"
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+      />
 
       {editingTeam && (
         <TeamModal
@@ -256,40 +295,44 @@ export default function TeamsPanel({
         />
       )}
 
-      <div className="flex justify-between p-4">
-        <button
-          type="button"
-          disabled={pageNumber <= 1 || isLoading}
-          onClick={() =>
-            setTeamsPage((p) => String(Math.max(1, Number(p) - 1)))
-          }
-          className={pageNumber <= 1 ? "cursor-not-allowed" : "cursor-pointer"}
-        >
-          Précédent
-        </button>
+      {(isLoading || teamsList.length > 0 || pageNumber > 1) && (
+        <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3 sm:px-5">
+          <button
+            type="button"
+            disabled={pageNumber <= 1 || isLoading}
+            onClick={() =>
+              setTeamsPage((p) => String(Math.max(1, Number(p) - 1)))
+            }
+            className="pager-btn"
+          >
+            Précédent
+          </button>
 
-        <span>
-          Page {pagination?.page} / {pagination?.totalPages}
-        </span>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination?.page ?? pageNumber} /{" "}
+            {pagination?.totalPages ?? "—"}
+            {pagination?.total != null ? (
+              <span className="tabular-nums">
+                {" "}
+                · {pagination.total} équipe{pagination.total > 1 ? "s" : ""}
+              </span>
+            ) : null}
+          </span>
 
-        <button
-          type="button"
-          disabled={
-            isLoading ||
-            (pagination?.totalPages != null &&
-              pageNumber >= pagination.totalPages)
-          }
-          onClick={() => setTeamsPage((p) => String(Number(p) + 1))}
-          className={
-            pagination?.totalPages != null &&
-            pageNumber >= pagination.totalPages
-              ? "cursor-not-allowed"
-              : "cursor-pointer"
-          }
-        >
-          Suivant
-        </button>
-      </div>
+          <button
+            type="button"
+            disabled={
+              isLoading ||
+              (pagination?.totalPages != null &&
+                pageNumber >= pagination.totalPages)
+            }
+            onClick={() => setTeamsPage((p) => String(Number(p) + 1))}
+            className="pager-btn"
+          >
+            Suivant
+          </button>
+        </div>
+      )}
     </div>
   );
 }

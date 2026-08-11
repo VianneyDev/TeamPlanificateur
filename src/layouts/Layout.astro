@@ -1,5 +1,6 @@
 ---
 import "@/styles/global.css";
+import ThemeToggle from "@/components/islands/ThemeToggle";
 
 const { title = "Planning équipe" } = Astro.props;
 const member = Astro.locals.member;
@@ -8,25 +9,42 @@ const isActive = (path: string) => pathname === path;
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="dark">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<script is:inline>
+			(function () {
+				try {
+					const t = localStorage.getItem("tpe-theme");
+					const root = document.documentElement;
+					if (t === "light") {
+						root.classList.add("light");
+						root.classList.remove("dark");
+					} else {
+						root.classList.add("dark");
+						root.classList.remove("light");
+					}
+				} catch {
+					document.documentElement.classList.add("dark");
+				}
+			})();
+		</script>
 	</head>
 	<body class="min-h-screen bg-background text-foreground">
 		<!--
 THESIS: Un dashboard entreprise familier où le mois et les demandes se lisent en un coup d’œil, sans spectacle.
-OWN-WORLD: Fond #f7f7f5, panels blancs, accent bleu #2563eb, top bar, split calendrier / file; system UI sans.
+OWN-WORLD: Dark-by-default ops chrome (#22252c / #2c3039), light toggle, accent bleu, top bar, split calendrier / file.
 STORY: Le visiteur (membre ou recruteur) comprend immédiatement TPE, navigue, et agit sur le planning.
-FIRST VIEWPORT: Top bar TPE + nav + Acting Member; sous la barre, calendrier ~65% et rail demandes ~35%.
-FORM: Canon enterprise dashboard · craft bar Linear + Notion · comp-b topnav-split.
+FIRST VIEWPORT: Top bar TPE + nav + thème + Acting Member; sous la barre, calendrier ~65% et rail demandes ~35%.
+FORM: Canon enterprise dashboard · craft bar Linear + Notion · comp-b topnav-split · dark default.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 		-->
-		<header class="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-			<div class="mx-auto flex h-14 max-w-[1400px] items-center gap-6 px-4 sm:px-6">
+		<header class="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75">
+			<div class="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:gap-6 sm:px-6">
 				<a href="/" class="shrink-0 leading-tight">
 					<span class="block text-sm font-semibold tracking-tight text-foreground">TPE</span>
 					<span class="block text-[0.65rem] text-muted-foreground">Team Planning Engine</span>
@@ -34,7 +52,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 				<nav class="flex flex-1 items-center gap-1 overflow-x-auto" aria-label="Navigation principale">
 					<a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
-						Dashboard
+						Calendrier
 					</a>
 					{
 						member && (member.isExternal || member.role === "manager") && (
@@ -56,38 +74,42 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 							</a>
 						) : (
 							<span
-								class="nav-item pointer-events-none opacity-40"
+								class="nav-item pointer-events-none opacity-50"
 								aria-disabled="true"
 								title="Accès réservé aux managers"
 							>
 								Gestion
+								<span class="sr-only"> (réservé aux managers)</span>
 							</span>
 						)
 					}
 				</nav>
 
-				{
-					member ? (
-						<div class="flex shrink-0 items-center gap-3 text-xs">
-							<div class="hidden text-right sm:block">
-								<div class="font-medium text-foreground">{member.name}</div>
-								<div class="text-muted-foreground max-w-40 truncate">
-									{member.teams?.length
-										? member.teams.map((t: { name: string }) => t.name).join(", ")
-										: "—"}
+				<div class="flex shrink-0 items-center gap-2 sm:gap-3">
+					<ThemeToggle client:load />
+					{
+						member ? (
+							<>
+								<div class="hidden text-right text-xs sm:block">
+									<div class="font-medium text-foreground">{member.name}</div>
+									<div class="max-w-40 truncate text-muted-foreground">
+										{member.teams?.length
+											? member.teams.map((t: { name: string }) => t.name).join(", ")
+											: "—"}
+									</div>
 								</div>
-							</div>
-							<form method="POST" action="/api/logout">
-								<button
-									type="submit"
-									class="rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground cursor-pointer"
-								>
-									Déconnexion
-								</button>
-							</form>
-						</div>
-					) : null
-				}
+								<form method="POST" action="/api/logout">
+									<button
+										type="submit"
+										class="rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground cursor-pointer"
+									>
+										Déconnexion
+									</button>
+								</form>
+							</>
+						) : null
+					}
+				</div>
 			</div>
 		</header>
 

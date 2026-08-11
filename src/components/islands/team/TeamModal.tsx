@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/islands/ui/dialog";
 import type { Team } from "@/lib/types";
@@ -16,8 +14,8 @@ import { useUpdateTeam } from "@/hooks/teams/useUpdateTeam";
 type TeamModalProps = {
   mode?: "create" | "update";
   team?: Team;
-  open?: boolean;
-  onClose?: () => void;
+  open: boolean;
+  onClose: () => void;
 };
 
 export default function TeamModal({
@@ -32,26 +30,26 @@ export default function TeamModal({
   const [name, setName] = useState("");
 
   useEffect(() => {
+    if (!open) return;
     if (mode === "update" && team) {
       setName(team.name);
       return;
     }
     setName("");
-  }, [mode, team]);
+  }, [mode, team, open]);
 
   const hasChanges = !team || name.trim() !== (team.name ?? "").trim();
-  const canSubmit = name.trim() && (mode !== "update" || hasChanges);
+  const canSubmit = Boolean(name.trim()) && (mode !== "update" || hasChanges);
   const isPending = isCreating || isUpdating;
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canSubmit || isPending) return;
+
     if (mode === "update" && team) {
       updateTeam(
         { id: team.id, data: { name: name.trim() } },
-        {
-          onSuccess: () => {
-            if (onClose) onClose();
-          },
-        },
+        { onSuccess: () => onClose() },
       );
       return;
     }
@@ -60,7 +58,7 @@ export default function TeamModal({
       { name: name.trim() },
       {
         onSuccess: () => {
-          if (onClose) onClose();
+          onClose();
           setName("");
         },
       },
@@ -71,46 +69,59 @@ export default function TeamModal({
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        if (!value && onClose) onClose();
+        if (!value && !isPending) onClose();
       }}
     >
-      {mode === "create" && (
-        <DialogTrigger asChild>
-          <button className="px-3 py-2 bg-muted rounded">
-            <Plus size={18} />
-          </button>
-        </DialogTrigger>
-      )}
-
-      <DialogContent>
+      <DialogContent className="bg-card">
         <DialogHeader>
           <DialogTitle>
             {mode === "update" ? "Modifier l’équipe" : "Nouvelle équipe"}
           </DialogTitle>
-          <DialogDescription>Entrez le nom de l’équipe.</DialogDescription>
+          <DialogDescription>
+            {mode === "update"
+              ? "Mettez à jour le nom de l’équipe."
+              : "Créez une équipe pour y rattacher des membres."}
+          </DialogDescription>
         </DialogHeader>
 
-        <input
-          className="w-full border rounded px-3 py-2 my-2"
-          placeholder="Nom de l’équipe"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <DialogFooter>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit || isPending}
-            className="bg-primary text-foreground px-4 py-2 rounded hover:brightness-95 transition-colors disabled:opacity-50"
-          >
-            {mode === "update"
-              ? isPending
-                ? "Enregistrement…"
-                : "Enregistrer"
-              : isPending
-                ? "Création…"
-                : "Créer"}
-          </button>
-        </DialogFooter>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium text-foreground">Nom</span>
+            <input
+              className="field"
+              placeholder="Nom de l’équipe"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              required
+            />
+          </label>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit || isPending}
+              className="btn-primary"
+              aria-busy={isPending}
+            >
+              {mode === "update"
+                ? isPending
+                  ? "Enregistrement…"
+                  : "Enregistrer"
+                : isPending
+                  ? "Création…"
+                  : "Créer"}
+            </button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

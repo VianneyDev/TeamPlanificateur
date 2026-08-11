@@ -14,49 +14,80 @@ const membersSearch = Astro.url.searchParams.get("search") ?? "";
 const teamsStatus = Astro.url.searchParams.get("teamsStatus") ?? "active";
 const teamsPage = Astro.url.searchParams.get("teamsPage") ?? "1";
 const teamsSearch = Astro.url.searchParams.get("teamsSearch") ?? "";
+
+const tabBlurb =
+	tab === "teams"
+		? "Créez et archivez les équipes auxquelles les membres sont rattachés."
+		: tab === "externes"
+			? "Membres externes : ils déclarent leurs jours travaillés mensuels (indépendants des jours de repos du calendrier)."
+			: "Gérez les membres internes, leurs rôles et leurs équipes.";
 ---
 
 <Layout title="Gestion d'équipe et membres">
-   <div class="mb-6">
-      <h1 class="text-2xl font-semibold tracking-tight text-foreground">Gestion</h1>
-      <p class="mt-1 text-sm text-muted-foreground">
-         Administration des équipes et des membres
-      </p>
-   </div>
+	<div class="mb-5">
+		<h1 class="text-2xl font-semibold tracking-tight text-foreground">Gestion</h1>
+	</div>
 
-   <div class="mb-6 flex gap-1 border-b border-border">
-      <a href="/gestion?tab=teams" class={`tab ${tab === "teams" ? "tab-active" : "tab"}`}>Équipes</a>
-      <a href="/gestion?tab=members" class={`tab ${tab === "members" ? "tab-active" : "tab"}`}>Membres</a>
-      <a href="/gestion?tab=externes" class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}>Externes</a>
-   </div>
+	<div class="mb-3 flex gap-1 border-b border-border" role="tablist" aria-label="Sections gestion">
+		<a
+			href="/gestion?tab=teams"
+			class={`tab ${tab === "teams" ? "tab-active" : "tab"}`}
+			role="tab"
+			aria-selected={tab === "teams"}
+		>
+			Équipes
+		</a>
+		<a
+			href="/gestion?tab=members"
+			class={`tab ${tab === "members" ? "tab-active" : "tab"}`}
+			role="tab"
+			aria-selected={tab === "members"}
+		>
+			Membres
+		</a>
+		<a
+			href="/gestion?tab=externes"
+			class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}
+			role="tab"
+			aria-selected={tab === "externes"}
+		>
+			Externes
+		</a>
+	</div>
 
-   <div class="panel p-4 sm:p-5">
-      {tab === "teams" &&
-         <TeamsPanelWithProvider
-            client:load
-            initialTeamsStatus={teamsStatus}
-            initialTeamsPage={teamsPage}
-            initialTeamsSearch={teamsSearch}
-         />
-      }
+	<p class="mb-5 max-w-2xl text-sm text-muted-foreground">{tabBlurb}</p>
 
-      {tab === "members" &&
-         <MembersPanelWithProvider
-            client:load
-            initialStatus={membersStatus}
-            initialPage={membersPage}
-            initialSearch={membersSearch}
-         />
-      }
+	{
+		tab === "teams" && (
+			<TeamsPanelWithProvider
+				client:load
+				initialTeamsStatus={teamsStatus}
+				initialTeamsPage={teamsPage}
+				initialTeamsSearch={teamsSearch}
+			/>
+		)
+	}
 
-      {tab === "externes" &&
-         <MembersPanelWithProvider
-            client:load
-            externalOnly
-            initialStatus={membersStatus}
-            initialPage={membersPage}
-            initialSearch={membersSearch}
-         />
-      }
-   </div>
+	{
+		tab === "members" && (
+			<MembersPanelWithProvider
+				client:load
+				initialStatus={membersStatus}
+				initialPage={membersPage}
+				initialSearch={membersSearch}
+			/>
+		)
+	}
+
+	{
+		tab === "externes" && (
+			<MembersPanelWithProvider
+				client:load
+				externalOnly
+				initialStatus={membersStatus}
+				initialPage={membersPage}
+				initialSearch={membersSearch}
+			/>
+		)
+	}
 </Layout>
