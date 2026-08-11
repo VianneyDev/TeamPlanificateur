@@ -14,7 +14,7 @@ describe("memberInitials", () => {
     expect(memberInitials("Bob")).toBe("BO");
   });
 
-  it("ignores extra whitespace and lowercases input", () => {
+  it("trims whitespace and uppercases initials", () => {
     expect(memberInitials("  claire  dupont  ")).toBe("CD");
   });
 
