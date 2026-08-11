@@ -9,11 +9,17 @@ export type LeaveRequestDate = {
   date: string;
 };
 
+export type LeaveRequestMember = {
+  id: string;
+  name: string;
+};
+
 export type LeaveRequest = {
   id: string;
   memberId: string;
   status: LeaveRequestStatus;
   dates: LeaveRequestDate[];
+  member?: LeaveRequestMember;
   createdAt?: string;
   updatedAt?: string;
 };

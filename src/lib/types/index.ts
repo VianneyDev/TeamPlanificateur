@@ -10,6 +10,7 @@ export type {
 export type {
   LeaveRequest,
   LeaveRequestDate,
+  LeaveRequestMember,
   LeaveRequestStatus,
   PendingLeaveDate,
 } from "@/lib/types/leave-request";

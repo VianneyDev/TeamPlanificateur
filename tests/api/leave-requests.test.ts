@@ -533,3 +533,358 @@ describe("Leave Requests API (non-manager submit path)", () => {
     );
   });
 });
+
+describe("Leave Requests API (manager validation path)", () => {
+  const suffix = `leave-val-${Date.now()}`;
+  const year = new Date().getUTCFullYear();
+
+  const weekdayPair = (() => {
+    for (let day = 1; day <= 28; day++) {
+      const monday = `${year}-06-${String(day).padStart(2, "0")}`;
+      if (new Date(`${monday}T00:00:00.000Z`).getUTCDay() !== 1) continue;
+      const tuesdayDate = new Date(`${monday}T00:00:00.000Z`);
+      tuesdayDate.setUTCDate(tuesdayDate.getUTCDate() + 1);
+      return {
+        monday,
+        tuesday: tuesdayDate.toISOString().slice(0, 10),
+      };
+    }
+    throw new Error("No Monday found in June");
+  })();
+
+  let teamId: string;
+  let requesterId: string;
+  let otherMemberId: string;
+  let managerId: string;
+  let secondManagerId: string;
+
+  beforeAll(async () => {
+    const teamResponse = await apiRequest("/api/teams", {
+      method: "POST",
+      body: { name: `${suffix}-team` },
+    });
+    expect(teamResponse.status).toBe(201);
+    teamId = (await teamResponse.json()).id;
+
+    const createMember = async (
+      name: string,
+      options: { role?: string } = {},
+    ) => {
+      const response = await apiRequest("/api/members", {
+        method: "POST",
+        body: {
+          name,
+          role: options.role ?? "member",
+          teamIds: [teamId],
+          isExternal: false,
+        },
+      });
+      expect(response.status).toBe(201);
+      return ((await response.json()) as MemberBody).id;
+    };
+
+    requesterId = await createMember(`${suffix}-requester`);
+    otherMemberId = await createMember(`${suffix}-other`);
+    managerId = await createMember(`${suffix}-manager`, { role: "manager" });
+    secondManagerId = await createMember(`${suffix}-manager-2`, {
+      role: "manager",
+    });
+  });
+
+  afterAll(async () => {
+    for (const id of [requesterId, otherMemberId, managerId, secondManagerId]) {
+      if (id) {
+        await apiRequest(`/api/members/${id}/archive`, { method: "POST" });
+      }
+    }
+  });
+
+  async function submitPending(dates: string[]) {
+    const response = await apiRequest("/api/leave-requests", {
+      method: "POST",
+      actingMemberId: requesterId,
+      body: { dates },
+    });
+    expect(response.status).toBe(201);
+    return (await response.json()) as LeaveRequestBody;
+  }
+
+  it("lists pending Leave Requests in the Manager à valider queue", async () => {
+    const created = await submitPending([weekdayPair.monday]);
+
+    const queue = await apiRequest("/api/leave-requests?status=pending", {
+      actingMemberId: managerId,
+    });
+    expect(queue.status).toBe(200);
+    const body = (await queue.json()) as ListBody;
+    expect(
+      body.data.some(
+        (request) =>
+          request.id === created.id &&
+          request.status === "pending" &&
+          request.memberId === requesterId,
+      ),
+    ).toBe(true);
+
+    const nonManagerQueue = await apiRequest(
+      "/api/leave-requests?status=pending",
+      { actingMemberId: otherMemberId },
+    );
+    expect(nonManagerQueue.status).toBe(200);
+    const nonManagerBody = (await nonManagerQueue.json()) as ListBody;
+    expect(
+      nonManagerBody.data.some((request) => request.id === created.id),
+    ).toBe(false);
+
+    await apiRequest(`/api/leave-requests/${created.id}/withdraw`, {
+      method: "POST",
+      actingMemberId: requesterId,
+    });
+  });
+
+  it("shows pending Leave Request dates to Managers on Team Calendar reads", async () => {
+    const created = await submitPending([weekdayPair.tuesday]);
+
+    const managerView = await apiRequest(`/api/days-off?year=${year}`, {
+      actingMemberId: managerId,
+    });
+    expect(managerView.status).toBe(200);
+    const managerBody = (await managerView.json()) as {
+      pending: {
+        leaveRequestId: string;
+        memberId: string;
+        date: string;
+      }[];
+    };
+    expect(managerBody.pending).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          leaveRequestId: created.id,
+          memberId: requesterId,
+          date: `${weekdayPair.tuesday}T00:00:00.000Z`,
+        }),
+      ]),
+    );
+
+    const teammateView = await apiRequest(`/api/days-off?year=${year}`, {
+      actingMemberId: otherMemberId,
+    });
+    expect(teammateView.status).toBe(200);
+    const teammateBody = (await teammateView.json()) as {
+      pending: { leaveRequestId: string }[];
+    };
+    expect(
+      teammateBody.pending?.some(
+        (entry) => entry.leaveRequestId === created.id,
+      ) ?? false,
+    ).toBe(false);
+
+    await apiRequest(`/api/leave-requests/${created.id}/withdraw`, {
+      method: "POST",
+      actingMemberId: requesterId,
+    });
+  });
+
+  it("approves a pending Leave Request and materializes Day Offs for every date", async () => {
+    const dates = [weekdayPair.monday, weekdayPair.tuesday];
+    const created = await submitPending(dates);
+
+    const approve = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: managerId },
+    );
+    expect(approve.status).toBe(200);
+    expect(await approve.json()).toEqual(
+      expect.objectContaining({
+        id: created.id,
+        status: "approved",
+      }),
+    );
+
+    const daysOff = await apiRequest(`/api/days-off?year=${year}`, {
+      actingMemberId: managerId,
+    });
+    expect(daysOff.status).toBe(200);
+    const body = (await daysOff.json()) as {
+      data: { memberId: string; date: string }[];
+    };
+    for (const date of dates) {
+      expect(
+        body.data.some(
+          (dayOff) =>
+            dayOff.memberId === requesterId &&
+            dayOff.date === `${date}T00:00:00.000Z`,
+        ),
+      ).toBe(true);
+    }
+
+    for (const date of dates) {
+      await apiRequest("/api/days-off/toggle", {
+        method: "PUT",
+        actingMemberId: managerId,
+        body: { date, memberId: requesterId },
+      });
+    }
+  });
+
+  it("rejects a pending Leave Request without creating Day Offs", async () => {
+    const created = await submitPending([weekdayPair.monday]);
+
+    const reject = await apiRequest(
+      `/api/leave-requests/${created.id}/reject`,
+      { method: "POST", actingMemberId: secondManagerId },
+    );
+    expect(reject.status).toBe(200);
+    expect(await reject.json()).toEqual(
+      expect.objectContaining({
+        id: created.id,
+        status: "rejected",
+      }),
+    );
+
+    const daysOff = await apiRequest(`/api/days-off?year=${year}`, {
+      actingMemberId: managerId,
+    });
+    expect(daysOff.status).toBe(200);
+    const body = (await daysOff.json()) as {
+      data: { memberId: string; date: string }[];
+    };
+    expect(
+      body.data.some(
+        (dayOff) =>
+          dayOff.memberId === requesterId &&
+          dayOff.date === `${weekdayPair.monday}T00:00:00.000Z`,
+      ),
+    ).toBe(false);
+  });
+
+  it("forbids non-managers from approving or rejecting", async () => {
+    const created = await submitPending([weekdayPair.tuesday]);
+
+    const approve = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: otherMemberId },
+    );
+    expect(approve.status).toBe(403);
+
+    const reject = await apiRequest(
+      `/api/leave-requests/${created.id}/reject`,
+      { method: "POST", actingMemberId: otherMemberId },
+    );
+    expect(reject.status).toBe(403);
+
+    await apiRequest(`/api/leave-requests/${created.id}/withdraw`, {
+      method: "POST",
+      actingMemberId: requesterId,
+    });
+  });
+
+  it("rejects illegal approve/reject transitions on terminal statuses", async () => {
+    const created = await submitPending([weekdayPair.monday]);
+
+    await db.leaveRequest.update({
+      where: { id: created.id },
+      data: { status: "withdrawn" },
+    });
+
+    const approveWithdrawn = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: managerId },
+    );
+    expect(approveWithdrawn.status).toBe(409);
+    expect(await approveWithdrawn.json()).toEqual(
+      expect.objectContaining({ code: INVALID_TRANSITION_CODE }),
+    );
+
+    await db.leaveRequest.update({
+      where: { id: created.id },
+      data: { status: "rejected" },
+    });
+
+    const rejectRejected = await apiRequest(
+      `/api/leave-requests/${created.id}/reject`,
+      { method: "POST", actingMemberId: managerId },
+    );
+    expect(rejectRejected.status).toBe(409);
+    expect(await rejectRejected.json()).toEqual(
+      expect.objectContaining({ code: INVALID_TRANSITION_CODE }),
+    );
+  });
+
+  it("does not duplicate Day Offs on double-approve (explicit conflict)", async () => {
+    const created = await submitPending([weekdayPair.tuesday]);
+
+    const first = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: managerId },
+    );
+    expect(first.status).toBe(200);
+
+    const second = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: secondManagerId },
+    );
+    expect(second.status).toBe(409);
+    expect(await second.json()).toEqual(
+      expect.objectContaining({ code: INVALID_TRANSITION_CODE }),
+    );
+
+    const daysOff = await db.dayOff.findMany({
+      where: {
+        memberId: requesterId,
+        date: new Date(`${weekdayPair.tuesday}T00:00:00.000Z`),
+      },
+    });
+    expect(daysOff).toHaveLength(1);
+
+    await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: weekdayPair.tuesday, memberId: requesterId },
+    });
+  });
+
+  it("fails approve when requester was Archived after submit with zero new Day Offs", async () => {
+    const created = await submitPending([weekdayPair.monday]);
+
+    const archive = await apiRequest(`/api/members/${requesterId}/archive`, {
+      method: "POST",
+    });
+    expect(archive.status).toBe(200);
+
+    const beforeCount = await db.dayOff.count({
+      where: {
+        memberId: requesterId,
+        date: new Date(`${weekdayPair.monday}T00:00:00.000Z`),
+      },
+    });
+
+    const approve = await apiRequest(
+      `/api/leave-requests/${created.id}/approve`,
+      { method: "POST", actingMemberId: managerId },
+    );
+    expect(approve.status).toBe(400);
+    expect(await approve.json()).toEqual(
+      expect.objectContaining({ code: MEMBER_ARCHIVED_CODE }),
+    );
+
+    const afterCount = await db.dayOff.count({
+      where: {
+        memberId: requesterId,
+        date: new Date(`${weekdayPair.monday}T00:00:00.000Z`),
+      },
+    });
+    expect(afterCount).toBe(beforeCount);
+
+    const stillPending = await db.leaveRequest.findUnique({
+      where: { id: created.id },
+    });
+    expect(stillPending?.status).toBe("pending");
+
+    // Restore requester for remaining suite cleanup
+    await db.member.update({
+      where: { id: requesterId },
+      data: { archived: false },
+    });
+  });
+});

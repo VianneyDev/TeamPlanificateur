@@ -41,7 +41,10 @@ import {
   DayOffYearSchema,
   ToggleDayOffSchema,
 } from "@/lib/schemas/day-off";
-import { CreateLeaveRequestSchema } from "@/lib/schemas/leave-request";
+import {
+  CreateLeaveRequestSchema,
+  LeaveRequestListQuerySchema,
+} from "@/lib/schemas/leave-request";
 import {
   enumerateWeekdayDates,
   isWeekendDate,
@@ -696,10 +699,33 @@ app.get("/leave-requests", async (c) => {
     return c.json({ error: "Acting Member required" }, 401);
   }
 
+  const queryResult = LeaveRequestListQuerySchema.safeParse({
+    status: c.req.query("status") || undefined,
+  });
+  if (!queryResult.success) {
+    return c.json(
+      {
+        error: "Invalid query",
+        issues: z.treeifyError(queryResult.error),
+      },
+      400,
+    );
+  }
+
+  const { status } = queryResult.data;
+  const manager = isManager(acting);
+  const queueForManagers = manager && status === "pending";
+
   const leaveRequests = await db.leaveRequest.findMany({
-    where: { memberId: acting.id },
+    where: queueForManagers
+      ? { status: "pending" }
+      : {
+          memberId: acting.id,
+          ...(status ? { status } : {}),
+        },
     include: {
       dates: { orderBy: { date: "asc" } },
+      member: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -774,6 +800,7 @@ app.post("/leave-requests/:id/withdraw", async (c) => {
     where: { id },
     include: {
       dates: { orderBy: { date: "asc" } },
+      member: { select: { id: true, name: true } },
     },
   });
 
@@ -800,6 +827,179 @@ app.post("/leave-requests/:id/withdraw", async (c) => {
     data: { status: "withdrawn" },
     include: {
       dates: { orderBy: { date: "asc" } },
+      member: { select: { id: true, name: true } },
+    },
+  });
+
+  return c.json(updated);
+});
+
+app.post("/leave-requests/:id/approve", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  if (!isManager(acting)) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const id = c.req.param("id");
+
+  type ApproveOutcome =
+    | { kind: "not_found" }
+    | { kind: "conflict" }
+    | { kind: "archived" }
+    | {
+        kind: "ok";
+        leaveRequest: Awaited<
+          ReturnType<typeof db.leaveRequest.findUniqueOrThrow>
+        >;
+      };
+
+  const outcome = await db.$transaction(async (tx): Promise<ApproveOutcome> => {
+    const leaveRequest = await tx.leaveRequest.findUnique({
+      where: { id },
+      include: {
+        dates: { orderBy: { date: "asc" } },
+        member: { select: { id: true, name: true, archived: true } },
+      },
+    });
+
+    if (!leaveRequest) {
+      return { kind: "not_found" };
+    }
+
+    if (leaveRequest.status !== "pending") {
+      return { kind: "conflict" };
+    }
+
+    if (leaveRequest.member.archived) {
+      return { kind: "archived" };
+    }
+
+    const transition = await tx.leaveRequest.updateMany({
+      where: { id, status: "pending" },
+      data: { status: "approved" },
+    });
+
+    if (transition.count === 0) {
+      return { kind: "conflict" };
+    }
+
+    const existing = await tx.dayOff.findMany({
+      where: {
+        memberId: leaveRequest.memberId,
+        date: { in: leaveRequest.dates.map((entry) => entry.date) },
+      },
+    });
+    const existingKeys = new Set(
+      existing.map((dayOff) => dayOff.date.toISOString().slice(0, 10)),
+    );
+    const missing = leaveRequest.dates.filter(
+      (entry) => !existingKeys.has(entry.date.toISOString().slice(0, 10)),
+    );
+
+    if (missing.length > 0) {
+      await tx.dayOff.createMany({
+        data: missing.map((entry) => ({
+          memberId: leaveRequest.memberId,
+          date: entry.date,
+        })),
+      });
+    }
+
+    const updated = await tx.leaveRequest.findUniqueOrThrow({
+      where: { id },
+      include: {
+        dates: { orderBy: { date: "asc" } },
+        member: { select: { id: true, name: true } },
+      },
+    });
+
+    return { kind: "ok", leaveRequest: updated };
+  });
+
+  if (outcome.kind === "not_found") {
+    return c.json({ error: "Leave Request not found" }, 404);
+  }
+
+  if (outcome.kind === "archived") {
+    return c.json(
+      {
+        error: LEAVE_MEMBER_ARCHIVED_ERROR,
+        code: LEAVE_MEMBER_ARCHIVED_CODE,
+      },
+      400,
+    );
+  }
+
+  if (outcome.kind === "conflict") {
+    return c.json(
+      {
+        error: INVALID_TRANSITION_ERROR,
+        code: INVALID_TRANSITION_CODE,
+      },
+      409,
+    );
+  }
+
+  return c.json(outcome.leaveRequest);
+});
+
+app.post("/leave-requests/:id/reject", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  if (!isManager(acting)) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const id = c.req.param("id");
+  const leaveRequest = await db.leaveRequest.findUnique({
+    where: { id },
+    include: {
+      dates: { orderBy: { date: "asc" } },
+      member: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!leaveRequest) {
+    return c.json({ error: "Leave Request not found" }, 404);
+  }
+
+  if (leaveRequest.status !== "pending") {
+    return c.json(
+      {
+        error: INVALID_TRANSITION_ERROR,
+        code: INVALID_TRANSITION_CODE,
+      },
+      409,
+    );
+  }
+
+  const transition = await db.leaveRequest.updateMany({
+    where: { id, status: "pending" },
+    data: { status: "rejected" },
+  });
+
+  if (transition.count === 0) {
+    return c.json(
+      {
+        error: INVALID_TRANSITION_ERROR,
+        code: INVALID_TRANSITION_CODE,
+      },
+      409,
+    );
+  }
+
+  const updated = await db.leaveRequest.findUniqueOrThrow({
+    where: { id },
+    include: {
+      dates: { orderBy: { date: "asc" } },
+      member: { select: { id: true, name: true } },
     },
   });
 
