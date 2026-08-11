@@ -4,7 +4,7 @@ export const WEEKEND_NOT_ALLOWED_ERROR =
 
 export const MEMBER_ARCHIVED_CODE = "MEMBER_ARCHIVED";
 export const MEMBER_ARCHIVED_ERROR =
-  "Leave Requests cannot be created for an Archived Member";
+  "This Leave Request action is not allowed for an Archived Member";
 
 export const DAY_OFF_CREATE_FORBIDDEN_CODE = "DAY_OFF_CREATE_FORBIDDEN";
 export const DAY_OFF_CREATE_FORBIDDEN_ERROR =
@@ -12,4 +12,4 @@ export const DAY_OFF_CREATE_FORBIDDEN_ERROR =
 
 export const INVALID_TRANSITION_CODE = "INVALID_TRANSITION";
 export const INVALID_TRANSITION_ERROR =
-  "This Leave Request cannot be withdrawn in its current status";
+  "This Leave Request cannot change status from its current state";

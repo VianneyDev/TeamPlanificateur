@@ -24,5 +24,12 @@ export const CreateLeaveRequestSchema = z
     }
   });
 
+export const LeaveRequestListQuerySchema = z
+  .object({
+    status: LeaveRequestStatusSchema.optional(),
+  })
+  .strict();
+
 export type CreateLeaveRequestInput = z.infer<typeof CreateLeaveRequestSchema>;
 export type LeaveRequestStatus = z.infer<typeof LeaveRequestStatusSchema>;
+export type LeaveRequestListQuery = z.infer<typeof LeaveRequestListQuerySchema>;

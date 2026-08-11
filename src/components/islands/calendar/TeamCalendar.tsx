@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import MyLeaveRequests from "@/components/islands/calendar/MyLeaveRequests";
+import PendingLeaveRequests from "@/components/islands/calendar/PendingLeaveRequests";
 import { useDaysOff } from "@/hooks/days-off/useDaysOff";
 import { useToggleDayOff } from "@/hooks/days-off/useToggleDayOff";
 import { useCreateLeaveRequest } from "@/hooks/leave-requests/useCreateLeaveRequest";
@@ -565,6 +566,7 @@ export default function TeamCalendar({
       </section>
 
       {!isManager && <MyLeaveRequests year={year} />}
+      {isManager && <PendingLeaveRequests year={year} />}
     </div>
   );
 }
