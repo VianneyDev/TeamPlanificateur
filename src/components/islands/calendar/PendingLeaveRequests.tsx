@@ -27,17 +27,17 @@ export default function PendingLeaveRequests({
       <div>
         <h2
           id="a-valider-heading"
-          className="text-lg font-semibold text-white"
+          className="text-lg font-semibold text-foreground"
         >
           À valider
         </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Approuvez ou refusez les demandes en attente.
         </p>
       </div>
 
       {isLoading && (
-        <p role="status" className="text-sm text-slate-500">
+        <p role="status" className="text-sm text-muted-foreground">
           Chargement…
         </p>
       )}
@@ -45,13 +45,13 @@ export default function PendingLeaveRequests({
       {error && (
         <div
           role="alert"
-          className="flex items-center justify-between gap-4 rounded-lg border border-red-500/40 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="flex items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         >
           <span>Impossible de charger la file à valider.</span>
           <button
             type="button"
             onClick={() => refetch()}
-            className="font-medium underline underline-offset-2 hover:text-white"
+            className="font-medium underline underline-offset-2 hover:text-foreground"
           >
             Réessayer
           </button>
@@ -59,7 +59,7 @@ export default function PendingLeaveRequests({
       )}
 
       {!isLoading && !error && requests.length === 0 && (
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           Aucune demande en attente.
         </p>
       )}
@@ -77,22 +77,22 @@ export default function PendingLeaveRequests({
             return (
               <li
                 key={request.id}
-                className="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
+                className="rounded-xl border border-border bg-card px-4 py-3"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {memberName} — {request.dates.length} jour
                       {request.dates.length > 1 ? "s" : ""}
                     </p>
-                    <p className="text-sm text-slate-400">{datesLabel}</p>
+                    <p className="text-sm text-muted-foreground">{datesLabel}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={() => approve.mutate(request.id)}
                       disabled={decisionPending}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                      className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-foreground transition hover:brightness-105 disabled:opacity-50"
                     >
                       Approuver
                     </button>
@@ -100,7 +100,7 @@ export default function PendingLeaveRequests({
                       type="button"
                       onClick={() => reject.mutate(request.id)}
                       disabled={decisionPending}
-                      className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
                     >
                       Refuser
                     </button>

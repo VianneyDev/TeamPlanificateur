@@ -76,7 +76,7 @@ export default function TeamModal({
     >
       {mode === "create" && (
         <DialogTrigger asChild>
-          <button className="px-3 py-2 bg-slate-800 rounded">
+          <button className="px-3 py-2 bg-muted rounded">
             <Plus size={18} />
           </button>
         </DialogTrigger>
@@ -100,7 +100,7 @@ export default function TeamModal({
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="bg-primary text-foreground px-4 py-2 rounded hover:brightness-95 transition-colors disabled:opacity-50"
           >
             {mode === "update"
               ? isPending

@@ -178,17 +178,17 @@ export default function MonthlyWorkedDaysPanel({
         onSubmit={handleSubmit}
         className={`max-w-xl space-y-4 rounded-lg border p-5 ${
           isCorrection
-            ? "border-blue-500 bg-slate-900/80 ring-1 ring-blue-500/40"
-            : "border-slate-700 bg-slate-900/50"
+            ? "border-blue-500 bg-card/80 ring-1 ring-blue-500/40"
+            : "border-border bg-card"
         }`}
       >
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold text-white">{formTitle}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{formTitle}</h2>
           {isCorrection && (
             <button
               type="button"
               onClick={resetForm}
-              className="shrink-0 text-sm text-slate-300 underline-offset-2 hover:text-white hover:underline"
+              className="shrink-0 text-sm text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
             >
               Annuler
             </button>
@@ -197,9 +197,9 @@ export default function MonthlyWorkedDaysPanel({
 
         {isManager && (
           <label className="block space-y-1 text-sm">
-            <span className="text-slate-300">Membre externe</span>
+            <span className="text-muted-foreground">Membre externe</span>
             <select
-              className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
+              className="w-full rounded border border-border bg-muted px-3 py-2 text-foreground"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
               disabled={externalsLoading}
@@ -219,15 +219,15 @@ export default function MonthlyWorkedDaysPanel({
         )}
 
         {!isManager && (
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             Déclaration pour votre compte uniquement.
           </p>
         )}
 
         <label className="block space-y-1 text-sm">
-          <span className="text-slate-300">Mois</span>
+          <span className="text-muted-foreground">Mois</span>
           <select
-            className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
+            className="w-full rounded border border-border bg-muted px-3 py-2 text-foreground"
             value={yearMonth}
             onChange={(e) => setYearMonth(e.target.value)}
           >
@@ -243,15 +243,15 @@ export default function MonthlyWorkedDaysPanel({
         </label>
 
         <label className="block space-y-1 text-sm">
-          <span className="text-slate-300">Jours travaillés (0–{maxDays})</span>
+          <span className="text-muted-foreground">Jours travaillés (0–{maxDays})</span>
           <input
             type="number"
             min={0}
             max={maxDays}
             step={1}
             placeholder="0"
-            className={`w-full rounded border bg-slate-800 px-3 py-2 text-slate-100 ${
-              daysError ? "border-red-500" : "border-slate-600"
+            className={`w-full rounded border bg-muted px-3 py-2 text-foreground ${
+              daysError ? "border-red-500" : "border-border"
             }`}
             value={days}
             onFocus={(e) => {
@@ -277,7 +277,7 @@ export default function MonthlyWorkedDaysPanel({
         <button
           type="submit"
           disabled={!canSubmit || isPending}
-          className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="rounded bg-primary px-4 py-2 text-foreground transition-colors hover:brightness-95 disabled:opacity-50"
         >
           {isPending
             ? "Enregistrement…"
@@ -288,10 +288,10 @@ export default function MonthlyWorkedDaysPanel({
       </form>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold text-white">Déclarations</h2>
+        <h2 className="mb-3 text-lg font-semibold text-foreground">Déclarations</h2>
 
         {isLoading && (
-          <p className="text-sm text-slate-400">Chargement…</p>
+          <p className="text-sm text-muted-foreground">Chargement…</p>
         )}
         {error && (
           <p className="text-sm text-red-400">
@@ -299,13 +299,13 @@ export default function MonthlyWorkedDaysPanel({
           </p>
         )}
         {!isLoading && !error && rows.length === 0 && (
-          <p className="text-sm text-slate-400">Aucune déclaration pour le moment.</p>
+          <p className="text-sm text-muted-foreground">Aucune déclaration pour le moment.</p>
         )}
 
         {rows.length > 0 && (
-          <div className="overflow-hidden rounded-lg border border-slate-700">
+          <div className="overflow-hidden rounded-lg border border-border">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-900 text-slate-400">
+              <thead className="bg-card text-muted-foreground">
                 <tr>
                   {isManager && <th className="px-4 py-3 font-medium">Membre</th>}
                   <th className="px-4 py-3 font-medium">Mois</th>
@@ -319,10 +319,10 @@ export default function MonthlyWorkedDaysPanel({
                   return (
                     <tr
                       key={row.id}
-                      className={`border-t text-slate-200 ${
+                      className={`border-t text-foreground ${
                         isActive
-                          ? "border-blue-500/40 bg-blue-600/15"
-                          : "border-slate-800"
+                          ? "border-blue-500/40 bg-primary/15"
+                          : "border-border"
                       }`}
                     >
                       {isManager && (

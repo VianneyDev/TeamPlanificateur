@@ -2,7 +2,7 @@
 import "@/styles/global.css";
 
 const { title = "Planning équipe" } = Astro.props;
-const member = Astro.locals.member; 
+const member = Astro.locals.member;
 const pathname = Astro.url.pathname;
 const isActive = (path: string) => pathname === path;
 ---
@@ -16,60 +16,84 @@ const isActive = (path: string) => pathname === path;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
-	<body class="min-h-screen bg-slate-800 text-slate-200 flex">
-      <aside class="w-56 bg-slate-900 border-r border-slate-700 flex flex-col">
-         <div class="p-6 border-b border-slate-700">
-            <a href="/" class="text-xl font-bold text-white tracking-wide">TPE</a>
-            <p class="text-xs text-slate-400 mt-1">Team Planning Engine</p>
-         </div>
+	<body class="min-h-screen bg-background text-foreground">
+		<!--
+THESIS: Un dashboard entreprise familier où le mois et les demandes se lisent en un coup d’œil, sans spectacle.
+OWN-WORLD: Fond #f7f7f5, panels blancs, accent bleu #2563eb, top bar, split calendrier / file; system UI sans.
+STORY: Le visiteur (membre ou recruteur) comprend immédiatement TPE, navigue, et agit sur le planning.
+FIRST VIEWPORT: Top bar TPE + nav + Acting Member; sous la barre, calendrier ~65% et rail demandes ~35%.
+FORM: Canon enterprise dashboard · craft bar Linear + Notion · comp-b topnav-split.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+		-->
+		<header class="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+			<div class="mx-auto flex h-14 max-w-[1400px] items-center gap-6 px-4 sm:px-6">
+				<a href="/" class="shrink-0 leading-tight">
+					<span class="block text-sm font-semibold tracking-tight text-foreground">TPE</span>
+					<span class="block text-[0.65rem] text-muted-foreground">Team Planning Engine</span>
+				</a>
 
-         <nav class="flex-1 px-3 py-6 space-y-4">
-            <a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
-               <span>Dashboard</span>
-            </a>
-            {member && (member.isExternal || member.role === "manager") && (
-              <a href="/external" class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}>
-                <span>Jours travaillés</span>
-              </a>
-            )}
-            {member && member.role === "manager" ? (
-              <a href="/gestion" class={`nav-item ${isActive("/gestion") ? "nav-item-active" : ""}`}>
-                <span>Gestion</span>
-              </a>
-            ) : (
-              <a
-                href="#"
-                class="nav-item pointer-events-none opacity-40"
-                aria-disabled="true"
-                title="Accès réservé aux admins"
-              >
-                <span>Gestion</span>
-              </a>
-            )}
-         </nav>
+				<nav class="flex flex-1 items-center gap-1 overflow-x-auto" aria-label="Navigation principale">
+					<a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
+						Dashboard
+					</a>
+					{
+						member && (member.isExternal || member.role === "manager") && (
+							<a
+								href="/external"
+								class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}
+							>
+								Jours travaillés
+							</a>
+						)
+					}
+					{
+						member && member.role === "manager" ? (
+							<a
+								href="/gestion"
+								class={`nav-item ${isActive("/gestion") ? "nav-item-active" : ""}`}
+							>
+								Gestion
+							</a>
+						) : (
+							<span
+								class="nav-item pointer-events-none opacity-40"
+								aria-disabled="true"
+								title="Accès réservé aux managers"
+							>
+								Gestion
+							</span>
+						)
+					}
+				</nav>
 
-         {member && (
-            <div class="p-4 border-t border-slate-700 text-xs text-slate-400 flex items-center justify-between gap-2">
-              <div class="truncate">
-                <div class="text-slate-200 font-medium">{member.name}</div>
-                <div class="text-slate-400">{member.teams?.length ? member.teams.map((t: { name: string }) => t.name).join(", ") : "—"}</div>
-              </div>
-          
-              <form method="POST" action="/api/logout">
-                <button
-                  type="submit"
-                  class="text-red-400 hover:text-red-300 text-xs font-medium cursor-pointer"
-                >
-                  Déconnexion
-                </button>
-              </form>
-            </div>
-          )}          
-      </aside>
+				{
+					member ? (
+						<div class="flex shrink-0 items-center gap-3 text-xs">
+							<div class="hidden text-right sm:block">
+								<div class="font-medium text-foreground">{member.name}</div>
+								<div class="text-muted-foreground max-w-40 truncate">
+									{member.teams?.length
+										? member.teams.map((t: { name: string }) => t.name).join(", ")
+										: "—"}
+								</div>
+							</div>
+							<form method="POST" action="/api/logout">
+								<button
+									type="submit"
+									class="rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground cursor-pointer"
+								>
+									Déconnexion
+								</button>
+							</form>
+						</div>
+					) : null
+				}
+			</div>
+		</header>
 
-      <main class="min-h-screen flex-1 px-6 py-8">
-         <slot />
-      </main>
+		<main class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+			<slot />
+		</main>
 	</body>
 </html>
 
@@ -78,6 +102,6 @@ const isActive = (path: string) => pathname === path;
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
+		min-height: 100%;
 	}
 </style>

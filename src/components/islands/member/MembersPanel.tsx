@@ -25,13 +25,13 @@ const TEAM_SELECT_LIMIT = 200;
 function MembersTableSkeletonBody({ rows }: { rows: number }) {
   const bar = (className: string) => (
     <div
-      className={`rounded-md bg-slate-700/35 animate-pulse motion-reduce:animate-none ${className}`}
+      className={`rounded-md bg-muted animate-pulse motion-reduce:animate-none ${className}`}
     />
   );
   return (
     <>
       {Array.from({ length: rows }, (_, i) => (
-        <tr key={i} className="border-t border-slate-800/80">
+        <tr key={i} className="border-t border-border">
           <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-44")}</td>
           <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-28")}</td>
           <td className="px-4 py-3 align-middle">{bar("h-3.5 w-14")}</td>
@@ -119,9 +119,9 @@ export default function MembersPanel({
     : "Erreur lors du chargement des membres";
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-slate-700">
-        <h2 className="text-lg font-semibold text-white shrink-0">{title}</h2>
+    <div className="bg-card border border-border rounded-lg">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-border">
+        <h2 className="text-lg font-semibold text-foreground shrink-0">{title}</h2>
 
         <div className="flex min-w-0 justify-center px-2">
           <div className="relative w-full max-w-md">
@@ -130,7 +130,7 @@ export default function MembersPanel({
               placeholder="Rechercher..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-slate-800 py-2 pl-3 pr-9 rounded border border-slate-600 text-white placeholder:text-slate-500"
+              className="w-full bg-muted py-2 pl-3 pr-9 rounded border border-border text-foreground placeholder:text-muted-foreground"
             />
             {searchInput.length > 0 && (
               <button
@@ -139,7 +139,7 @@ export default function MembersPanel({
                   setSearchInput("");
                   flushSearch();
                 }}
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
+                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 aria-label="Effacer la recherche"
               >
                 <X size={16} strokeWidth={2} />
@@ -158,12 +158,12 @@ export default function MembersPanel({
       </div>
 
       {error && (
-        <div className="px-4 py-3 text-sm text-red-400 border-b border-slate-700">
+        <div className="px-4 py-3 text-sm text-red-400 border-b border-border">
           {errorLabel}
         </div>
       )}
 
-      <div className="flex gap-1 p-2 border-b border-slate-700">
+      <div className="flex gap-1 p-2 border-b border-border">
         {STATUS_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -176,8 +176,8 @@ export default function MembersPanel({
             }}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               status === opt.value
-                ? "bg-slate-600 text-white"
-                : "text-slate-400 hover:text-slate-300 hover:bg-slate-800"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-muted-foreground hover:bg-muted"
             }`}
           >
             {opt.label}
@@ -187,7 +187,7 @@ export default function MembersPanel({
 
       <div className="relative">
         <table className="w-full text-sm">
-          <thead className="text-slate-400">
+          <thead className="text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Nom</th>
               <th className="px-4 py-3 text-left">Équipe</th>
@@ -205,7 +205,7 @@ export default function MembersPanel({
                   <tr>
                     <td
                       colSpan={4}
-                      className="px-4 py-6 text-center text-slate-400"
+                      className="px-4 py-6 text-center text-muted-foreground"
                     >
                       {emptyLabel}
                     </td>
@@ -215,9 +215,9 @@ export default function MembersPanel({
                 {membersList.map((member: Member) => (
                   <tr
                     key={member.id}
-                    className="border-t border-slate-800 hover:bg-slate-800/40"
+                    className="border-t border-border hover:bg-muted/40"
                   >
-                    <td className="px-4 py-3 text-white">
+                    <td className="px-4 py-3 text-foreground">
                       <div className="flex items-center gap-2">
                         {member.name}
 
@@ -229,13 +229,13 @@ export default function MembersPanel({
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-slate-300">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {member.teams?.length
                         ? member.teams.map((t) => t.name).join(", ")
                         : "—"}
                     </td>
 
-                    <td className="px-4 py-3 text-slate-300 capitalize">
+                    <td className="px-4 py-3 text-muted-foreground capitalize">
                       {member.role}
                     </td>
 
@@ -254,7 +254,7 @@ export default function MembersPanel({
 
         {showFetchingOverlay && (
           <div
-            className="absolute left-0 right-0 bottom-0 top-12 z-10 overflow-hidden bg-slate-900/45 backdrop-blur-[1px] pointer-events-none"
+            className="absolute left-0 right-0 bottom-0 top-12 z-10 overflow-hidden bg-card/45 backdrop-blur-[1px] pointer-events-none"
             aria-hidden
           >
             <table className="w-full text-sm table-fixed">

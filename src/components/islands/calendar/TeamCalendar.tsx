@@ -257,22 +257,22 @@ export default function TeamCalendar({
   };
 
   return (
-    <div className="space-y-10">
-      <section className="space-y-5" aria-labelledby="calendar-heading">
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-700 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)] lg:items-start">
+      <section className="panel space-y-5 p-4 sm:p-5" aria-labelledby="calendar-heading">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2
               id="calendar-heading"
-              className="text-lg font-semibold text-white"
+              className="text-base font-semibold text-foreground"
             >
               Calendrier mensuel
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               {isManager ? (
                 <>
                   Cliquez pour basculer un jour, ou glissez pour une plage
                   continue (édition pour{" "}
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-foreground">
                     {editTargetName}
                   </span>
                   ).
@@ -281,7 +281,7 @@ export default function TeamCalendar({
                 <>
                   Sélectionnez des jours ouvrés (clics ou plage), confirmez
                   votre demande, ou effacez vos jours de repos déjà validés (
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-foreground">
                     {actingMemberName}
                   </span>
                   ).
@@ -290,23 +290,23 @@ export default function TeamCalendar({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start rounded-lg border border-slate-700 bg-slate-950/70 p-1 sm:self-auto">
+          <div className="flex items-center gap-1 self-start rounded-md border border-border bg-background p-0.5 sm:self-auto">
             <button
               type="button"
               onClick={() => setYearMonth((value) => shiftMonth(value, -1))}
-              className="rounded-md p-2 text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-40"
+              className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
               aria-label="Afficher le mois précédent"
               disabled={mutationPending}
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
             </button>
-            <span className="min-w-36 text-center text-sm font-semibold capitalize text-white">
+            <span className="min-w-36 text-center text-sm font-semibold capitalize text-foreground">
               {monthLabel}
             </span>
             <button
               type="button"
               onClick={() => setYearMonth((value) => shiftMonth(value, 1))}
-              className="rounded-md p-2 text-slate-300 transition hover:bg-slate-800 hover:text-white disabled:opacity-40"
+              className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
               aria-label="Afficher le mois suivant"
               disabled={mutationPending}
             >
@@ -319,7 +319,7 @@ export default function TeamCalendar({
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             <label
               htmlFor="day-off-edit-target"
-              className="text-sm font-medium text-slate-300"
+              className="text-sm font-medium text-foreground"
             >
               Membre à éditer
             </label>
@@ -328,7 +328,7 @@ export default function TeamCalendar({
               value={editTargetId}
               onChange={(event) => setEditTargetId(event.target.value)}
               disabled={membersLoading || mutationPending}
-              className="max-w-md rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              className="max-w-md rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground"
             >
               {!members.some((member) => member.id === actingMemberId) && (
                 <option value={actingMemberId}>{actingMemberName}</option>
@@ -344,12 +344,12 @@ export default function TeamCalendar({
         )}
 
         {!isManager && draftDates.length > 0 && (
-          <div className="flex flex-col gap-3 rounded-xl border border-sky-500/40 bg-sky-950/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-sky-100">
+          <div className="flex flex-col gap-3 rounded-lg border border-primary/25 bg-accent px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-foreground">
               <span className="font-semibold">
                 {draftDates.length} jour{draftDates.length > 1 ? "s" : ""}
               </span>{" "}
-              sélectionné{draftDates.length > 1 ? "s" : ""} — non envoyés tant
+              sélectionné{draftDates.length > 1 ? "s" : ""} - non envoyés tant
               que vous ne confirmez pas.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -357,7 +357,7 @@ export default function TeamCalendar({
                 type="button"
                 onClick={() => setDraftDates([])}
                 disabled={createLeaveRequest.isPending}
-                className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-md border border-border bg-card px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
               >
                 Annuler
               </button>
@@ -365,7 +365,7 @@ export default function TeamCalendar({
                 type="button"
                 onClick={handleSubmitDraft}
                 disabled={createLeaveRequest.isPending}
-                className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-sky-500 disabled:opacity-50"
+                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition hover:brightness-105 disabled:opacity-50"
               >
                 Demander {draftDates.length} jour
                 {draftDates.length > 1 ? "s" : ""}
@@ -374,21 +374,21 @@ export default function TeamCalendar({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-2">
-            <span className="size-3 rounded-sm bg-blue-500" aria-hidden="true" />
+            <span className="size-3 rounded-sm bg-primary" aria-hidden="true" />
             Vos jours de repos
           </span>
           <span className="inline-flex items-center gap-2">
             <span
-              className="size-3 rounded-sm border border-dashed border-violet-400 bg-violet-500/30"
+              className="size-3 rounded-sm border border-dashed border-primary/50 bg-accent"
               aria-hidden="true"
             />
             Demande en attente
           </span>
           <span className="inline-flex items-center gap-2">
             <span
-              className="size-3 rounded-sm bg-amber-500/70"
+              className="size-3 rounded-sm bg-amber-500/80"
               aria-hidden="true"
             />
             Autres membres (initiales)
@@ -399,40 +399,38 @@ export default function TeamCalendar({
                 className="size-3 rounded-sm bg-sky-600"
                 aria-hidden="true"
               />
-              Cible d'édition
+              Cible d&apos;édition
             </span>
           )}
           <span className="inline-flex items-center gap-2">
             <span
-              className="size-3 rounded-sm border border-blue-400"
+              className="size-3 rounded-sm border border-primary"
               aria-hidden="true"
             />
-            Aujourd'hui
+            Aujourd&apos;hui
           </span>
           {(isLoading || isFetching) && (
-            <span role="status" className="text-slate-500">
-              Chargement…
-            </span>
+            <span role="status">Chargement…</span>
           )}
         </div>
 
         {error && (
           <div
             role="alert"
-            className="flex items-center justify-between gap-4 rounded-lg border border-red-500/40 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+            className="flex items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
           >
             <span>Impossible de charger les jours de repos.</span>
             <button
               type="button"
               onClick={() => refetch()}
-              className="font-medium underline underline-offset-2 hover:text-white"
+              className="font-medium underline underline-offset-2 hover:text-foreground"
             >
               Réessayer
             </button>
           </div>
         )}
 
-        <article className="mx-auto w-full max-w-xl rounded-xl border border-slate-700 bg-slate-900/50 p-4 shadow-sm">
+        <article className="w-full rounded-lg border border-border bg-background p-3 sm:p-4">
           <div
             className="grid grid-cols-7 gap-1 select-none"
             aria-label={monthLabel}
@@ -440,7 +438,7 @@ export default function TeamCalendar({
             {WEEKDAYS.map((weekday, index) => (
               <span
                 key={`${weekday}-${index}`}
-                className="pb-1 text-center text-[0.65rem] font-medium text-slate-500"
+                className="pb-1 text-center text-[0.65rem] font-medium uppercase tracking-wide text-muted-foreground"
                 aria-hidden="true"
               >
                 {weekday}
@@ -520,25 +518,23 @@ export default function TeamCalendar({
                   }
                   className={[
                     "relative aspect-square rounded-md text-sm font-medium transition",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     selectionBlocked && !isWeekend
                       ? "disabled:cursor-wait disabled:opacity-60"
                       : "",
                     isWeekend
-                      ? "cursor-default bg-slate-800/70 text-slate-500 disabled:opacity-100"
+                      ? "cursor-default bg-muted text-muted-foreground disabled:opacity-100"
                       : primary
-                        ? "bg-blue-600 text-white shadow-sm hover:bg-blue-500"
+                        ? "bg-primary text-primary-foreground shadow-sm hover:brightness-105"
                         : isPending
-                          ? "border border-dashed border-violet-400 bg-violet-500/25 text-violet-50 hover:bg-violet-500/40"
+                          ? "border border-dashed border-primary/40 bg-accent text-accent-foreground hover:bg-accent/80"
                           : editTargetOff
-                            ? "bg-sky-600/80 text-white shadow-sm hover:bg-sky-500"
+                            ? "bg-sky-600 text-white shadow-sm hover:bg-sky-500"
                             : secondary
-                              ? "bg-amber-500/25 text-amber-50 hover:bg-amber-500/40"
-                              : "text-slate-200 hover:bg-slate-700",
-                    isToday
-                      ? "ring-1 ring-blue-400 ring-offset-1 ring-offset-slate-900"
-                      : "",
-                    inPreview || inDraft ? "ring-2 ring-sky-300/80" : "",
+                              ? "bg-amber-100 text-amber-950 hover:bg-amber-200"
+                              : "text-foreground hover:bg-muted",
+                    isToday ? "ring-1 ring-primary ring-offset-1 ring-offset-background" : "",
+                    inPreview || inDraft ? "ring-2 ring-primary/50" : "",
                   ].join(" ")}
                 >
                   <span className="relative z-10">{day}</span>
@@ -551,7 +547,7 @@ export default function TeamCalendar({
                         <span
                           key={member.id}
                           title={member.name}
-                          className="rounded-[2px] bg-amber-500/90 px-0.5 text-[0.55rem] leading-tight font-semibold tracking-tight text-amber-950"
+                          className="rounded-[2px] bg-amber-500 px-0.5 text-[0.55rem] leading-tight font-semibold tracking-tight text-amber-950"
                         >
                           {memberInitials(member.name)}
                         </span>
@@ -565,8 +561,10 @@ export default function TeamCalendar({
         </article>
       </section>
 
-      {!isManager && <MyLeaveRequests year={year} />}
-      {isManager && <PendingLeaveRequests year={year} />}
+      <aside className="panel p-4 sm:p-5">
+        {!isManager && <MyLeaveRequests year={year} />}
+        {isManager && <PendingLeaveRequests year={year} />}
+      </aside>
     </div>
   );
 }

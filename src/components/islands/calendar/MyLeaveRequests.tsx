@@ -30,17 +30,17 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
       <div>
         <h2
           id="mes-demandes-heading"
-          className="text-lg font-semibold text-white"
+          className="text-lg font-semibold text-foreground"
         >
           Mes demandes
         </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-muted-foreground">
           Suivez le statut de vos demandes de congés.
         </p>
       </div>
 
       {isLoading && (
-        <p role="status" className="text-sm text-slate-500">
+        <p role="status" className="text-sm text-muted-foreground">
           Chargement…
         </p>
       )}
@@ -48,13 +48,13 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
       {error && (
         <div
           role="alert"
-          className="flex items-center justify-between gap-4 rounded-lg border border-red-500/40 bg-red-950/30 px-4 py-3 text-sm text-red-200"
+          className="flex items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         >
           <span>Impossible de charger vos demandes.</span>
           <button
             type="button"
             onClick={() => refetch()}
-            className="font-medium underline underline-offset-2 hover:text-white"
+            className="font-medium underline underline-offset-2 hover:text-foreground"
           >
             Réessayer
           </button>
@@ -62,7 +62,7 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
       )}
 
       {!isLoading && !error && requests.length === 0 && (
-        <p className="text-sm text-slate-500">Aucune demande pour le moment.</p>
+        <p className="text-sm text-muted-foreground">Aucune demande pour le moment.</p>
       )}
 
       {requests.length > 0 && (
@@ -78,23 +78,23 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
             return (
               <li
                 key={request.id}
-                className="rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3"
+                className="rounded-xl border border-border bg-card px-4 py-3"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-foreground">
                       {request.dates.length} jour
                       {request.dates.length > 1 ? "s" : ""} —{" "}
                       {STATUS_LABELS[status] ?? status}
                     </p>
-                    <p className="text-sm text-slate-400">{datesLabel}</p>
+                    <p className="text-sm text-muted-foreground">{datesLabel}</p>
                   </div>
                   {status === "pending" && (
                     <button
                       type="button"
                       onClick={() => withdraw.mutate(request.id)}
                       disabled={withdraw.isPending}
-                      className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-50"
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm text-foreground transition hover:bg-muted disabled:opacity-50"
                     >
                       Retirer
                     </button>

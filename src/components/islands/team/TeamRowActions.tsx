@@ -93,14 +93,14 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <button
               type="button"
-              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              className="px-3 py-2 rounded border border-border hover:bg-muted"
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-foreground"
               onClick={handleArchive}
             >
               Archiver
@@ -123,14 +123,14 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <button
               type="button"
-              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              className="px-3 py-2 rounded border border-border hover:bg-muted"
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700"
+              className="px-3 py-2 rounded bg-muted hover:bg-muted"
               onClick={handleRestore}
             >
               Restaurer
@@ -154,14 +154,14 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <button
               type="button"
-              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              className="px-3 py-2 rounded border border-border hover:bg-muted"
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
+              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-foreground"
               onClick={handleDelete}
             >
               Supprimer
