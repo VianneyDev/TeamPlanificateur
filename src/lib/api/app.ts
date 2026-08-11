@@ -41,6 +41,7 @@ import {
   DayOffYearSchema,
   ToggleDayOffSchema,
 } from "@/lib/schemas/day-off";
+import { CreateLeaveRequestSchema } from "@/lib/schemas/leave-request";
 import {
   enumerateWeekdayDates,
   isWeekendDate,
@@ -55,6 +56,16 @@ import {
   MEMBER_NOT_EXTERNAL_CODE,
   MEMBER_NOT_EXTERNAL_ERROR,
 } from "@/lib/monthly-worked-days-codes";
+import {
+  DAY_OFF_CREATE_FORBIDDEN_CODE,
+  DAY_OFF_CREATE_FORBIDDEN_ERROR,
+  INVALID_TRANSITION_CODE,
+  INVALID_TRANSITION_ERROR,
+  MEMBER_ARCHIVED_CODE as LEAVE_MEMBER_ARCHIVED_CODE,
+  MEMBER_ARCHIVED_ERROR as LEAVE_MEMBER_ARCHIVED_ERROR,
+  WEEKEND_NOT_ALLOWED_CODE,
+  WEEKEND_NOT_ALLOWED_ERROR,
+} from "@/lib/leave-request-codes";
 
 const listMembersQuerySchema = MemberStatusSchema.optional().transform(
   (status) => status ?? "active",
@@ -484,7 +495,35 @@ app.get("/days-off", async (c) => {
     orderBy: [{ date: "asc" }, { memberId: "asc" }],
   });
 
-  return c.json({ data: daysOff });
+  const pendingWhere: Prisma.LeaveRequestDateWhereInput = {
+    date: { gte: start, lt: end },
+    leaveRequest: {
+      status: "pending",
+      ...(manager
+        ? {}
+        : {
+            memberId: acting.id,
+          }),
+    },
+  };
+
+  const pendingDates = await db.leaveRequestDate.findMany({
+    where: pendingWhere,
+    include: {
+      leaveRequest: {
+        select: { id: true, memberId: true },
+      },
+    },
+    orderBy: [{ date: "asc" }],
+  });
+
+  const pending = pendingDates.map((entry) => ({
+    leaveRequestId: entry.leaveRequest.id,
+    memberId: entry.leaveRequest.memberId,
+    date: entry.date,
+  }));
+
+  return c.json({ data: daysOff, pending });
 });
 
 app.put(
@@ -579,6 +618,16 @@ app.put(
         return c.json({ active: false, dayOffs: [] });
       }
 
+      if (!manager) {
+        return c.json(
+          {
+            error: DAY_OFF_CREATE_FORBIDDEN_ERROR,
+            code: DAY_OFF_CREATE_FORBIDDEN_CODE,
+          },
+          403,
+        );
+      }
+
       const existingKeys = new Set(
         existing.map((dayOff) => dayOff.date.toISOString().slice(0, 10)),
       );
@@ -620,6 +669,16 @@ app.put(
       return c.json({ active: false, dayOff: null });
     }
 
+    if (!manager) {
+      return c.json(
+        {
+          error: DAY_OFF_CREATE_FORBIDDEN_ERROR,
+          code: DAY_OFF_CREATE_FORBIDDEN_CODE,
+        },
+        403,
+      );
+    }
+
     const dayOff = await db.dayOff.create({
       data: {
         date,
@@ -630,6 +689,122 @@ app.put(
     return c.json({ active: true, dayOff });
   },
 );
+
+app.get("/leave-requests", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  const leaveRequests = await db.leaveRequest.findMany({
+    where: { memberId: acting.id },
+    include: {
+      dates: { orderBy: { date: "asc" } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return c.json({ data: leaveRequests });
+});
+
+app.post(
+  "/leave-requests",
+  zValidator("json", CreateLeaveRequestSchema),
+  async (c) => {
+    const acting = await resolveActingMember(c);
+    if (!acting) {
+      return c.json({ error: "Acting Member required" }, 401);
+    }
+
+    if (acting.archived) {
+      return c.json(
+        {
+          error: LEAVE_MEMBER_ARCHIVED_ERROR,
+          code: LEAVE_MEMBER_ARCHIVED_CODE,
+        },
+        400,
+      );
+    }
+
+    if (isManager(acting)) {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const body = c.req.valid("json");
+
+    if (body.dates.some((date) => isWeekendDate(date))) {
+      return c.json(
+        {
+          error: WEEKEND_NOT_ALLOWED_ERROR,
+          code: WEEKEND_NOT_ALLOWED_CODE,
+        },
+        400,
+      );
+    }
+
+    const sortedDates = [...body.dates].sort();
+
+    const leaveRequest = await db.leaveRequest.create({
+      data: {
+        memberId: acting.id,
+        status: "pending",
+        dates: {
+          create: sortedDates.map((calendarDate) => ({
+            date: new Date(`${calendarDate}T00:00:00.000Z`),
+          })),
+        },
+      },
+      include: {
+        dates: { orderBy: { date: "asc" } },
+      },
+    });
+
+    return c.json(leaveRequest, 201);
+  },
+);
+
+app.post("/leave-requests/:id/withdraw", async (c) => {
+  const acting = await resolveActingMember(c);
+  if (!acting || acting.archived) {
+    return c.json({ error: "Acting Member required" }, 401);
+  }
+
+  const id = c.req.param("id");
+  const leaveRequest = await db.leaveRequest.findUnique({
+    where: { id },
+    include: {
+      dates: { orderBy: { date: "asc" } },
+    },
+  });
+
+  if (!leaveRequest) {
+    return c.json({ error: "Leave Request not found" }, 404);
+  }
+
+  if (leaveRequest.memberId !== acting.id) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  if (leaveRequest.status !== "pending") {
+    return c.json(
+      {
+        error: INVALID_TRANSITION_ERROR,
+        code: INVALID_TRANSITION_CODE,
+      },
+      409,
+    );
+  }
+
+  const updated = await db.leaveRequest.update({
+    where: { id },
+    data: { status: "withdrawn" },
+    include: {
+      dates: { orderBy: { date: "asc" } },
+    },
+  });
+
+  return c.json(updated);
+});
 
 app.get("/monthly-worked-days", async (c) => {
   const acting = await resolveActingMember(c);

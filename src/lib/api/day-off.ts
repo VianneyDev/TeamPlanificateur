@@ -1,6 +1,7 @@
 import type { ToggleDayOffInput } from "@/lib/schemas";
 import type {
   DayOff,
+  PendingLeaveDate,
   ToggleDayOffRangeResult,
   ToggleDayOffResult,
 } from "@/lib/types";
@@ -8,7 +9,7 @@ import { throwIfNotOk } from "@/lib/api/errors";
 
 export async function fetchDaysOff(
   year: number,
-): Promise<{ data: DayOff[] }> {
+): Promise<{ data: DayOff[]; pending: PendingLeaveDate[] }> {
   const response = await fetch(`/api/days-off?year=${year}`);
   await throwIfNotOk(response, "Failed to fetch Day Offs");
   return response.json();

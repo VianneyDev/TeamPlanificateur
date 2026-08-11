@@ -16,6 +16,10 @@ export default defineConfig({
           environment: "node",
           include: ["tests/api/**/*.test.ts"],
           setupFiles: ["./tests/setup-env.ts"],
+          // Neon preview branches (CI) can cold-start; beforeAll seeds several
+          // sequential Hono round-trips and must outlive the default 10s hook.
+          hookTimeout: 60_000,
+          testTimeout: 30_000,
         },
       },
       {

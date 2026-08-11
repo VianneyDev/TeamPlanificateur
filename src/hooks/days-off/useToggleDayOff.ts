@@ -2,10 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { isRangeToggleResult, toggleDayOff } from "@/lib/api/day-off";
 import { daysOffQueryKey } from "@/hooks/days-off/useDaysOff";
-import type { DayOff } from "@/lib/types";
+import type { DayOff, PendingLeaveDate } from "@/lib/types";
 
 type DayOffList = {
   data: DayOff[];
+  pending: PendingLeaveDate[];
 };
 
 function sortDayOffs(data: DayOff[]) {
@@ -49,7 +50,7 @@ export function useToggleDayOff(year: number) {
               data.push(...result.dayOffs);
             }
 
-            return { data: sortDayOffs(data) };
+            return { ...current, data: sortDayOffs(data) };
           }
 
           const dateKey = variables.date!;
@@ -66,7 +67,7 @@ export function useToggleDayOff(year: number) {
             data.push(result.dayOff);
           }
 
-          return { data: sortDayOffs(data) };
+          return { ...current, data: sortDayOffs(data) };
         },
       );
     },
