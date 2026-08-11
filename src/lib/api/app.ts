@@ -41,7 +41,10 @@ import {
   DayOffYearSchema,
   ToggleDayOffSchema,
 } from "@/lib/schemas/day-off";
-import { enumerateCalendarDates } from "@/lib/day-off-range";
+import {
+  enumerateWeekdayDates,
+  isWeekendDate,
+} from "@/lib/day-off-range";
 import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
 import {
   DAYS_EXCEED_MONTH_CODE,
@@ -539,8 +542,21 @@ app.put(
       );
     }
 
+    const submittedDates = body.date
+      ? [body.date]
+      : [body.from!, body.to!];
+    if (submittedDates.some((date) => isWeekendDate(date))) {
+      return c.json(
+        {
+          error: "Day Offs cannot include weekend dates",
+          code: "WEEKEND_NOT_ALLOWED",
+        },
+        400,
+      );
+    }
+
     if (body.from && body.to) {
-      const calendarDates = enumerateCalendarDates(body.from, body.to);
+      const calendarDates = enumerateWeekdayDates(body.from, body.to);
       const dates = calendarDates.map(
         (calendarDate) => new Date(`${calendarDate}T00:00:00.000Z`),
       );

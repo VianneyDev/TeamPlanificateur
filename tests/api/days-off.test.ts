@@ -25,10 +25,32 @@ describe("Day Offs API", () => {
   const year = new Date().getUTCFullYear();
   const firstDate = `${year}-02-12`;
   const secondDate = `${year}-08-21`;
-  const thirdDate = `${year}-03-15`;
+  const thirdDate = `${year}-03-16`; // Monday (weekdays-only writes)
   const rangeStart = `${year}-04-01`;
   const rangeMid = `${year}-04-02`;
   const rangeEnd = `${year}-04-03`;
+  // Friday → Tuesday spanning a weekend (year-relative)
+  const friToTue = (() => {
+    for (let day = 1; day <= 28; day++) {
+      const friday = `${year}-06-${String(day).padStart(2, "0")}`;
+      if (new Date(`${friday}T00:00:00.000Z`).getUTCDay() !== 5) continue;
+
+      const shift = (offset: number) => {
+        const date = new Date(`${friday}T00:00:00.000Z`);
+        date.setUTCDate(date.getUTCDate() + offset);
+        return date.toISOString().slice(0, 10);
+      };
+
+      return {
+        friday,
+        saturday: shift(1),
+        sunday: shift(2),
+        monday: shift(3),
+        tuesday: shift(4),
+      };
+    }
+    throw new Error("No Friday found in June");
+  })();
 
   let teamId: string;
   let otherTeamId: string;
@@ -398,5 +420,91 @@ describe("Day Offs API", () => {
       body: { date: firstDate },
     });
     expect(toggleResponse.status).toBe(401);
+  });
+
+  it("rejects a single-day toggle on a weekend date", async () => {
+    const response = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { date: friToTue.saturday },
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(
+      expect.objectContaining({
+        code: "WEEKEND_NOT_ALLOWED",
+      }),
+    );
+  });
+
+  it("rejects a range toggle when from or to falls on a weekend", async () => {
+    const fromWeekend = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { from: friToTue.saturday, to: friToTue.tuesday },
+    });
+    expect(fromWeekend.status).toBe(400);
+    expect(await fromWeekend.json()).toEqual(
+      expect.objectContaining({ code: "WEEKEND_NOT_ALLOWED" }),
+    );
+
+    const toWeekend = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { from: friToTue.friday, to: friToTue.sunday },
+    });
+    expect(toWeekend.status).toBe(400);
+    expect(await toWeekend.json()).toEqual(
+      expect.objectContaining({ code: "WEEKEND_NOT_ALLOWED" }),
+    );
+  });
+
+  it("expands Friday→Tuesday to three weekdays only", async () => {
+    const setResponse = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { from: friToTue.friday, to: friToTue.tuesday },
+    });
+    expect(setResponse.status).toBe(200);
+    const setBody = await setResponse.json();
+    expect(setBody.active).toBe(true);
+    expect(setBody.dayOffs).toHaveLength(3);
+    expect(setBody.dayOffs).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: `${friToTue.friday}T00:00:00.000Z`,
+        }),
+        expect.objectContaining({
+          date: `${friToTue.monday}T00:00:00.000Z`,
+        }),
+        expect.objectContaining({
+          date: `${friToTue.tuesday}T00:00:00.000Z`,
+        }),
+      ]),
+    );
+
+    const clearResponse = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { from: friToTue.friday, to: friToTue.tuesday },
+    });
+    expect(clearResponse.status).toBe(200);
+    expect(await clearResponse.json()).toEqual({
+      active: false,
+      dayOffs: [],
+    });
+  });
+
+  it("gives Managers no weekend bypass on Day Off writes", async () => {
+    const response = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: friToTue.sunday, memberId: otherMemberId },
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual(
+      expect.objectContaining({ code: "WEEKEND_NOT_ALLOWED" }),
+    );
   });
 });

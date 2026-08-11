@@ -8,7 +8,11 @@ import {
   shiftMonth,
 } from "@/lib/calendar/month-navigation";
 import { groupDayOffsByDate } from "@/lib/day-off-calendar";
-import { orderedCalendarRange } from "@/lib/day-off-range";
+import {
+  enumerateWeekdayDates,
+  isWeekendDate,
+  orderedCalendarRange,
+} from "@/lib/day-off-range";
 import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
 
 type TeamCalendarProps = {
@@ -102,6 +106,13 @@ export default function TeamCalendar({
     return orderedCalendarRange(rangeAnchor, rangeHover);
   }, [rangeAnchor, rangeHover]);
 
+  const previewWeekdays = useMemo(() => {
+    if (!previewRange) return null;
+    return new Set(
+      enumerateWeekdayDates(previewRange.from, previewRange.to),
+    );
+  }, [previewRange]);
+
   const currentDate = todayKey();
   const days = monthDays(year, month);
   const monthLabel = MONTH_YEAR_FORMATTER.format(
@@ -116,6 +127,7 @@ export default function TeamCalendar({
       if (!anchor) return;
       const end = rangeHoverRef.current ?? anchor;
       const { from, to } = orderedCalendarRange(anchor, end);
+      const weekdays = enumerateWeekdayDates(from, to);
       const memberId = editTargetIdRef.current;
 
       setRangeAnchor(null);
@@ -123,12 +135,16 @@ export default function TeamCalendar({
       rangeAnchorRef.current = null;
       rangeHoverRef.current = null;
 
-      if (toggle.isPending) return;
+      if (toggle.isPending || weekdays.length === 0) return;
 
-      if (from === to) {
-        toggle.mutate({ date: from, memberId });
+      if (weekdays.length === 1) {
+        toggle.mutate({ date: weekdays[0], memberId });
       } else {
-        toggle.mutate({ from, to, memberId });
+        toggle.mutate({
+          from: weekdays[0],
+          to: weekdays[weekdays.length - 1],
+          memberId,
+        });
       }
     };
 
@@ -149,6 +165,7 @@ export default function TeamCalendar({
 
   const handlePointerDown = (key: string) => {
     if (isLoading || Boolean(error) || toggle.isPending) return;
+    if (isWeekendDate(key)) return;
     rangeAnchorRef.current = key;
     rangeHoverRef.current = key;
     setRangeAnchor(key);
@@ -157,6 +174,7 @@ export default function TeamCalendar({
 
   const handlePointerEnter = (key: string) => {
     if (!rangeAnchorRef.current || toggle.isPending) return;
+    if (isWeekendDate(key)) return;
     rangeHoverRef.current = key;
     setRangeHover(key);
   };
@@ -319,16 +337,15 @@ export default function TeamCalendar({
             const others = entry?.others ?? [];
             const secondary = others.length > 0;
             const isToday = key === currentDate;
-            const weekday = new Date(Date.UTC(year, month, day)).getUTCDay();
-            const isWeekend = weekday === 0 || weekday === 6;
+            const isWeekend = isWeekendDate(key);
             const formattedDate = DATE_FORMATTER.format(
               new Date(Date.UTC(year, month, day)),
             );
-            const inPreview =
-              previewRange !== null &&
-              key >= previewRange.from &&
-              key <= previewRange.to;
+            const inPreview = previewWeekdays?.has(key) ?? false;
             const otherNames = others.map((member) => member.name).join(", ");
+            const selectionBlocked =
+              isLoading || Boolean(error) || toggle.isPending;
+            const interactionBlocked = selectionBlocked || isWeekend;
 
             return (
               <button
@@ -339,35 +356,50 @@ export default function TeamCalendar({
                   handlePointerDown(key);
                 }}
                 onPointerEnter={() => handlePointerEnter(key)}
-                disabled={isLoading || Boolean(error) || toggle.isPending}
-                aria-pressed={editTargetOff}
+                disabled={interactionBlocked}
+                aria-disabled={interactionBlocked}
+                aria-pressed={isWeekend ? undefined : editTargetOff}
                 aria-label={[
-                  primary
-                    ? `Jour de repos pour ${actingMemberName} le ${formattedDate}`
-                    : `Jour ouvrable le ${formattedDate}`,
-                  secondary ? `aussi en repos : ${otherNames}` : null,
-                  editTargetId !== actingMemberId
+                  isWeekend
+                    ? `Week-end le ${formattedDate}, non sélectionnable`
+                    : primary
+                      ? `Jour de repos pour ${actingMemberName} le ${formattedDate}`
+                      : `Jour ouvrable le ${formattedDate}`,
+                  !isWeekend && secondary
+                    ? `aussi en repos : ${otherNames}`
+                    : null,
+                  !isWeekend && editTargetId !== actingMemberId
                     ? editTargetOff
                       ? `cible d'édition (${editTargetName}) en repos`
                       : `cible d'édition (${editTargetName}) disponible`
                     : null,
-                  "Cliquer ou glisser pour modifier",
+                  isWeekend
+                    ? null
+                    : "Cliquer ou glisser pour modifier",
                 ]
                   .filter(Boolean)
                   .join(". ")}
-                title={secondary ? `Aussi en repos : ${otherNames}` : undefined}
+                title={
+                  isWeekend
+                    ? "Week-end non sélectionnable"
+                    : secondary
+                      ? `Aussi en repos : ${otherNames}`
+                      : undefined
+                }
                 className={[
                   "relative aspect-square rounded-md text-sm font-medium transition",
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400",
-                  "disabled:cursor-wait disabled:opacity-60",
-                  primary
-                    ? "bg-blue-600 text-white shadow-sm hover:bg-blue-500"
-                    : editTargetOff
-                      ? "bg-sky-600/80 text-white shadow-sm hover:bg-sky-500"
-                      : secondary
-                        ? "bg-amber-500/25 text-amber-50 hover:bg-amber-500/40"
-                        : isWeekend
-                          ? "bg-slate-800/70 text-slate-400 hover:bg-slate-700 hover:text-white"
+                  selectionBlocked && !isWeekend
+                    ? "disabled:cursor-wait disabled:opacity-60"
+                    : "",
+                  isWeekend
+                    ? "cursor-default bg-slate-800/70 text-slate-500 disabled:opacity-100"
+                    : primary
+                      ? "bg-blue-600 text-white shadow-sm hover:bg-blue-500"
+                      : editTargetOff
+                        ? "bg-sky-600/80 text-white shadow-sm hover:bg-sky-500"
+                        : secondary
+                          ? "bg-amber-500/25 text-amber-50 hover:bg-amber-500/40"
                           : "text-slate-200 hover:bg-slate-700",
                   isToday
                     ? "ring-1 ring-blue-400 ring-offset-1 ring-offset-slate-900"
