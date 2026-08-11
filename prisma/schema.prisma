@@ -38,14 +38,20 @@ model LeaveRequest {
   id        String             @id @default(cuid())
   memberId  String
   member    Member             @relation(fields: [memberId], references: [id])
-  /// pending | approved | rejected | withdrawn
-  status    String             @default("pending")
+  status    LeaveRequestStatus @default(pending)
   dates     LeaveRequestDate[]
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
   @@index([memberId])
   @@index([status])
+}
+
+enum LeaveRequestStatus {
+  pending
+  approved
+  rejected
+  withdrawn
 }
 
 model LeaveRequestDate {

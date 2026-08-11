@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import {
   DAY_OFF_CREATE_FORBIDDEN_CODE,
@@ -6,6 +7,7 @@ import {
   MEMBER_ARCHIVED_CODE,
   WEEKEND_NOT_ALLOWED_CODE,
 } from "@/lib/leave-request-codes";
+import { LeaveRequestStatusSchema } from "@/lib/schemas/leave-request";
 import { apiRequest } from "./helpers";
 
 type MemberBody = {
@@ -27,6 +29,8 @@ type ListBody = {
   data: LeaveRequestBody[];
 };
 
+const LEAVE_REQUEST_STATUSES = LeaveRequestStatusSchema.options;
+
 describe("Leave Requests API (non-manager submit path)", () => {
   const suffix = `leave-req-${Date.now()}`;
   const year = new Date().getUTCFullYear();
@@ -43,6 +47,27 @@ describe("Leave Requests API (non-manager submit path)", () => {
       };
     }
     throw new Error("No Monday found in September");
+  })();
+
+  /** Monday + Thursday + next Tuesday — non-contiguous assembled selection. */
+  const sparseWeekdays = (() => {
+    for (let day = 1; day <= 28; day++) {
+      const monday = `${year}-11-${String(day).padStart(2, "0")}`;
+      if (new Date(`${monday}T00:00:00.000Z`).getUTCDay() !== 1) continue;
+
+      const shift = (offset: number) => {
+        const date = new Date(`${monday}T00:00:00.000Z`);
+        date.setUTCDate(date.getUTCDate() + offset);
+        return date.toISOString().slice(0, 10);
+      };
+
+      return {
+        monday,
+        thursday: shift(3),
+        nextTuesday: shift(8),
+      };
+    }
+    throw new Error("No Monday found in November");
   })();
 
   const weekendDate = (() => {
@@ -149,6 +174,71 @@ describe("Leave Requests API (non-manager submit path)", () => {
       { method: "POST", actingMemberId },
     );
     expect(withdraw.status).toBe(200);
+  });
+
+  it("accepts a sparse non-contiguous weekday selection with the correct day count", async () => {
+    const dates = [
+      sparseWeekdays.monday,
+      sparseWeekdays.thursday,
+      sparseWeekdays.nextTuesday,
+    ];
+
+    const response = await apiRequest("/api/leave-requests", {
+      method: "POST",
+      actingMemberId,
+      body: { dates },
+    });
+
+    expect(response.status).toBe(201);
+    const created = (await response.json()) as LeaveRequestBody;
+    expect(created.dates).toHaveLength(3);
+    expect(
+      created.dates.map((entry) => entry.date.slice(0, 10)).sort(),
+    ).toEqual([...dates].sort());
+    expect(LEAVE_REQUEST_STATUSES).toContain(created.status);
+
+    await apiRequest(`/api/leave-requests/${created.id}/withdraw`, {
+      method: "POST",
+      actingMemberId,
+    });
+  });
+
+  it("persists only LeaveRequestStatus enum values on the Hono path", async () => {
+    const createResponse = await apiRequest("/api/leave-requests", {
+      method: "POST",
+      actingMemberId,
+      body: { dates: [sparseWeekdays.monday] },
+    });
+    expect(createResponse.status).toBe(201);
+    const created = (await createResponse.json()) as LeaveRequestBody;
+    expect(created.status).toBe("pending");
+    expect(LEAVE_REQUEST_STATUSES).toContain(created.status);
+
+    const withdraw = await apiRequest(
+      `/api/leave-requests/${created.id}/withdraw`,
+      { method: "POST", actingMemberId },
+    );
+    expect(withdraw.status).toBe(200);
+    const withdrawn = (await withdraw.json()) as LeaveRequestBody;
+    expect(withdrawn.status).toBe("withdrawn");
+    expect(LEAVE_REQUEST_STATUSES).toContain(withdrawn.status);
+
+    const listResponse = await apiRequest("/api/leave-requests", {
+      actingMemberId,
+    });
+    expect(listResponse.status).toBe(200);
+    const list = (await listResponse.json()) as ListBody;
+    for (const request of list.data) {
+      expect(LEAVE_REQUEST_STATUSES).toContain(request.status);
+    }
+
+    await expect(
+      db.$executeRaw`
+        UPDATE "LeaveRequest"
+        SET status = 'not-a-status'
+        WHERE id = ${created.id}
+      `,
+    ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
   });
 
   it("does not materialize Day Offs on Leave Request submit", async () => {

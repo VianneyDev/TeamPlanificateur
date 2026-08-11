@@ -18,6 +18,7 @@ import {
   isWeekendDate,
   orderedCalendarRange,
 } from "@/lib/day-off-range";
+import { mergeDraftWeekdays } from "@/lib/leave-request-draft";
 import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
 import type { PendingLeaveDate } from "@/lib/types";
 
@@ -210,7 +211,7 @@ export default function TeamCalendar({
         return;
       }
 
-      setDraftDates(weekdays);
+      setDraftDates((current) => mergeDraftWeekdays(current, weekdays));
     };
 
     const cancel = () => {
@@ -277,8 +278,8 @@ export default function TeamCalendar({
                 </>
               ) : (
                 <>
-                  Sélectionnez des jours ouvrés, confirmez votre demande, ou
-                  effacez vos jours de repos déjà validés (
+                  Sélectionnez des jours ouvrés (clics ou plage), confirmez
+                  votre demande, ou effacez vos jours de repos déjà validés (
                   <span className="font-medium text-slate-200">
                     {actingMemberName}
                   </span>
