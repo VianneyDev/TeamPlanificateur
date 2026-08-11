@@ -7,3 +7,9 @@ export type {
   ToggleDayOffResult,
   ToggleDayOffRangeResult,
 } from "@/lib/types/day-off";
+export type {
+  LeaveRequest,
+  LeaveRequestDate,
+  LeaveRequestStatus,
+  PendingLeaveDate,
+} from "@/lib/types/leave-request";

@@ -27,10 +27,36 @@ model Member {
    teams             Team[]              @relation("TeamMembers")
 
    daysOff           DayOff[]
+   leaveRequests     LeaveRequest[]
    monthlyWorkedDays MonthlyWorkedDays[]
 
    createdAt         DateTime            @default(now())
    updatedAt         DateTime            @updatedAt
+}
+
+model LeaveRequest {
+  id        String             @id @default(cuid())
+  memberId  String
+  member    Member             @relation(fields: [memberId], references: [id])
+  /// pending | approved | rejected | withdrawn
+  status    String             @default("pending")
+  dates     LeaveRequestDate[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([memberId])
+  @@index([status])
+}
+
+model LeaveRequestDate {
+  id             String       @id @default(cuid())
+  leaveRequestId String
+  leaveRequest   LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  date           DateTime
+
+  @@unique([leaveRequestId, date])
+  @@index([date])
+  @@index([leaveRequestId])
 }
 
 model DayOff {

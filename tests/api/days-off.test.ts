@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { DAY_OFF_CREATE_FORBIDDEN_CODE } from "@/lib/leave-request-codes";
 import { apiRequest } from "./helpers";
 
 type MemberBody = {
@@ -18,6 +19,7 @@ type ToggleBody = {
 
 type ListBody = {
   data: DayOffBody[];
+  pending?: unknown[];
 };
 
 describe("Day Offs API", () => {
@@ -115,34 +117,37 @@ describe("Day Offs API", () => {
     }
   });
 
-  it("lets the Acting Member toggle one full calendar day on and off", async () => {
-    const createResponse = await apiRequest("/api/days-off/toggle", {
+  it("forbids non-manager Day Off create and still allows clear of own Day Off", async () => {
+    const forbiddenCreate = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
       actingMemberId,
       body: { date: firstDate },
     });
+    expect(forbiddenCreate.status).toBe(403);
+    expect(await forbiddenCreate.json()).toEqual(
+      expect.objectContaining({ code: DAY_OFF_CREATE_FORBIDDEN_CODE }),
+    );
 
-    expect(createResponse.status).toBe(200);
-    const created = (await createResponse.json()) as ToggleBody;
-    expect(created).toEqual({
-      active: true,
-      dayOff: expect.objectContaining({
-        date: `${firstDate}T00:00:00.000Z`,
-        memberId: actingMemberId,
-      }),
+    const seeded = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: firstDate, memberId: actingMemberId },
     });
+    expect(seeded.status).toBe(200);
 
     const listResponse = await apiRequest(`/api/days-off?year=${year}`, {
       actingMemberId,
     });
     expect(listResponse.status).toBe(200);
     const list = (await listResponse.json()) as ListBody;
-    expect(list.data).toEqual([
-      expect.objectContaining({
-        date: `${firstDate}T00:00:00.000Z`,
-        memberId: actingMemberId,
-      }),
-    ]);
+    expect(list.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          date: `${firstDate}T00:00:00.000Z`,
+          memberId: actingMemberId,
+        }),
+      ]),
+    );
 
     const removeResponse = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
@@ -159,22 +164,22 @@ describe("Day Offs API", () => {
   it("lists Day Offs for active Members who share a Team with a non-manager", async () => {
     const teammateToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId: otherMemberId,
-      body: { date: secondDate },
+      actingMemberId: managerId,
+      body: { date: secondDate, memberId: otherMemberId },
     });
     expect(teammateToggle.status).toBe(200);
 
     const outsiderToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId: outsiderMemberId,
-      body: { date: thirdDate },
+      actingMemberId: managerId,
+      body: { date: thirdDate, memberId: outsiderMemberId },
     });
     expect(outsiderToggle.status).toBe(200);
 
     const actingToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId,
-      body: { date: firstDate },
+      actingMemberId: managerId,
+      body: { date: firstDate, memberId: actingMemberId },
     });
     expect(actingToggle.status).toBe(200);
 
@@ -202,11 +207,30 @@ describe("Day Offs API", () => {
           dayOff.date === `${secondDate}T00:00:00.000Z`,
       ),
     ).toBe(true);
+
+    // cleanup
+    await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { date: firstDate },
+    });
+    await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: secondDate, memberId: otherMemberId },
+    });
+    await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: thirdDate, memberId: outsiderMemberId },
+    });
   });
 
   it("lets a Manager list Day Offs across the organisation excluding Archived Members", async () => {
     const managerViewDate = `${year}-05-20`;
     const soonArchivedDate = `${year}-05-21`;
+    const actingVisibleDate = `${year}-05-18`; // Monday
+    const otherVisibleDate = `${year}-05-19`; // Tuesday
 
     const soonArchivedResponse = await apiRequest("/api/members", {
       method: "POST",
@@ -223,13 +247,27 @@ describe("Day Offs API", () => {
 
     const outsiderToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId: outsiderMemberId,
-      body: { date: managerViewDate },
+      actingMemberId: managerId,
+      body: { date: managerViewDate, memberId: outsiderMemberId },
     });
     expect(outsiderToggle.status).toBe(200);
     expect((await outsiderToggle.json()) as ToggleBody).toEqual(
       expect.objectContaining({ active: true }),
     );
+
+    const actingToggle = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: actingVisibleDate, memberId: actingMemberId },
+    });
+    expect(actingToggle.status).toBe(200);
+
+    const otherToggle = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId: managerId,
+      body: { date: otherVisibleDate, memberId: otherMemberId },
+    });
+    expect(otherToggle.status).toBe(200);
 
     const beforeArchiveToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
@@ -321,32 +359,13 @@ describe("Day Offs API", () => {
     });
   });
 
-  it("applies a homogeneous toggle across a contiguous date range", async () => {
-    const setResponse = await apiRequest("/api/days-off/toggle", {
+  it("lets a non-manager clear a homogeneous Day Off range and forbids range create", async () => {
+    const seedResponse = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId,
-      body: { from: rangeStart, to: rangeEnd },
+      actingMemberId: managerId,
+      body: { from: rangeStart, to: rangeEnd, memberId: actingMemberId },
     });
-    expect(setResponse.status).toBe(200);
-    const setBody = await setResponse.json();
-    expect(setBody).toEqual({
-      active: true,
-      dayOffs: expect.arrayContaining([
-        expect.objectContaining({
-          memberId: actingMemberId,
-          date: `${rangeStart}T00:00:00.000Z`,
-        }),
-        expect.objectContaining({
-          memberId: actingMemberId,
-          date: `${rangeMid}T00:00:00.000Z`,
-        }),
-        expect.objectContaining({
-          memberId: actingMemberId,
-          date: `${rangeEnd}T00:00:00.000Z`,
-        }),
-      ]),
-    });
-    expect(setBody.dayOffs).toHaveLength(3);
+    expect(seedResponse.status).toBe(200);
 
     const clearResponse = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
@@ -358,14 +377,24 @@ describe("Day Offs API", () => {
       active: false,
       dayOffs: [],
     });
+
+    const forbiddenCreate = await apiRequest("/api/days-off/toggle", {
+      method: "PUT",
+      actingMemberId,
+      body: { from: rangeStart, to: rangeEnd },
+    });
+    expect(forbiddenCreate.status).toBe(403);
+    expect(await forbiddenCreate.json()).toEqual(
+      expect.objectContaining({ code: DAY_OFF_CREATE_FORBIDDEN_CODE }),
+    );
   });
 
-  it("sets the whole range to Day Off when only some days are already off", async () => {
+  it("forbids non-manager range create when only some days are already off", async () => {
     const partialDate = rangeMid;
     const partialToggle = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId,
-      body: { date: partialDate },
+      actingMemberId: managerId,
+      body: { date: partialDate, memberId: actingMemberId },
     });
     expect(partialToggle.status).toBe(200);
 
@@ -374,16 +403,15 @@ describe("Day Offs API", () => {
       actingMemberId,
       body: { from: rangeStart, to: rangeEnd },
     });
-    expect(setResponse.status).toBe(200);
-    const setBody = await setResponse.json();
-    expect(setBody.active).toBe(true);
-    expect(setBody.dayOffs).toHaveLength(3);
+    expect(setResponse.status).toBe(403);
+    expect(await setResponse.json()).toEqual(
+      expect.objectContaining({ code: DAY_OFF_CREATE_FORBIDDEN_CODE }),
+    );
 
-    // cleanup
     await apiRequest("/api/days-off/toggle", {
       method: "PUT",
       actingMemberId,
-      body: { from: rangeStart, to: rangeEnd },
+      body: { date: partialDate },
     });
   });
 
@@ -459,11 +487,15 @@ describe("Day Offs API", () => {
     );
   });
 
-  it("expands Friday→Tuesday to three weekdays only", async () => {
+  it("lets a Manager expand Friday→Tuesday to three weekdays only", async () => {
     const setResponse = await apiRequest("/api/days-off/toggle", {
       method: "PUT",
-      actingMemberId,
-      body: { from: friToTue.friday, to: friToTue.tuesday },
+      actingMemberId: managerId,
+      body: {
+        from: friToTue.friday,
+        to: friToTue.tuesday,
+        memberId: actingMemberId,
+      },
     });
     expect(setResponse.status).toBe(200);
     const setBody = await setResponse.json();
