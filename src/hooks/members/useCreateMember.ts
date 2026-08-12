@@ -10,7 +10,7 @@ export function useCreateMember() {
   return useMutation({
     mutationFn: (data: CreateMemberInput) => createMember(data),
     onSuccess: () => {
-      toast.success("Membre créée");
+      toast.success("Membre créé");
       queryClient.invalidateQueries({ queryKey: ["members"] });
     },
     onError: (error) => {

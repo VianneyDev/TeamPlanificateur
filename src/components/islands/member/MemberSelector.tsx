@@ -63,24 +63,28 @@ export default function MemberSelector() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="w-full max-w-xl bg-slate-700/60 backdrop-blur rounded-2xl shadow-lg p-8">
+    <div className="flex flex-1 items-center justify-center">
+      <div className="panel w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 size-12 flex items-center justify-center bg-blue-500/20 text-blue-400 rounded-full">
-            <User />
+          <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-accent text-primary">
+            <User className="size-5" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-100">
+          <h2 className="text-xl font-semibold tracking-tight text-foreground">
             Accès au planning
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Sélectionnez votre équipe et votre nom
           </p>
         </div>
 
         <div className="space-y-5">
-          {/* Team */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-300">Équipe</label>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="member-selector-team"
+              className="text-sm font-medium text-foreground"
+            >
+              Équipe
+            </label>
             <Select
               value={selectedTeamId}
               onValueChange={(value) => {
@@ -88,12 +92,15 @@ export default function MemberSelector() {
                 setSelectedMemberId("");
               }}
             >
-              <SelectTrigger className="w-full cursor-pointer">
+              <SelectTrigger
+                id="member-selector-team"
+                className="w-full cursor-pointer"
+              >
                 <SelectValue placeholder="Choisir une équipe" />
               </SelectTrigger>
               <SelectContent>
                 {teams.length === 0 ? (
-                  <div className="px-4 py-2 text-muted-foreground text-sm">
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
                     Chargement...
                   </div>
                 ) : (
@@ -111,15 +118,22 @@ export default function MemberSelector() {
             </Select>
           </div>
 
-          {/* Member */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-gray-300">Membre</label>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="member-selector-member"
+              className="text-sm font-medium text-foreground"
+            >
+              Membre
+            </label>
             <Select
               value={selectedMemberId}
               onValueChange={setSelectedMemberId}
               disabled={!selectedTeamId}
             >
-              <SelectTrigger className="w-full cursor-pointer">
+              <SelectTrigger
+                id="member-selector-member"
+                className="w-full cursor-pointer"
+              >
                 <SelectValue placeholder="Choisir votre nom" />
               </SelectTrigger>
               <SelectContent>
@@ -139,8 +153,7 @@ export default function MemberSelector() {
           <button
             onClick={handleSelect}
             disabled={!selectedMemberId}
-            className="w-full mt-4 bg-blue-600 rounded-lg text-white font-medium py-2.5 cursor-pointer
-                      hover:bg-blue-500 transition disabled:bg-gray-500 disabled:cursor-not-allowed"
+            className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:brightness-105 cursor-pointer disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:brightness-100"
           >
             Accéder au dashboard
           </button>

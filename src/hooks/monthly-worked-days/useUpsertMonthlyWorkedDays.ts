@@ -30,7 +30,6 @@ export function useUpsertMonthlyWorkedDays() {
     mutationFn: (data: UpsertMonthlyWorkedDaysInput) =>
       upsertMonthlyWorkedDays(data),
     onSuccess: () => {
-      toast.success("Jours travaillés enregistrés");
       queryClient.invalidateQueries({ queryKey: ["monthly-worked-days"] });
     },
     onError: (error) => {

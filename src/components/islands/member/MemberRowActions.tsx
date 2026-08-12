@@ -27,28 +27,24 @@ export default function MemberRowActions({
   member,
   onEdit,
 }: MemberRowActionsProps) {
-  const { mutate: archive } = useArchiveMember();
-  const { mutate: restore } = useRestoreMember();
+  const { mutate: archive, isPending: isArchiving } = useArchiveMember();
+  const { mutate: restore, isPending: isRestoring } = useRestoreMember();
   const [confirmAction, setConfirmAction] = useState<
     "archive" | "restore" | null
   >(null);
 
-  const handleArchive = () => {
-    archive(member.id);
-    setConfirmAction(null);
-  };
-
-  const handleRestore = () => {
-    restore(member.id);
-    setConfirmAction(null);
-  };
+  const decisionPending = isArchiving || isRestoring;
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button>
-            <MoreHorizontal size={18} />
+          <button
+            type="button"
+            className="btn-ghost touch-target p-0"
+            aria-label={`Actions pour ${member.name}`}
+          >
+            <MoreHorizontal size={18} aria-hidden />
           </button>
         </DropdownMenuTrigger>
 
@@ -73,29 +69,35 @@ export default function MemberRowActions({
 
       <Dialog
         open={confirmAction === "archive"}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+        onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="bg-card">
           <DialogHeader>
             <DialogTitle>Archiver ce membre ?</DialogTitle>
             <DialogDescription>
-              Le membre sera archivé et n’apparaîtra plus dans la liste active.
+              Le membre quittera la liste active. Vous pourrez le restaurer plus
+              tard.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"
-              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              className="btn-outline"
+              disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleArchive}
+              className="btn-primary"
+              disabled={decisionPending}
+              aria-busy={isArchiving}
+              onClick={() =>
+                archive(member.id, { onSuccess: () => setConfirmAction(null) })
+              }
             >
-              Archiver
+              {isArchiving ? "Archivage…" : "Archiver"}
             </button>
           </DialogFooter>
         </DialogContent>
@@ -103,29 +105,34 @@ export default function MemberRowActions({
 
       <Dialog
         open={confirmAction === "restore"}
-        onOpenChange={(open) => !open && setConfirmAction(null)}
+        onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton>
+        <DialogContent showCloseButton className="bg-card">
           <DialogHeader>
             <DialogTitle>Restaurer ce membre ?</DialogTitle>
             <DialogDescription>
               Le membre réapparaîtra dans la liste des membres actifs.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-2">
             <button
               type="button"
-              className="px-3 py-2 rounded border border-slate-600 hover:bg-slate-800"
+              className="btn-outline"
+              disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
             </button>
             <button
               type="button"
-              className="px-3 py-2 rounded bg-slate-800 hover:bg-slate-700"
-              onClick={handleRestore}
+              className="btn-primary"
+              disabled={decisionPending}
+              aria-busy={isRestoring}
+              onClick={() =>
+                restore(member.id, { onSuccess: () => setConfirmAction(null) })
+              }
             >
-              Restaurer
+              {isRestoring ? "Restauration…" : "Restaurer"}
             </button>
           </DialogFooter>
         </DialogContent>

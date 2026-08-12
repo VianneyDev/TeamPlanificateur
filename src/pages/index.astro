@@ -12,16 +12,18 @@ const selectedMember =
 ---
 
 <Layout title="Calendrier d'équipe">
-   <div class="mb-8">
-      <h1 class="text-3xl font-bold text-white">Calendrier d'équipe</h1>
-      <p class="text-slate-400 mt-1">
+   <div class="mb-6">
+      <h1 class="text-2xl font-semibold tracking-tight text-foreground">
+         Calendrier d'équipe
+      </h1>
+      <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
          Consultez les jours de repos de l'équipe. Les membres soumettent une
          demande ; les managers peuvent corriger directement.
       </p>
    </div>
 
    {!selectedMember && (
-      <div class="flex-1 flex">
+      <div class="flex min-h-[50vh]">
          <MemberSelector client:load />
       </div>
    )}
@@ -34,4 +36,4 @@ const selectedMember =
          client:load
       />
    )}
-</Layout> 
+</Layout>

@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/islands/ui/dialog";
 import type { Member, Team } from "@/lib/types";
@@ -16,8 +15,8 @@ type MemberModalProps = {
   teams: Team[];
   mode?: "create" | "update";
   member?: Member;
-  open?: boolean;
-  onClose?: () => void;
+  open: boolean;
+  onClose: () => void;
   /** Applied on create (e.g. Externes tab). */
   defaultIsExternal?: boolean;
 };
@@ -30,8 +29,8 @@ export default function MemberModal({
   onClose,
   defaultIsExternal = false,
 }: MemberModalProps) {
-  const { mutate, isPending } = useCreateMember();
-  const { mutate: updateMember } = useUpdateMember();
+  const { mutate: createMember, isPending: isCreating } = useCreateMember();
+  const { mutate: updateMember, isPending: isUpdating } = useUpdateMember();
 
   const [name, setName] = useState("");
   const [role, setRole] = useState<"member" | "manager">("member");
@@ -42,12 +41,17 @@ export default function MemberModal({
   }, [role, mode]);
 
   useEffect(() => {
+    if (!open) return;
     if (mode === "update" && member) {
       setName(member.name);
       setRole(member.role as "member" | "manager");
       setTeamIds(member.teams?.map((t) => t.id) ?? []);
+      return;
     }
-  }, [mode, member]);
+    setName("");
+    setRole("member");
+    setTeamIds([]);
+  }, [mode, member, open]);
 
   const initialTeamIds = member?.teams?.map((t) => t.id) ?? [];
   const teamIdsChanged =
@@ -60,133 +64,187 @@ export default function MemberModal({
     teamIdsChanged;
 
   const canSubmit =
-    name.trim() && teamIds.length > 0 && (mode !== "update" || hasChanges);
+    Boolean(name.trim()) &&
+    teamIds.length > 0 &&
+    (mode !== "update" || hasChanges);
+  const isPending = isCreating || isUpdating;
 
-  const handleSubmit = () => {
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canSubmit || isPending) return;
+
     if (mode === "update" && member) {
       updateMember(
         { id: member.id, data: { name, role, teamIds } },
-        {
-          onSuccess: () => {
-            if (onClose) onClose();
-          },
-        },
+        { onSuccess: () => onClose() },
       );
-    } else {
-      mutate(
-        {
-          name,
-          role,
-          teamIds,
-          ...(defaultIsExternal ? { isExternal: true } : {}),
-        },
-        {
-          onSuccess: () => {
-            if (onClose) onClose();
-            setName("");
-            setRole("member");
-            setTeamIds([]);
-          },
-        },
-      );
+      return;
     }
+
+    createMember(
+      {
+        name,
+        role,
+        teamIds,
+        ...(defaultIsExternal ? { isExternal: true } : {}),
+      },
+      {
+        onSuccess: () => {
+          onClose();
+          setName("");
+          setRole("member");
+          setTeamIds([]);
+        },
+      },
+    );
   };
+
+  const isExternalEntity =
+    defaultIsExternal || Boolean(member?.isExternal);
+  const entityLabel = isExternalEntity ? "externe" : "membre";
 
   return (
     <Dialog
       open={open}
       onOpenChange={(value) => {
-        if (!value && onClose) onClose();
+        if (!value && !isPending) onClose();
       }}
     >
-      {mode === "create" && (
-        <DialogTrigger asChild>
-          <button className="px-3 py-2 bg-slate-800 rounded">
-            <Plus size={18} />
-          </button>
-        </DialogTrigger>
-      )}
-
-      <DialogContent>
+      <DialogContent className="bg-card">
         <DialogHeader>
           <DialogTitle>
             {mode === "update"
-              ? defaultIsExternal
+              ? isExternalEntity
                 ? "Modifier l'externe"
                 : "Modifier le membre"
-              : defaultIsExternal
+              : isExternalEntity
                 ? "Nouvel externe"
                 : "Nouveau membre"}
           </DialogTitle>
+          <DialogDescription>
+            {isExternalEntity
+              ? "Les membres externes déclarent leurs jours travaillés mensuels (indépendants des jours de repos)."
+              : "Rattachez le membre à au moins une équipe."}
+          </DialogDescription>
         </DialogHeader>
 
-        <input
-          className="w-full border rounded px-3 py-2 my-2"
-          placeholder="Nom"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as "manager" | "member")}
-        >
-          <option value="member">Membre</option>
-          <option value="manager">Manager</option>
-        </select>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium text-foreground">Nom</span>
+            <input
+              className="field"
+              placeholder={`Nom du ${entityLabel}`}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              required
+            />
+          </label>
 
-        {role === "member" && (
-          <select
-            className="w-full border rounded px-3 py-2 my-2"
-            value={teamIds[0] ?? ""}
-            onChange={(e) => setTeamIds([e.target.value])}
-          >
-            <option value="" disabled>
-              Sélectionner une équipe
-            </option>
-            {teams.map((team) => (
-              <option key={team.id} value={team.id}>
-                {team.name}
-              </option>
-            ))}
-          </select>
-        )}
+          <label className="block space-y-1.5 text-sm">
+            <span className="font-medium text-foreground">Rôle</span>
+            <select
+              className="field"
+              value={role}
+              onChange={(e) => setRole(e.target.value as "manager" | "member")}
+            >
+              <option value="member">Membre</option>
+              <option value="manager">Manager</option>
+            </select>
+          </label>
 
-        {role === "manager" && (
-          <div className="space-y-2 my-2">
-            {teams.map((team) => (
-              <label key={team.id} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={teamIds.includes(team.id)}
-                  onChange={(e) =>
-                    setTeamIds((prev) =>
-                      e.target.checked
-                        ? [...prev, team.id]
-                        : prev.filter((id) => id !== team.id),
-                    )
-                  }
-                />
-                {team.name}
-              </label>
-            ))}
-          </div>
-        )}
+          {role === "member" && (
+            <label className="block space-y-1.5 text-sm">
+              <span className="font-medium text-foreground">Équipe</span>
+              <select
+                className="field"
+                value={teamIds[0] ?? ""}
+                onChange={(e) => setTeamIds([e.target.value])}
+                required
+              >
+                <option value="" disabled>
+                  Sélectionner une équipe
+                </option>
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              {teams.length === 0 && (
+                <span className="block text-xs text-muted-foreground">
+                  Aucune équipe active - créez-en une dans l’onglet Équipes.
+                </span>
+              )}
+            </label>
+          )}
 
-        <DialogFooter>
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit || isPending}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {mode === "update"
-              ? isPending
-                ? "Enregistrement…"
-                : "Enregistrer"
-              : isPending
-                ? "Création…"
-                : "Créer"}
-          </button>
-        </DialogFooter>
+          {role === "manager" && (
+            <fieldset className="space-y-2 border-0 p-0">
+              <legend className="text-sm font-medium text-foreground">
+                Équipes
+              </legend>
+              {teams.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Aucune équipe active - créez-en une dans l’onglet Équipes.
+                </p>
+              ) : (
+                <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border border-border p-3">
+                  {teams.map((team) => (
+                    <label
+                      key={team.id}
+                      className="flex items-center gap-2 text-sm text-foreground"
+                    >
+                      <input
+                        type="checkbox"
+                        className="size-4 rounded border-input"
+                        checked={teamIds.includes(team.id)}
+                        onChange={(e) =>
+                          setTeamIds((prev) =>
+                            e.target.checked
+                              ? [...prev, team.id]
+                              : prev.filter((id) => id !== team.id),
+                          )
+                        }
+                      />
+                      {team.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+              {teamIds.length === 0 && teams.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Sélectionnez au moins une équipe.
+                </p>
+              )}
+            </fieldset>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit || isPending}
+              className="btn-primary"
+              aria-busy={isPending}
+            >
+              {mode === "update"
+                ? isPending
+                  ? "Enregistrement…"
+                  : "Enregistrer"
+                : isPending
+                  ? "Création…"
+                  : "Créer"}
+            </button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

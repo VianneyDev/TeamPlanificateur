@@ -15,7 +15,15 @@ const unusedVarsRule = [
 
 export default tseslint.config(
   {
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.astro/**"],
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.astro/**",
+      "**/.cursor/**",
+      "**/.github/skills/**",
+      "**/.github/agents/**",
+      "**/.impeccable/**",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

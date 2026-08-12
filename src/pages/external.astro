@@ -5,22 +5,32 @@ import Layout from "@/layouts/Layout.astro";
 import MonthlyWorkedDaysPanelWithProvider from "@/components/islands/monthly-worked-days/MonthlyWorkedDaysPanelWithProvider";
 
 const member = Astro.locals.member;
+const isManager = member?.role === "manager";
+const isExternal = Boolean(member?.isExternal);
 ---
 
 <Layout title="Jours travaillés">
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-white mb-2">Jours travaillés</h1>
-    <p class="text-slate-400">
-      Déclarez ou corrigez le volume mensuel des membres externes (mois courant et passés uniquement).
+  <div class="mb-6 rounded-xl border border-primary/20 bg-accent/50 px-4 py-4 sm:px-5">
+    <h1 class="text-2xl font-semibold tracking-tight text-foreground">
+      Jours travaillés
+    </h1>
+    <p class="mt-1 max-w-2xl text-sm text-accent-foreground">
+      {
+        isExternal && !isManager
+          ? "Déclarez votre volume mensuel. Indépendant des jours de repos du calendrier."
+          : isManager
+            ? "Volumes mensuels des membres externes - mois courant et passés uniquement."
+            : "Volumes mensuels - mois courant et passés uniquement."
+      }
     </p>
   </div>
 
   {member && (
     <MonthlyWorkedDaysPanelWithProvider
-      client:load
+      client:visible
       actingMemberId={member.id}
-      isManager={member.role === "manager"}
-      isExternal={member.isExternal}
+      isManager={isManager}
+      isExternal={isExternal}
     />
   )}
 </Layout>

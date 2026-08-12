@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -16,6 +16,11 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
   { value: "all", label: "Tous" },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  member: "Membre",
+  manager: "Manager",
+};
+
 const SEARCH_DEBOUNCE_MS = 300;
 const FETCH_INDICATOR_DELAY_MS = 200;
 const INITIAL_SKELETON_ROWS = 4;
@@ -25,13 +30,13 @@ const TEAM_SELECT_LIMIT = 200;
 function MembersTableSkeletonBody({ rows }: { rows: number }) {
   const bar = (className: string) => (
     <div
-      className={`rounded-md bg-slate-700/35 animate-pulse motion-reduce:animate-none ${className}`}
+      className={`rounded-md bg-muted animate-pulse motion-reduce:animate-none ${className}`}
     />
   );
   return (
     <>
       {Array.from({ length: rows }, (_, i) => (
-        <tr key={i} className="border-t border-slate-800/80">
+        <tr key={i} className="border-t border-border">
           <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-44")}</td>
           <td className="px-4 py-3 align-middle">{bar("h-3.5 max-w-28")}</td>
           <td className="px-4 py-3 align-middle">{bar("h-3.5 w-14")}</td>
@@ -60,6 +65,7 @@ export default function MembersPanel({
   initialSearch = "",
 }: MembersPanelProps) {
   const [status] = useQueryState("status", "active", initialStatus);
+  const [createOpen, setCreateOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [page, setPage] = useQueryState("page", "1", initialPage);
   const [urlSearch, setUrlSearch] = useQueryState("search", "", initialSearch);
@@ -85,7 +91,7 @@ export default function MembersPanel({
   const statusTyped = status as MemberStatus;
   const pageNumber = Number(page);
 
-  const { data, isLoading, isFetching, error } = useMembers({
+  const { data, isLoading, isFetching, error, refetch } = useMembers({
     status: statusTyped,
     page: pageNumber,
     search: debouncedSearch,
@@ -111,59 +117,72 @@ export default function MembersPanel({
   const overlayRowCount = Math.max(1, membersList.length);
 
   const title = externalOnly ? "Externes" : "Membres";
-  const emptyLabel = externalOnly
-    ? "Aucun externe trouvé"
-    : "Aucun membre trouvé";
+  const createLabel = externalOnly ? "Nouvel externe" : "Nouveau membre";
+  const emptyCopy = externalOnly
+    ? "Aucun membre externe pour ce filtre. Les externes déclarent leurs jours travaillés mensuels."
+    : "Aucun membre pour ce filtre. Créez un membre et rattachez-le à une équipe.";
   const errorLabel = externalOnly
-    ? "Erreur lors du chargement des externes"
-    : "Erreur lors du chargement des membres";
+    ? "Impossible de charger les externes."
+    : "Impossible de charger les membres.";
+  const entityWord = externalOnly ? "externe" : "membre";
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg">
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 border-b border-slate-700">
-        <h2 className="text-lg font-semibold text-white shrink-0">{title}</h2>
+    <div className="panel overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:gap-3 sm:p-5">
+        <h2 className="sr-only">{title}</h2>
 
-        <div className="flex min-w-0 justify-center px-2">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full bg-slate-800 py-2 pl-3 pr-9 rounded border border-slate-600 text-white placeholder:text-slate-500"
-            />
-            {searchInput.length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput("");
-                  flushSearch();
-                }}
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
-                aria-label="Effacer la recherche"
-              >
-                <X size={16} strokeWidth={2} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-          {teamsLoading ? (
-            <span className="invisible h-10 w-10 shrink-0" aria-hidden />
-          ) : (
-            <MemberModal teams={teams} defaultIsExternal={externalOnly} />
+        <div className="relative min-w-0 flex-1 sm:max-w-md">
+          <input
+            type="search"
+            placeholder="Rechercher…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="field pr-9"
+            aria-label={`Rechercher un ${entityWord}`}
+          />
+          {searchInput.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput("");
+                flushSearch();
+              }}
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Effacer la recherche"
+            >
+              <X size={16} strokeWidth={2} />
+            </button>
           )}
         </div>
+
+        <button
+          type="button"
+          className="btn-primary w-full gap-1.5 sm:ml-auto sm:w-auto"
+          onClick={() => setCreateOpen(true)}
+          disabled={teamsLoading}
+        >
+          <Plus size={16} aria-hidden />
+          {createLabel}
+        </button>
       </div>
 
       {error && (
-        <div className="px-4 py-3 text-sm text-red-400 border-b border-slate-700">
-          {errorLabel}
+        <div
+          role="alert"
+          className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+        >
+          <span className="text-sm text-destructive">{errorLabel}</span>
+          <button
+            type="button"
+            className="btn-outline shrink-0"
+            onClick={() => refetch()}
+          >
+            Réessayer
+          </button>
         </div>
       )}
 
-      <div className="flex gap-1 p-2 border-b border-slate-700">
+      <div className="flex flex-wrap gap-1 border-b border-border p-2 sm:px-3">
         {STATUS_OPTIONS.map((opt) => (
           <button
             key={opt.value}
@@ -174,25 +193,36 @@ export default function MembersPanel({
                 { key: "page", value: "1", defaultValue: "1" },
               ]);
             }}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              status === opt.value
-                ? "bg-slate-600 text-white"
-                : "text-slate-400 hover:text-slate-300 hover:bg-slate-800"
-            }`}
+            className={`filter-chip ${status === opt.value ? "filter-chip-active" : ""}`}
+            aria-pressed={status === opt.value}
           >
             {opt.label}
           </button>
         ))}
       </div>
 
-      <div className="relative">
+      <div className="relative overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="text-slate-400">
-            <tr>
-              <th className="px-4 py-3 text-left">Nom</th>
-              <th className="px-4 py-3 text-left">Équipe</th>
-              <th className="px-4 py-3 text-left">Role</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+          <caption className="sr-only">
+            Liste des {externalOnly ? "membres externes" : "membres"}
+          </caption>
+          <thead>
+            <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
+                Nom
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
+                Équipe
+              </th>
+              <th scope="col" className="px-4 py-3 font-medium sm:px-5">
+                Rôle
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-right font-medium sm:px-5"
+              >
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
 
@@ -203,11 +233,21 @@ export default function MembersPanel({
               <>
                 {membersList.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-6 text-center text-slate-400"
-                    >
-                      {emptyLabel}
+                    <td colSpan={4} className="px-4 py-10 sm:px-5">
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <p className="max-w-md text-sm text-muted-foreground">
+                          {emptyCopy}
+                        </p>
+                        <button
+                          type="button"
+                          className="btn-primary gap-1.5"
+                          onClick={() => setCreateOpen(true)}
+                          disabled={teamsLoading}
+                        >
+                          <Plus size={16} aria-hidden />
+                          {createLabel}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -215,31 +255,33 @@ export default function MembersPanel({
                 {membersList.map((member: Member) => (
                   <tr
                     key={member.id}
-                    className="border-t border-slate-800 hover:bg-slate-800/40"
+                    className="border-b border-border last:border-b-0 hover:bg-muted/35"
                   >
-                    <td className="px-4 py-3 text-white">
-                      <div className="flex items-center gap-2">
-                        {member.name}
-
+                    <td className="px-4 py-3 text-foreground sm:px-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{member.name}</span>
                         {member.archived && (
-                          <span className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded">
-                            Archivé
-                          </span>
+                          <span className="badge-archived">Archivé</span>
+                        )}
+                        {!externalOnly && member.isExternal && (
+                          <span className="badge-external">Externe</span>
                         )}
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-slate-300">
+                    <td className="px-4 py-3 text-muted-foreground sm:px-5">
                       {member.teams?.length
                         ? member.teams.map((t) => t.name).join(", ")
                         : "—"}
                     </td>
 
-                    <td className="px-4 py-3 text-slate-300 capitalize">
-                      {member.role}
+                    <td className="px-4 py-3 sm:px-5">
+                      <span className="badge-role">
+                        {ROLE_LABELS[member.role] ?? member.role}
+                      </span>
                     </td>
 
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right sm:px-5">
                       <MemberRowActions
                         member={member}
                         onEdit={(member: Member) => setEditingMember(member)}
@@ -254,10 +296,10 @@ export default function MembersPanel({
 
         {showFetchingOverlay && (
           <div
-            className="absolute left-0 right-0 bottom-0 top-12 z-10 overflow-hidden bg-slate-900/45 backdrop-blur-[1px] pointer-events-none"
+            className="pointer-events-none absolute bottom-0 left-0 right-0 top-10 z-10 overflow-hidden bg-card/50 backdrop-blur-[1px]"
             aria-hidden
           >
-            <table className="w-full text-sm table-fixed">
+            <table className="w-full table-fixed text-sm">
               <tbody>
                 <MembersTableSkeletonBody rows={overlayRowCount} />
               </tbody>
@@ -266,6 +308,14 @@ export default function MembersPanel({
         )}
       </div>
 
+      <MemberModal
+        teams={teams}
+        mode="create"
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        defaultIsExternal={externalOnly}
+      />
+
       {editingMember && (
         <MemberModal
           teams={teams}
@@ -273,42 +323,47 @@ export default function MembersPanel({
           member={editingMember}
           open={true}
           onClose={() => setEditingMember(null)}
-          defaultIsExternal={externalOnly}
+          defaultIsExternal={externalOnly || editingMember.isExternal}
         />
       )}
 
-      <div className="flex justify-between p-4">
-        <button
-          type="button"
-          disabled={pageNumber <= 1 || isLoading}
-          onClick={() => setPage((p) => String(Math.max(1, Number(p) - 1)))}
-          className={pageNumber <= 1 ? "cursor-not-allowed" : "cursor-pointer"}
-        >
-          Précédent
-        </button>
+      {(isLoading || membersList.length > 0 || pageNumber > 1) && (
+        <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3 sm:px-5">
+          <button
+            type="button"
+            disabled={pageNumber <= 1 || isLoading}
+            onClick={() => setPage((p) => String(Math.max(1, Number(p) - 1)))}
+            className="pager-btn"
+          >
+            Précédent
+          </button>
 
-        <span>
-          Page {pagination?.page} / {pagination?.totalPages}
-        </span>
+          <span className="text-sm text-muted-foreground">
+            Page {pagination?.page ?? pageNumber} /{" "}
+            {pagination?.totalPages ?? "—"}
+            {pagination?.total != null ? (
+              <span className="tabular-nums">
+                {" "}
+                · {pagination.total} {entityWord}
+                {pagination.total > 1 ? "s" : ""}
+              </span>
+            ) : null}
+          </span>
 
-        <button
-          type="button"
-          disabled={
-            isLoading ||
-            (pagination?.totalPages != null &&
-              pageNumber >= pagination.totalPages)
-          }
-          onClick={() => setPage((p) => String(Number(p) + 1))}
-          className={
-            pagination?.totalPages != null &&
-            pageNumber >= pagination.totalPages
-              ? "cursor-not-allowed"
-              : "cursor-pointer"
-          }
-        >
-          Suivant
-        </button>
-      </div>
+          <button
+            type="button"
+            disabled={
+              isLoading ||
+              (pagination?.totalPages != null &&
+                pageNumber >= pagination.totalPages)
+            }
+            onClick={() => setPage((p) => String(Number(p) + 1))}
+            className="pager-btn"
+          >
+            Suivant
+          </button>
+        </div>
+      )}
     </div>
   );
 }
