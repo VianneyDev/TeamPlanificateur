@@ -32,3 +32,8 @@ contexte.md
 .codex/
 .beads/
 .agents/
+
+# Impeccable - artefacts locaux / transitoires
+.impeccable/finish/
+.impeccable/hook.cache.json
+.impeccable/*.local.json
