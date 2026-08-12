@@ -33,7 +33,11 @@ contexte.md
 .beads/
 .agents/
 
-# Impeccable - artefacts locaux / transitoires
-.impeccable/finish/
-.impeccable/hook.cache.json
-.impeccable/*.local.json
+# Impeccable - outil de design local (non versionné)
+.impeccable/
+.cursor/skills/impeccable/
+.cursor/agents/impeccable-*.md
+.github/skills/impeccable/
+.github/agents/impeccable-*.agent.md
+.github/hooks/impeccable.json
+.cursor/hooks.json
