@@ -70,3 +70,7 @@ Design choices are recorded as ADRs under [`docs/adr/`](docs/adr/). Notable exam
 - [Cookie-based identity (V1)](docs/adr/0001-v1-identity-selected-member.md) - acting member via `selectedMemberId` cookie, no real login yet
 - [Test isolation via Neon branch](docs/adr/0002-test-database-neon-branch.md) - API tests never touch the dev database
 - [Leave-request approval workflow (V2)](docs/adr/0004-v2-day-off-approval.md) - members submit requests; managers approve or reject
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
