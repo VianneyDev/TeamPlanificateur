@@ -79,7 +79,12 @@ export default function MemberSelector() {
 
         <div className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Équipe</label>
+            <label
+              htmlFor="member-selector-team"
+              className="text-sm font-medium text-foreground"
+            >
+              Équipe
+            </label>
             <Select
               value={selectedTeamId}
               onValueChange={(value) => {
@@ -87,7 +92,10 @@ export default function MemberSelector() {
                 setSelectedMemberId("");
               }}
             >
-              <SelectTrigger className="w-full cursor-pointer">
+              <SelectTrigger
+                id="member-selector-team"
+                className="w-full cursor-pointer"
+              >
                 <SelectValue placeholder="Choisir une équipe" />
               </SelectTrigger>
               <SelectContent>
@@ -111,13 +119,21 @@ export default function MemberSelector() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Membre</label>
+            <label
+              htmlFor="member-selector-member"
+              className="text-sm font-medium text-foreground"
+            >
+              Membre
+            </label>
             <Select
               value={selectedMemberId}
               onValueChange={setSelectedMemberId}
               disabled={!selectedTeamId}
             >
-              <SelectTrigger className="w-full cursor-pointer">
+              <SelectTrigger
+                id="member-selector-member"
+                className="w-full cursor-pointer"
+              >
                 <SelectValue placeholder="Choisir votre nom" />
               </SelectTrigger>
               <SelectContent>
@@ -137,7 +153,7 @@ export default function MemberSelector() {
           <button
             onClick={handleSelect}
             disabled={!selectedMemberId}
-            className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:brightness-105 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-2 w-full rounded-md bg-primary py-2.5 text-sm font-medium text-primary-foreground transition hover:brightness-105 cursor-pointer disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:brightness-100"
           >
             Accéder au dashboard
           </button>

@@ -41,7 +41,7 @@ export default function MemberRowActions({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="btn-ghost size-8 p-0"
+            className="btn-ghost touch-target p-0"
             aria-label={`Actions pour ${member.name}`}
           >
             <MoreHorizontal size={18} aria-hidden />

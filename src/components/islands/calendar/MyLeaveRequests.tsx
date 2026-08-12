@@ -9,6 +9,15 @@ const STATUS_LABELS: Record<LeaveRequestStatus, string> = {
   withdrawn: "Retirée",
 };
 
+const STATUS_CHIP: Record<LeaveRequestStatus, string> = {
+  pending:
+    "border-amber-500/30 bg-amber-500/15 text-amber-100 light:bg-amber-100 light:text-amber-950",
+  approved:
+    "border-emerald-500/30 bg-emerald-500/15 text-emerald-100 light:bg-emerald-100 light:text-emerald-950",
+  rejected: "border-destructive/30 bg-destructive/10 text-destructive",
+  withdrawn: "border-border bg-muted text-muted-foreground",
+};
+
 const DATE_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
   month: "short",
@@ -24,19 +33,27 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
   const { data, isLoading, error, refetch } = useLeaveRequests();
   const withdraw = useWithdrawLeaveRequest(year);
   const requests = data?.data ?? [];
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
 
   return (
     <section className="space-y-4" aria-labelledby="mes-demandes-heading">
-      <div>
-        <h2
-          id="mes-demandes-heading"
-          className="text-base font-semibold text-foreground"
-        >
-          Mes demandes
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Suivez le statut de vos demandes de congés.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2
+            id="mes-demandes-heading"
+            className="flex items-center gap-2 text-base font-semibold text-foreground"
+          >
+            Mes demandes
+            {pendingCount > 0 && (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-primary px-1.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                {pendingCount}
+              </span>
+            )}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Statut de vos demandes - créez-les depuis le calendrier.
+          </p>
+        </div>
       </div>
 
       {isLoading && (
@@ -62,11 +79,18 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
       )}
 
       {!isLoading && !error && requests.length === 0 && (
-        <p className="text-sm text-muted-foreground">Aucune demande pour le moment.</p>
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-center">
+          <p className="text-sm font-medium text-foreground">
+            Aucune demande pour le moment
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Sélectionnez des jours ouvrés sur le calendrier, puis confirmez.
+          </p>
+        </div>
       )}
 
       {requests.length > 0 && (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {requests.map((request) => {
             const datesLabel = request.dates
               .map((entry) =>
@@ -78,23 +102,31 @@ export default function MyLeaveRequests({ year }: MyLeaveRequestsProps) {
             return (
               <li
                 key={request.id}
-                className="rounded-lg border border-border bg-muted/40 px-4 py-3"
+                className="rounded-lg border border-border bg-muted/40 px-3 py-3 transition hover:bg-muted/60 hover:shadow-md"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {request.dates.length} jour
-                      {request.dates.length > 1 ? "s" : ""} -{" "}
-                      {STATUS_LABELS[status] ?? status}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {request.dates.length} jour
+                        {request.dates.length > 1 ? "s" : ""}
+                      </p>
+                      <span
+                        className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${STATUS_CHIP[status] ?? STATUS_CHIP.withdrawn}`}
+                      >
+                        {STATUS_LABELS[status] ?? status}
+                      </span>
+                    </div>
+                    <p className="truncate text-sm text-muted-foreground">
+                      {datesLabel}
                     </p>
-                    <p className="text-sm text-muted-foreground">{datesLabel}</p>
                   </div>
                   {status === "pending" && (
                     <button
                       type="button"
                       onClick={() => withdraw.mutate(request.id)}
                       disabled={withdraw.isPending}
-                      className="btn-outline"
+                      className="btn-outline shrink-0"
                     >
                       Retirer
                     </button>

@@ -28,39 +28,36 @@ const tabBlurb =
 		<h1 class="text-2xl font-semibold tracking-tight text-foreground">Gestion</h1>
 	</div>
 
-	<div class="mb-3 flex gap-1 border-b border-border" role="tablist" aria-label="Sections gestion">
+	<nav class="mb-3 flex gap-1 border-b border-border" aria-label="Sections gestion">
 		<a
 			href="/gestion?tab=teams"
-			class={`tab ${tab === "teams" ? "tab-active" : "tab"}`}
-			role="tab"
-			aria-selected={tab === "teams"}
+			class={tab === "teams" ? "tab-active" : "tab"}
+			aria-current={tab === "teams" ? "page" : undefined}
 		>
 			Équipes
 		</a>
 		<a
 			href="/gestion?tab=members"
-			class={`tab ${tab === "members" ? "tab-active" : "tab"}`}
-			role="tab"
-			aria-selected={tab === "members"}
+			class={tab === "members" ? "tab-active" : "tab"}
+			aria-current={tab === "members" ? "page" : undefined}
 		>
 			Membres
 		</a>
 		<a
 			href="/gestion?tab=externes"
-			class={`tab ${tab === "externes" ? "tab-active" : "tab"}`}
-			role="tab"
-			aria-selected={tab === "externes"}
+			class={tab === "externes" ? "tab-active" : "tab"}
+			aria-current={tab === "externes" ? "page" : undefined}
 		>
 			Externes
 		</a>
-	</div>
+	</nav>
 
 	<p class="mb-5 max-w-2xl text-sm text-muted-foreground">{tabBlurb}</p>
 
 	{
 		tab === "teams" && (
 			<TeamsPanelWithProvider
-				client:load
+				client:visible
 				initialTeamsStatus={teamsStatus}
 				initialTeamsPage={teamsPage}
 				initialTeamsSearch={teamsSearch}
@@ -71,7 +68,7 @@ const tabBlurb =
 	{
 		tab === "members" && (
 			<MembersPanelWithProvider
-				client:load
+				client:visible
 				initialStatus={membersStatus}
 				initialPage={membersPage}
 				initialSearch={membersSearch}
@@ -82,7 +79,7 @@ const tabBlurb =
 	{
 		tab === "externes" && (
 			<MembersPanelWithProvider
-				client:load
+				client:visible
 				externalOnly
 				initialStatus={membersStatus}
 				initialPage={membersPage}

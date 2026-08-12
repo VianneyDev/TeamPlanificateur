@@ -320,7 +320,7 @@ export default function MonthlyWorkedDaysPanel({
         ref={formRef}
         onSubmit={handleSubmit}
         aria-labelledby="worked-days-form-heading"
-        className={`panel space-y-4 p-4 sm:p-5 ${
+        className={`panel-accent space-y-4 p-4 sm:p-5 ${
           isCorrection ? "ring-1 ring-primary/40" : ""
         }`}
       >
@@ -523,7 +523,7 @@ export default function MonthlyWorkedDaysPanel({
       </form>
 
       <section
-        className="panel overflow-hidden"
+        className="panel-accent overflow-hidden"
         aria-labelledby="worked-days-history-heading"
       >
         <div className="border-b border-border px-4 py-4 sm:px-5">

@@ -260,7 +260,7 @@ export default function TeamCalendar({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)] lg:items-start">
+    <div className="grid max-w-full gap-6 overflow-x-hidden lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,1fr)] lg:items-start">
       <section className="panel space-y-5 p-4 sm:p-5" aria-labelledby="calendar-heading">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -299,16 +299,16 @@ export default function TeamCalendar({
                 type="button"
                 onClick={() => setYearMonth(currentYearMonth())}
                 disabled={mutationPending}
-                className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                className="rounded-md border border-border px-3 py-2.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:text-muted-foreground/60"
               >
                 Aujourd&apos;hui
               </button>
             )}
-            <div className="flex items-center gap-1 rounded-md border border-border bg-muted/50 p-0.5">
+            <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5">
               <button
                 type="button"
                 onClick={() => setYearMonth((value) => shiftMonth(value, -1))}
-                className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                className="touch-target rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:text-muted-foreground/60"
                 aria-label="Afficher le mois précédent"
                 disabled={mutationPending}
               >
@@ -317,7 +317,7 @@ export default function TeamCalendar({
               <button
                 type="button"
                 onClick={() => setYearMonth((value) => shiftMonth(value, 1))}
-                className="rounded-md p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-40"
+                className="touch-target rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:text-muted-foreground/60"
                 aria-label="Afficher le mois suivant"
                 disabled={mutationPending}
               >
@@ -411,7 +411,7 @@ export default function TeamCalendar({
           )}
           <span className="inline-flex items-center gap-2">
             <span
-              className="size-3 rounded-sm bg-amber-500/80"
+              className="size-3 rounded-sm bg-calendar-secondary"
               aria-hidden="true"
             />
             Autres membres (initiales)
@@ -419,7 +419,7 @@ export default function TeamCalendar({
           {isManager && editTargetId !== actingMemberId && (
             <span className="inline-flex items-center gap-2">
               <span
-                className="size-3 rounded-sm bg-sky-600"
+                className="size-3 rounded-sm bg-calendar-edit-target"
                 aria-hidden="true"
               />
               Cible d&apos;édition
@@ -455,9 +455,9 @@ export default function TeamCalendar({
           </div>
         )}
 
-        <article className="w-full rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+        <article className="w-full max-w-full overflow-x-hidden rounded-lg border border-border bg-muted/30 p-2 sm:p-4">
           <div
-            className="grid grid-cols-7 gap-1 select-none"
+            className="grid grid-cols-7 gap-0.5 sm:gap-1 select-none"
             aria-label={monthLabel}
           >
             {WEEKDAYS.map((weekday, index) => (
@@ -475,7 +475,7 @@ export default function TeamCalendar({
                 return (
                   <span
                     key={`empty-${index}`}
-                    className="aspect-square rounded-md bg-muted/40"
+                    className="aspect-square min-h-9 w-full min-w-0 rounded-md bg-muted/40 sm:min-h-11"
                     aria-hidden="true"
                   />
                 );
@@ -512,9 +512,9 @@ export default function TeamCalendar({
                     : isPending
                       ? "border border-dashed border-primary/40 bg-accent text-accent-foreground hover:bg-accent/80"
                       : editTargetOff
-                        ? "bg-sky-600 text-white shadow-sm hover:bg-sky-500"
+                        ? "bg-calendar-edit-target text-white shadow-sm hover:bg-calendar-edit-target-hover"
                         : secondary
-                          ? "bg-amber-500/20 text-amber-100 hover:bg-amber-500/30 light:bg-amber-100 light:text-amber-950 light:hover:bg-amber-200"
+                          ? "bg-calendar-secondary-soft text-foreground hover:brightness-95"
                           : "bg-card text-foreground hover:bg-muted";
 
               return (
@@ -577,10 +577,10 @@ export default function TeamCalendar({
                         : undefined
                   }
                   className={[
-                    "relative aspect-square rounded-md text-sm font-medium transition",
+                    "relative aspect-square min-h-9 w-full min-w-0 rounded-md text-sm font-medium transition sm:min-h-11",
                     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     selectionBlocked && !isWeekend
-                      ? "disabled:cursor-wait disabled:opacity-60"
+                      ? "disabled:cursor-wait disabled:bg-muted disabled:text-muted-foreground"
                       : "",
                     fillClass,
                     isToday && !isSelected ? "font-semibold" : "",
@@ -616,7 +616,7 @@ export default function TeamCalendar({
                         <span
                           key={member.id}
                           title={member.name}
-                          className="rounded-[2px] bg-amber-500 px-0.5 text-[0.55rem] leading-tight font-semibold tracking-tight text-amber-950"
+                          className="rounded-[2px] bg-calendar-secondary px-0.5 text-[0.65rem] leading-tight font-semibold tracking-tight text-calendar-secondary-fg"
                         >
                           {memberInitials(member.name)}
                         </span>

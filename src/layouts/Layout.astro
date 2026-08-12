@@ -1,129 +1,93 @@
 ---
 import "@/styles/global.css";
-import ThemeToggle from "@/components/islands/ThemeToggle";
+import AppHeader from "@/components/islands/AppHeader";
 
 const { title = "Planning équipe" } = Astro.props;
 const member = Astro.locals.member;
 const pathname = Astro.url.pathname;
-const isActive = (path: string) => pathname === path;
+
+const memberPayload = member
+	? {
+			name: member.name as string,
+			role: member.role as string,
+			isExternal: Boolean(member.isExternal),
+			initials: String(member.name)
+				.split(/\s+/)
+				.filter(Boolean)
+				.slice(0, 2)
+				.map((part: string) => part[0]?.toUpperCase() ?? "")
+				.join(""),
+		}
+	: null;
 ---
 
 <!doctype html>
-<html lang="fr" class="dark">
+<html lang="fr" class="light">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+			rel="stylesheet"
+		/>
 		<title>{title}</title>
 		<script is:inline>
 			(function () {
 				try {
 					const t = localStorage.getItem("tpe-theme");
 					const root = document.documentElement;
-					if (t === "light") {
-						root.classList.add("light");
-						root.classList.remove("dark");
-					} else {
+					if (t === "dark") {
 						root.classList.add("dark");
 						root.classList.remove("light");
+					} else {
+						root.classList.add("light");
+						root.classList.remove("dark");
 					}
 				} catch {
-					document.documentElement.classList.add("dark");
+					document.documentElement.classList.add("light");
 				}
 			})();
 		</script>
 	</head>
-	<body class="min-h-screen bg-background text-foreground">
+	<body class="flex min-h-dvh flex-col bg-background text-foreground">
 		<!--
 THESIS: Un dashboard entreprise familier où le mois et les demandes se lisent en un coup d’œil, sans spectacle.
-OWN-WORLD: Dark-by-default ops chrome (#22252c / #2c3039), light toggle, accent bleu, top bar, split calendrier / file.
+OWN-WORLD: Light-by-default ops chrome, dark toggle, accent bleu, top bar, split calendrier / file; dark lifted (not muddy).
 STORY: Le visiteur (membre ou recruteur) comprend immédiatement TPE, navigue, et agit sur le planning.
-FIRST VIEWPORT: Top bar TPE + nav + thème + Acting Member; sous la barre, calendrier ~65% et rail demandes ~35%.
-FORM: Canon enterprise dashboard · craft bar Linear + Notion · comp-b topnav-split · dark default.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+FIRST VIEWPORT: Top bar TPE + nav (desktop) / menu hamburger (mobile) + thème + Acting Member; sous la barre, calendrier ~65% et rail demandes ~35%.
+FORM: seed:canon-comp-b · Canon enterprise dashboard · craft bar Linear + Notion · topnav-split · light default.
+FINISH: UX pass — Acting Member menu, mobile nav, theme lift, sticky footer, calendar contrast.
 		-->
-		<header class="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-			<div class="mx-auto flex h-14 max-w-[1400px] items-center gap-4 px-4 sm:gap-6 sm:px-6">
-				<a href="/" class="shrink-0 leading-tight">
-					<span class="block text-sm font-semibold tracking-tight text-foreground">TPE</span>
-					<span class="block text-[0.65rem] text-muted-foreground">Team Planning Engine</span>
-				</a>
+		<AppHeader client:load pathname={pathname} member={memberPayload} />
 
-				<nav class="flex flex-1 items-center gap-1 overflow-x-auto" aria-label="Navigation principale">
-					<a href="/" class={`nav-item ${isActive("/") ? "nav-item-active" : ""}`}>
-						Calendrier
-					</a>
-					{
-						member && (member.isExternal || member.role === "manager") && (
-							<a
-								href="/external"
-								class={`nav-item ${isActive("/external") ? "nav-item-active" : ""}`}
-							>
-								Jours travaillés
-							</a>
-						)
-					}
-					{
-						member && member.role === "manager" ? (
-							<a
-								href="/gestion"
-								class={`nav-item ${isActive("/gestion") ? "nav-item-active" : ""}`}
-							>
-								Gestion
-							</a>
-						) : (
-							<span
-								class="nav-item pointer-events-none opacity-50"
-								aria-disabled="true"
-								title="Accès réservé aux managers"
-							>
-								Gestion
-								<span class="sr-only"> (réservé aux managers)</span>
-							</span>
-						)
-					}
-				</nav>
-
-				<div class="flex shrink-0 items-center gap-2 sm:gap-3">
-					<ThemeToggle client:load />
-					{
-						member ? (
-							<>
-								<div class="hidden text-right text-xs sm:block">
-									<div class="font-medium text-foreground">{member.name}</div>
-									<div class="max-w-40 truncate text-muted-foreground">
-										{member.teams?.length
-											? member.teams.map((t: { name: string }) => t.name).join(", ")
-											: "—"}
-									</div>
-								</div>
-								<form method="POST" action="/api/logout">
-									<button
-										type="submit"
-										class="rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground cursor-pointer"
-									>
-										Déconnexion
-									</button>
-								</form>
-							</>
-						) : null
-					}
-				</div>
-			</div>
-		</header>
-
-		<main class="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
+		<main class="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 sm:py-8">
 			<slot />
 		</main>
+
+		<footer class="mt-auto border-t border-border bg-card/60">
+			<div class="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-4 text-sm text-muted-foreground sm:px-6">
+				<p>© {new Date().getFullYear()} TPE – Team Planning Engine</p>
+				<nav class="flex items-center gap-4" aria-label="Pied de page">
+					<a href="#aide" class="transition hover:text-foreground">Aide</a>
+					<a href="#confidentialite" class="transition hover:text-foreground">Confidentialité</a>
+				</nav>
+			</div>
+		</footer>
 	</body>
 </html>
 
 <style>
-	html,
+	html {
+		height: 100%;
+	}
 	body {
 		margin: 0;
 		width: 100%;
 		min-height: 100%;
+		overflow-x: clip;
 	}
 </style>

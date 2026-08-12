@@ -12,7 +12,7 @@ function readTheme(): Theme {
   } catch {
     /* ignore */
   }
-  return "dark";
+  return "light";
 }
 
 function applyTheme(theme: Theme) {
@@ -27,7 +27,7 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     const initial = readTheme();
@@ -48,7 +48,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
+      className="touch-target rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground"
       aria-label={label}
       title={label}
     >
