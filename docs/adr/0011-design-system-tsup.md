@@ -81,9 +81,9 @@ A3 owns token **content**. After the same build:
 - All three token levels are present in `dist/index.css`.
 - The alternative theme reassigns at least two semantic tokens.
 
-A3 and A4 validate each other: A4 without A3 can ship an empty-of-meaning `--*` plumbing file; A3 without A4 cannot prove those tokens survived the sibling emit. Neither issue waits on an unwritten ADR.
+A3 and A4 validate each other: A4 without A3 can ship an empty-of-meaning `--*` plumbing file; A3 without A4 cannot prove those tokens survived the sibling emit.
 
-The token list is A3’s deliverable (extracted from TeamPlanificateur). A repo ADR for that list is written **at the end of A3** and referenced retroactively. Until then, A3’s criterion above is the check; do not invent a packaging ADR number for tokens.
+The token list is A3’s deliverable (extracted from TeamPlanificateur). Names, layers, the component consumption rule, and the dark semantic reassignment live in **ADR-0015**. This ADR does not record that list.
 
 Cadrage decisions are referenced by **title**. Repo ADRs are referenced by **docs/adr/ number**. Never the reverse (a cadrage “0003” is not an ADR id; repo ADR-0003 is Monthly Worked Days).
 

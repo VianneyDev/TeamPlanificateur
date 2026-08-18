@@ -1,0 +1,193 @@
+/**
+ * @vianneytraina/ui design tokens (ADR-0015).
+ *
+ * Three levels:
+ *   1. Primitive - raw values (example --color-blue-500)
+ *   2. Semantic  - meaning (example --color-action-primary)
+ *   3. Component - slots (example --button-bg-default)
+ *
+ * Rule: components may use semantic or component-level tokens only, never primitives.
+ *
+ * Alternative theme: :root.dark reassigns semantic tokens. Component tokens stay
+ * on the light/default :root so they follow the semantic layer.
+ *
+ * Native CSS custom properties only. No Style Dictionary. No JS dependency.
+ * A4 emits this file as dist/index.css (ADR-0011). Consumers load
+ * '@vianneytraina/ui/styles.css' themselves (ADR-0009).
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Primitive palette - extracted from Team Planning Engine global.css         */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --color-white: #ffffff;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-900: #1e3a8a;
+  --color-slate-100: #f1f5f9;
+  --color-slate-600: #475569;
+  --color-slate-900: #0f172a;
+  --color-red-400: #f87171;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-amber-100: #ffedd5;
+  --color-amber-400: #fbbf24;
+  --color-amber-400-alpha-22: rgb(251 191 36 / 0.22);
+  --color-amber-700: #b45309;
+  --color-sky-400: #38bdf8;
+  --color-sky-500: #0ea5e9;
+  --color-sky-600: #0284c7;
+  --color-sky-700: #0369a1;
+  --color-stone-900: #1c1917;
+  --color-teal-400: #2dd4bf;
+  --color-teal-700: #0f766e;
+  --color-orange-700: #c2410c;
+  --color-violet-400: #a78bfa;
+  --color-violet-600: #7c3aed;
+  --color-rose-400: #fb7185;
+  --color-rose-700: #be123c;
+  --color-paper: #f4f6fb;
+  --color-paper-muted: #eef2f9;
+  --color-paper-secondary: #e8eefc;
+  --color-paper-accent: #dbe7ff;
+  --color-paper-line: #d5deef;
+  --color-ops-canvas: #1e2433;
+  --color-ops-raised: #283044;
+  --color-ops-muted: #343e56;
+  --color-ops-muted-fg: #b6c2d6;
+  --color-ops-line: #3d4a66;
+  --color-ops-accent: #2a3f6d;
+  --font-ibm-plex-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Semantic tokens - light default (also :root.light explicit class)          */
+/* -------------------------------------------------------------------------- */
+
+:root,
+:root.light {
+  --color-action-primary: var(--color-blue-600);
+  --color-action-primary-foreground: var(--color-white);
+  --color-surface-canvas: var(--color-paper);
+  --color-surface-raised: var(--color-white);
+  --color-surface-muted: var(--color-paper-muted);
+  --color-surface-secondary: var(--color-paper-secondary);
+  --color-surface-accent: var(--color-paper-accent);
+  --color-text-primary: var(--color-slate-900);
+  --color-text-muted: var(--color-slate-600);
+  --color-text-secondary: var(--color-blue-900);
+  --color-text-accent: var(--color-blue-900);
+  --color-border-default: var(--color-paper-line);
+  --color-border-input: var(--color-paper-line);
+  --color-focus-ring: var(--color-blue-600);
+  --color-danger: var(--color-red-600);
+  --color-danger-fill: var(--color-red-700);
+  --color-calendar-teammate: var(--color-amber-700);
+  --color-calendar-teammate-fg: var(--color-white);
+  --color-calendar-teammate-soft: var(--color-amber-100);
+  --color-calendar-edit-target: var(--color-sky-700);
+  --color-calendar-edit-target-hover: var(--color-sky-600);
+  --color-chart-1: var(--color-blue-600);
+  --color-chart-2: var(--color-teal-700);
+  --color-chart-3: var(--color-orange-700);
+  --color-chart-4: var(--color-violet-600);
+  --color-chart-5: var(--color-rose-700);
+  --color-surface-sidebar: var(--color-surface-raised);
+  --color-text-sidebar: var(--color-text-primary);
+  --color-action-sidebar: var(--color-action-primary);
+  --color-action-sidebar-foreground: var(--color-action-primary-foreground);
+  --color-surface-sidebar-accent: var(--color-surface-muted);
+  --color-text-sidebar-accent: var(--color-text-primary);
+  --color-border-sidebar: var(--color-border-default);
+  --color-focus-sidebar: var(--color-focus-ring);
+  --font-sans: var(--font-ibm-plex-sans);
+  --radius: var(--radius-lg);
+  --radius-control: var(--radius-md);
+  --radius-panel: var(--radius-xl);
+
+  /* ------------------------------------------------------------------------ */
+  /* Component tokens - A5 lots reference these, never primitives             */
+  /* ------------------------------------------------------------------------ */
+
+  --button-bg-default: var(--color-action-primary);
+  --button-fg-default: var(--color-action-primary-foreground);
+  --button-bg-ghost: transparent;
+  --button-fg-ghost: var(--color-text-muted);
+  --button-bg-outline: transparent;
+  --button-fg-outline: var(--color-text-primary);
+  --button-border-outline: var(--color-border-default);
+  --button-bg-danger: var(--color-danger-fill);
+  --button-fg-danger: var(--color-action-primary-foreground);
+  --button-bg-disabled: var(--color-surface-muted);
+  --button-fg-disabled: var(--color-text-muted);
+  --button-radius: var(--radius-control);
+
+  --text-field-bg: var(--color-surface-canvas);
+  --text-field-fg: var(--color-text-primary);
+  --text-field-border: var(--color-border-input);
+  --text-field-placeholder: var(--color-text-muted);
+  --text-field-ring: var(--color-focus-ring);
+  --text-field-radius: var(--radius-control);
+
+  --label-fg: var(--color-text-primary);
+
+  --dialog-bg: var(--color-surface-raised);
+  --dialog-fg: var(--color-text-primary);
+  --dialog-border: var(--color-border-default);
+  --dialog-radius: var(--radius-panel);
+
+  --select-bg: var(--color-surface-raised);
+  --select-fg: var(--color-text-primary);
+  --select-border: var(--color-border-default);
+  --select-radius: var(--radius-control);
+
+  --dropdown-menu-bg: var(--color-surface-raised);
+  --dropdown-menu-fg: var(--color-text-primary);
+  --dropdown-menu-border: var(--color-border-default);
+  --dropdown-menu-radius: var(--radius-control);
+
+  --badge-bg-default: var(--color-surface-muted);
+  --badge-fg-default: var(--color-text-muted);
+  --badge-border-default: var(--color-border-default);
+  --badge-bg-accent: var(--color-surface-accent);
+  --badge-fg-accent: var(--color-text-accent);
+  --badge-border-accent: var(--color-action-primary);
+  --badge-radius: var(--radius-control);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Alternative theme - dark document-root class reassigns semantic tokens     */
+/* -------------------------------------------------------------------------- */
+
+:root.dark {
+  --color-action-primary: var(--color-blue-500);
+  --color-surface-canvas: var(--color-ops-canvas);
+  --color-surface-raised: var(--color-ops-raised);
+  --color-surface-muted: var(--color-ops-muted);
+  --color-surface-secondary: var(--color-ops-muted);
+  --color-surface-accent: var(--color-ops-accent);
+  --color-text-primary: var(--color-slate-100);
+  --color-text-muted: var(--color-ops-muted-fg);
+  --color-text-secondary: var(--color-slate-100);
+  --color-text-accent: var(--color-paper-accent);
+  --color-border-default: var(--color-ops-line);
+  --color-border-input: var(--color-ops-line);
+  --color-focus-ring: var(--color-blue-500);
+  --color-danger: var(--color-red-400);
+  --color-calendar-teammate: var(--color-amber-400);
+  --color-calendar-teammate-fg: var(--color-stone-900);
+  --color-calendar-teammate-soft: var(--color-amber-400-alpha-22);
+  --color-calendar-edit-target: var(--color-sky-500);
+  --color-calendar-edit-target-hover: var(--color-sky-400);
+  --color-chart-1: var(--color-blue-500);
+  --color-chart-2: var(--color-teal-400);
+  --color-chart-3: var(--color-amber-400);
+  --color-chart-4: var(--color-violet-400);
+  --color-chart-5: var(--color-rose-400);
+}
