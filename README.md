@@ -20,7 +20,7 @@ Astro (islands) · React · Hono (API) · Prisma · PostgreSQL / Neon · TypeScr
 
 ```sh
 pnpm install
-# Set DATABASE_URL in .env to your Neon connection string
+# Set DATABASE_URL in apps/web/.env to your Neon connection string
 pnpm dev
 ```
 
@@ -34,7 +34,7 @@ All commands are run from the root of the project, from a terminal:
 | :---------------------------- | :----------------------------------------------- |
 | `pnpm install`                | Installs dependencies                            |
 | `pnpm dev`                    | Starts local dev server at `localhost:4321`      |
-| `pnpm build`                  | Build your production site to `./dist/`          |
+| `pnpm build`                  | Build your production site to `./apps/web/dist/` |
 | `pnpm preview`                | Preview your build locally, before deploying     |
 | `pnpm astro ...`              | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help`        | Get help using the Astro CLI                     |
@@ -47,9 +47,9 @@ All commands are run from the root of the project, from a terminal:
 
 API tests use a **dedicated Neon branch**, not the dev database from `.env`.
 
-1. Copy `.env.test.example` → `.env.test` and set `DATABASE_URL` to your Neon test branch.
+1. Copy `apps/web/.env.test.example` → `apps/web/.env.test` and set `DATABASE_URL` to your Neon test branch.
 2. Apply the schema once (and after new migrations): `pnpm db:migrate:test`
-3. Run `pnpm test` - Vitest loads `.env.test` via `tests/setup-env.ts` and refuses to run if that URL targets the same Neon endpoint as `.env`.
+3. Run `pnpm test` - Vitest loads `apps/web/.env.test` via `apps/web/tests/setup-env.ts` and refuses to run if that URL targets the same Neon endpoint as `apps/web/.env`.
 
 `.env.test` is gitignored. See [docs/adr/0002-test-database-neon-branch.md](docs/adr/0002-test-database-neon-branch.md).
 

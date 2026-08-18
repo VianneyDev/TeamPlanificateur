@@ -41,7 +41,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm exec prisma generate
+        run: pnpm --filter eccentric-equinox exec prisma generate
+
+      - name: Workspace contract
+        run: pnpm test:workspace
 
       - name: Lint
         run: pnpm lint
@@ -90,17 +93,17 @@ jobs:
           expires_at: ${{ env.EXPIRES_AT }}
 
       - name: Generate Prisma client
-        run: pnpm exec prisma generate
+        run: pnpm --filter eccentric-equinox exec prisma generate
 
       - name: Apply Prisma migrations (direct / unpooled URL)
-        run: pnpm exec prisma migrate deploy
+        run: pnpm --filter eccentric-equinox exec prisma migrate deploy
         env:
           DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url }}
 
       - name: Write .env.test for Vitest
         run: |
           umask 077
-          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > .env.test
+          printf 'DATABASE_URL=%s\n' "$DATABASE_URL" > apps/web/.env.test
         env:
           DATABASE_URL: ${{ steps.create_neon_branch.outputs.db_url }}
 

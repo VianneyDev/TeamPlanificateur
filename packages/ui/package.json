@@ -1,0 +1,17 @@
+{
+  "name": "@vianneytraina/ui",
+  "version": "0.0.0",
+  "private": false,
+  "author": "Vianney Traina",
+  "license": "MIT",
+  "description": "Composants React accessibles et tokens de design distribués en package versionné, extraits de TeamPlanificateur.",
+  "homepage": "https://github.com/VianneyDev/TeamPlanificateur/tree/master/packages/ui",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VianneyDev/TeamPlanificateur.git",
+    "directory": "packages/ui"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

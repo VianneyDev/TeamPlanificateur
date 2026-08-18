@@ -1,8 +1,8 @@
 # Team Planning Engine (TPE)
 
-**Orientation rapide (agents)** — Application web SSR avec **Astro 5** et îlots **React 19**. Les pages vivent dans `src/pages/*.astro` ; l’interactivité (listes, modales) est dans `src/components/islands/` avec `client:load`. L’API HTTP est **un seul point d’entrée** (fichier catch-all `src/pages/api/[...path].ts`) qui délègue à **Hono** ([`src/lib/api/app.ts`](src/lib/api/app.ts)). Données : **Prisma 7** + PostgreSQL via le driver adapter `pg` ([`src/lib/db.ts`](src/lib/db.ts)). Côté client : **TanStack Query** ([`AppProviders.tsx`](src/components/islands/providers/AppProviders.tsx)). Prérequis : `DATABASE_URL` ; dev : `pnpm dev` (port **4321** par défaut). Alias TypeScript : `@/*` → `./src/*`.
+**Orientation rapide (agents)** — Application web SSR avec **Astro 5** et îlots **React 19**, dans un monorepo pnpm (`apps/web` + `packages/ui`). Les pages vivent dans `apps/web/src/pages/*.astro` ; l’interactivité (listes, modales) est dans `apps/web/src/components/islands/` avec `client:load`. L’API HTTP est **un seul point d’entrée** (fichier catch-all `apps/web/src/pages/api/[...path].ts`) qui délègue à **Hono** ([`src/lib/api/app.ts`](../apps/web/src/lib/api/app.ts)). Données : **Prisma 7** + PostgreSQL via le driver adapter `pg` ([`src/lib/db.ts`](../apps/web/src/lib/db.ts)). Côté client : **TanStack Query** ([`AppProviders.tsx`](../apps/web/src/components/islands/providers/AppProviders.tsx)). Prérequis : `DATABASE_URL` dans `apps/web/.env` ; dev : `pnpm dev` à la racine (port **4321** par défaut). Alias TypeScript : `@/*` → `./src/*` (dans `apps/web`).
 
-> Le nom du package npm (`package.json`) est `eccentric-equinox` ; le libellé produit dans l’UI est **TPE / Team Planning Engine**.
+> Le nom du package npm de l’app (`apps/web/package.json`) est `eccentric-equinox` ; le libellé produit dans l’UI est **TPE / Team Planning Engine**. Le package design system est `@vianneytraina/ui` (`packages/ui`).
 
 ## Produit
 
@@ -11,11 +11,11 @@ Dashboard pour la gestion d’équipes et de membres. Les managers administrent 
 ## Stack technique
 
 - **Framework** : Astro 5, `output: "server"`, adapter `@astrojs/node` (mode standalone)
-- **UI** : React 19 (îlots), Tailwind CSS v4 (`@tailwindcss/vite`), composants Radix (`src/components/islands/ui/`) + `class-variance-authority`, `tailwind-merge`, `clsx`, toasts **Sonner**
+- **UI** : React 19 (îlots), Tailwind CSS v4 (`@tailwindcss/vite`), composants Radix (`apps/web/src/components/islands/ui/`) + `class-variance-authority`, `tailwind-merge`, `clsx`, toasts **Sonner**
 - **API** : Hono (`basePath("/api")`), validation `@hono/zod-validator`
 - **Données client** : TanStack Query (fetch, cache, optimistic updates sur les mutations)
-- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL`). Les tests Vitest utilisent `.env.test` (branche Neon dédiée), pas `.env` - voir `docs/adr/0002-test-database-neon-branch.md`.
-- **Validation** : Zod v4 — schémas partagés dans `src/lib/schemas/`
+- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL` dans `apps/web/.env`). Les tests Vitest utilisent `apps/web/.env.test` (branche Neon dédiée), pas `.env` - voir `docs/adr/0002-test-database-neon-branch.md`.
+- **Validation** : Zod v4 — schémas partagés dans `apps/web/src/lib/schemas/`
 
 ## Flux de données (résumé)
 
@@ -27,34 +27,34 @@ Les mutations passent par les routes Hono ; les `useMutation` peuvent appliquer 
 
 ## Architecture
 
-Pas de monorepo : un seul paquet à la racine.
+Monorepo pnpm : `apps/web` (app privée `eccentric-equinox`) et `packages/ui` (`@vianneytraina/ui`). L’app ne dépend pas encore du design system.
 
-| Zone                                | Rôle                                                      |
-| ----------------------------------- | --------------------------------------------------------- |
-| `src/pages/*.astro`                 | Routes SSR ; `prerender = false` sur les pages dynamiques |
-| `src/pages/api/[...path].ts`        | Route catch-all Astro → `app.fetch(request)` (Hono)       |
-| `src/middleware.ts`                 | Session légère + garde d’accès                            |
-| `src/layouts/Layout.astro`          | Coquille (sidebar, nav, déconnexion)                      |
-| `src/components/islands/`           | Composants React hydratés depuis les pages                |
-| `src/components/islands/<domaine>/` | UI par domaine (`member`, `team`, `providers`, `ui`)      |
-| `src/hooks/<domaine>/`              | Hooks TanStack Query (ex. `members`, `teams`)             |
-| `src/hooks/useQueryState.ts`        | État synchronisé avec l’URL (query string)                |
-| `src/lib/api/`                      | Clients / helpers fetch typés côté îlot                   |
-| `src/lib/types/`                    | Types métier alignés avec l’API                           |
-| `src/lib/schemas/`                  | Schémas Zod (création / mise à jour / query)              |
-| `src/lib/db.ts`                     | Instance Prisma + pool                                    |
-| `prisma/schema.prisma`              | Modèles et relations                                      |
-| `src/env.d.ts`                      | Typage `App.Locals`                                       |
+| Zone                                         | Rôle                                                      |
+| -------------------------------------------- | --------------------------------------------------------- |
+| `apps/web/src/pages/*.astro`                 | Routes SSR ; `prerender = false` sur les pages dynamiques |
+| `apps/web/src/pages/api/[...path].ts`        | Route catch-all Astro → `app.fetch(request)` (Hono)       |
+| `apps/web/src/middleware.ts`                 | Session légère + garde d’accès                            |
+| `apps/web/src/layouts/Layout.astro`          | Coquille (sidebar, nav, déconnexion)                      |
+| `apps/web/src/components/islands/`           | Composants React hydratés depuis les pages                |
+| `apps/web/src/components/islands/<domaine>/` | UI par domaine (`member`, `team`, `providers`, `ui`)      |
+| `apps/web/src/hooks/<domaine>/`              | Hooks TanStack Query (ex. `members`, `teams`)             |
+| `apps/web/src/hooks/useQueryState.ts`        | État synchronisé avec l’URL (query string)                |
+| `apps/web/src/lib/api/`                      | Clients / helpers fetch typés côté îlot                   |
+| `apps/web/src/lib/types/`                    | Types métier alignés avec l’API                           |
+| `apps/web/src/lib/schemas/`                  | Schémas Zod (création / mise à jour / query)              |
+| `apps/web/src/lib/db.ts`                     | Instance Prisma + pool                                    |
+| `apps/web/prisma/schema.prisma`              | Modèles et relations                                      |
+| `apps/web/src/env.d.ts`                      | Typage `App.Locals`                                       |
 
 **Patterns** : organisation par **domaine métier** (équipes, membres) ; séparation UI / accès données / validation ; typage strict TypeScript + Zod.
 
 ## Session & accès (pas d’un auth “classique”)
 
 - Un cookie **`selectedMemberId`** identifie le membre “connecté”.
-- [`src/middleware.ts`](src/middleware.ts) charge le membre (avec équipes) et le pose dans **`Astro.locals.member`** (typé dans [`src/env.d.ts`](src/env.d.ts)).
+- [`src/middleware.ts`](../apps/web/src/middleware.ts) charge le membre (avec équipes) et le pose dans **`Astro.locals.member`** (typé dans [`src/env.d.ts`](../apps/web/src/env.d.ts)).
 - La route **`/gestion`** redirige vers `/` si aucun membre ou si `role !== "manager"`.
 - **Déconnexion** : `POST /api/logout` (efface le cookie, redirection) — formulaire dans le layout.
-- **Sélecteur de membre** : [`MemberSelector`](src/components/islands/member/MemberSelector.tsx) côté dashboard pour choisir qui est “connecté” (usage interne / démo).
+- **Sélecteur de membre** : [`MemberSelector`](../apps/web/src/components/islands/member/MemberSelector.tsx) côté dashboard pour choisir qui est “connecté” (usage interne / démo).
 
 ## Schéma Prisma (référence métier)
 
@@ -69,17 +69,17 @@ Pas de monorepo : un seul paquet à la racine.
 
 - [x] CRUD équipes et membres (API Hono + îlots)
 - [x] Archivage / restauration membres ; archivage / suppression équipes (selon routes)
-- [x] **Membres** : filtre par statut (actifs / archivés / tous), **recherche** `search` et **pagination** côté serveur ([`app.ts`](src/lib/api/app.ts))
+- [x] **Membres** : filtre par statut (actifs / archivés / tous), **recherche** `search` et **pagination** côté serveur ([`app.ts`](../apps/web/src/lib/api/app.ts))
 - [x] **Équipes** : liste avec filtre statut (pas de pagination ni recherche dédiées comme pour les membres)
 - [x] Mises à jour optimistes sur plusieurs mutations TanStack Query
 - [x] États de chargement (ex. message “Chargement…” sur le panneau membres)
 
 ### Partiel / placeholder
 
-- [~] **Dashboard** ([`index.astro`](src/pages/index.astro)) : sélection de membre ; contenu principal encore minimal
-- [~] **Calendrier** ([`Calendar.astro`](src/components/calendar/Calendar.astro)) : squelette grille de mois, sans interaction ni branchement données
-- [~] **Gestion** — onglet **Externes** ([`gestion.astro`](src/pages/gestion.astro)) : lien d’onglet présent, **pas de bloc conditionnel** pour le contenu `tab === "externes"`
-- [~] Nav **“Jours travaillés”** pointe vers **`/external`** ([`Layout.astro`](src/layouts/Layout.astro)) mais **aucune page** `external.astro` à ce jour — lien à implémenter ou corriger
+- [~] **Dashboard** ([`index.astro`](../apps/web/src/pages/index.astro)) : sélection de membre ; contenu principal encore minimal
+- [~] **Calendrier** ([`Calendar.astro`](../apps/web/src/components/calendar/Calendar.astro)) : squelette grille de mois, sans interaction ni branchement données
+- [~] **Gestion** — onglet **Externes** ([`gestion.astro`](../apps/web/src/pages/gestion.astro)) : lien d’onglet présent, **pas de bloc conditionnel** pour le contenu `tab === "externes"`
+- [~] Nav **“Jours travaillés”** pointe vers **`/external`** ([`Layout.astro`](../apps/web/src/layouts/Layout.astro)) mais **aucune page** `external.astro` à ce jour — lien à implémenter ou corriger
 
 ### À faire (roadmap)
 
