@@ -63,31 +63,6 @@ Monorepo pnpm : `apps/web` (app privée `eccentric-equinox`) et `packages/ui` (`
 - **DayOff** : jour off par membre (contrainte unique `memberId` + `date`) — **présent en BDD**, peu / pas d’UI encore
 - **MonthlyWorkedDays** : jours travaillés par membre, année / mois — **présent en BDD**, peu / pas d’UI encore
 
-## Fonctionnalités
-
-### Implémenté (vérifié dans le code)
-
-- [x] CRUD équipes et membres (API Hono + îlots)
-- [x] Archivage / restauration membres ; archivage / suppression équipes (selon routes)
-- [x] **Membres** : filtre par statut (actifs / archivés / tous), **recherche** `search` et **pagination** côté serveur ([`app.ts`](../apps/web/src/lib/api/app.ts))
-- [x] **Équipes** : liste avec filtre statut (pas de pagination ni recherche dédiées comme pour les membres)
-- [x] Mises à jour optimistes sur plusieurs mutations TanStack Query
-- [x] États de chargement (ex. message “Chargement…” sur le panneau membres)
-
-### Partiel / placeholder
-
-- [~] **Dashboard** ([`index.astro`](../apps/web/src/pages/index.astro)) : sélection de membre ; contenu principal encore minimal
-- [~] **Calendrier** ([`Calendar.astro`](../apps/web/src/components/calendar/Calendar.astro)) : squelette grille de mois, sans interaction ni branchement données
-- [~] **Gestion** — onglet **Externes** ([`gestion.astro`](../apps/web/src/pages/gestion.astro)) : lien d’onglet présent, **pas de bloc conditionnel** pour le contenu `tab === "externes"`
-- [~] Nav **“Jours travaillés”** pointe vers **`/external`** ([`Layout.astro`](../apps/web/src/layouts/Layout.astro)) mais **aucune page** `external.astro` à ce jour — lien à implémenter ou corriger
-
-### À faire (roadmap)
-
-- [ ] Calendrier jours off (brancher `DayOff`)
-- [ ] Saisie jours travaillés pour externes (brancher `MonthlyWorkedDays`, page `/external`)
-- [ ] Stats / reporting
-- [ ] Fonctionnalités IA (vision produit)
-
 ## Règles & conventions
 
 **Patterns**
@@ -126,12 +101,3 @@ Monorepo pnpm : `apps/web` (app privée `eccentric-equinox`) et `packages/ui` (`
 - Gérer équipes et membres (côté manager)
 - Suivre archivage et rattachement aux équipes
 - Filtrer / chercher / paginer la liste des membres
-
-**Vision produit**
-
-- Outil augmenté par l’IA : recherche et analyse, aide à la décision, automatisation de tâches
-
-## État actuel & focus
-
-- Base solide côté **CRUD membres/équipes**, API cohérente, îlots React + TanStack Query
-- **En cours / court terme** : Mise en place sur TeamsPanel des mêmes fonctionnalités que pour les membres avec gestion des tabs via url (ex: ?tab=teams&status=archived) pour éviter la refrech à chaque changement de tab, mise en place de la debounce sur la search et skeleton.
