@@ -7,9 +7,10 @@ alwaysApply: false
 
 ## Identité
 
-- **Produit** : TPE / Team Planning Engine. **Package npm** : `eccentric-equinox` (ne pas confondre avec le libellé UI).
-- **Alias** : `@/*` → `./src/*`.
-- **Prérequis** : `DATABASE_URL`. **Dev** : `pnpm dev` (port **4321** par défaut).
+- **Produit** : TPE / Team Planning Engine. **Package npm de l’app** : `eccentric-equinox` (ne pas confondre avec le libellé UI).
+- **Monorepo** : app dans `apps/web` ; design system `@vianneytraina/ui` dans `packages/ui`. Les chemins `src/` ci-dessous sont relatifs à `apps/web`.
+- **Alias** : `@/*` → `./src/*` (dans `apps/web`).
+- **Prérequis** : `DATABASE_URL` dans `apps/web/.env`. **Dev** : `pnpm dev` à la racine (port **4321** par défaut).
 
 ## Front Astro
 

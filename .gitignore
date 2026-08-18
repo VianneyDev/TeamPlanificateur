@@ -23,7 +23,10 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-/src/generated/prisma
+# vscode setting folder
+.vscode/
+
+**/src/generated/prisma
 
 contexte.md
 .scratch/

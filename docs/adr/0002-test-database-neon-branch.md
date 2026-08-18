@@ -5,11 +5,11 @@ API tests hit a real Postgres via Prisma. Running them against the local `.env` 
 ## Setup
 
 1. Create a Neon branch (schema-only is fine; a branch copied from parent already has tables).
-2. Copy `.env.test.example` → `.env.test` and set `DATABASE_URL` to that branch.
+2. Copy `apps/web/.env.test.example` → `apps/web/.env.test` and set `DATABASE_URL` to that branch.
 3. Apply migrations: `pnpm db:migrate:test`  
-   If the branch already has the schema but no Prisma migration history (common for a Neon copy), baseline once with `node --import ./scripts/load-env-test.mjs ./node_modules/prisma/build/index.js migrate resolve --applied <migration_name>` for each migration under `prisma/migrations`, then re-run `pnpm db:migrate:test`.
+   If the branch already has the schema but no Prisma migration history (common for a Neon copy), baseline once with `pnpm --filter eccentric-equinox exec -- node --import ./scripts/load-env-test.mjs ./node_modules/prisma/build/index.js migrate resolve --applied <migration_name>` for each migration under `apps/web/prisma/migrations`, then re-run `pnpm db:migrate:test`.
 4. Run tests: `pnpm test` / `pnpm test:api`
 
-Vitest loads `.env.test` in `tests/setup-env.ts` (not `.env`). The setup fails fast if `.env.test` is missing or targets the same Neon endpoint as `.env`. `pnpm db:migrate:test` uses `scripts/load-env-test.mjs` with `override: true` so a shell `DATABASE_URL` cannot accidentally point migrate at dev. Do not commit `.env.test`.
+Vitest loads `apps/web/.env.test` in `apps/web/tests/setup-env.ts` (not `.env`). The setup fails fast if `.env.test` is missing or targets the same Neon endpoint as `apps/web/.env`. `pnpm db:migrate:test` uses `apps/web/scripts/load-env-test.mjs` with `override: true` so a shell `DATABASE_URL` cannot accidentally point migrate at dev. Do not commit `.env.test`.
 
 Locally, keep using this **stable** dedicated test branch. CI uses a separate **ephemeral** Neon branch per PR (create on open/sync, delete on close) - see `.github/workflows/ci.yml` and the README CI section.

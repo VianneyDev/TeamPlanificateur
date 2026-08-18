@@ -4,14 +4,14 @@
 
 MAIN_REPO="$HOME/dev/TeamPlanificateur"
 
-if [ -f "$MAIN_REPO/.env" ] && [ ! -f ".env" ]; then
-  cp "$MAIN_REPO/.env" ".env"
-  echo "Copied .env from main repo"
+if [ -f "$MAIN_REPO/apps/web/.env" ] && [ ! -f "apps/web/.env" ]; then
+  cp "$MAIN_REPO/apps/web/.env" "apps/web/.env"
+  echo "Copied apps/web/.env from main repo"
 fi
 
-if [ -f "$MAIN_REPO/.env.test" ] && [ ! -f ".env.test" ]; then
-  cp "$MAIN_REPO/.env.test" ".env.test"
-  echo "Copied .env.test from main repo"
+if [ -f "$MAIN_REPO/apps/web/.env.test" ] && [ ! -f "apps/web/.env.test" ]; then
+  cp "$MAIN_REPO/apps/web/.env.test" "apps/web/.env.test"
+  echo "Copied apps/web/.env.test from main repo"
 fi
 
 # Optionnel : installer les deps si besoin (décommente si tu veux)
