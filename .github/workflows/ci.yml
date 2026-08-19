@@ -53,6 +53,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: UI unit tests
+        run: pnpm test:ui
+
       - name: Build
         run: pnpm build
 
