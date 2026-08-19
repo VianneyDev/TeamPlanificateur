@@ -22,6 +22,7 @@
 
 :root {
   --color-white: #ffffff;
+  --color-blue-400: #60a5fa;
   --color-blue-500: #3b82f6;
   --color-blue-600: #2563eb;
   --color-blue-900: #1e3a8a;
@@ -177,7 +178,7 @@
   --color-text-accent: var(--color-paper-accent);
   --color-border-default: var(--color-ops-line);
   --color-border-input: var(--color-ops-line);
-  --color-focus-ring: var(--color-blue-500);
+  --color-focus-ring: var(--color-blue-400);
   --color-danger: var(--color-red-400);
   --color-calendar-teammate: var(--color-amber-400);
   --color-calendar-teammate-fg: var(--color-stone-900);

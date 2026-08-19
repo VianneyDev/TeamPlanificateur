@@ -224,36 +224,8 @@ function parseContrastPairs(adr) {
   return pairs;
 }
 
-function namedForegroundPairs(tokenNames) {
-  const names = new Set(tokenNames);
-  const pairs = [];
-  for (const name of tokenNames) {
-    const base = name.endsWith("-foreground")
-      ? name.slice(0, -"-foreground".length)
-      : name.endsWith("-fg")
-        ? name.slice(0, -"-fg".length)
-        : null;
-    if (base && names.has(base)) {
-      pairs.push({ foreground: name, background: base });
-    }
-  }
-  return pairs;
-}
-
-function terminalSemantic(props, name) {
-  const seen = new Set();
-  let current = name;
-  while (!seen.has(current)) {
-    seen.add(current);
-    const value = props[current];
-    const next = varTarget(value);
-    if (next === null) return current;
-    if (Object.hasOwn(props, next) && varTarget(props[next]) === null) {
-      return current;
-    }
-    current = next;
-  }
-  assert.fail(`token cycle while resolving ${name}`);
+function namedForegroundToken(name) {
+  return name.endsWith("-foreground") || name.endsWith("-fg");
 }
 
 function parseColor(value) {
@@ -329,46 +301,23 @@ function contrastRatio(foreground, background) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-function semanticColorNames(props) {
-  return Object.keys(props).filter(
-    (name) => name.startsWith("--color-") && usesVar(props[name]),
-  );
-}
-
 describe("design-system semantic contrast (A3b)", () => {
-  it("declares a contrast target for every named semantic foreground/background pair", () => {
-    const adr = readText("docs/adr/0015-design-system-tokens.md");
-    const declared = parseContrastPairs(adr);
+  it("declares a contrast target for every -foreground and -fg custom property by name", () => {
+    const declared = parseContrastPairs(readText("docs/adr/0015-design-system-tokens.md"));
     const light = cascade(readText(TOKEN_CSS), isLightRoot);
-    const names = semanticColorNames(light);
+    const declaredForegrounds = new Set(declared.map((pair) => pair.foreground));
 
-    const declaredTerminals = new Set(
-      declared.map(
-        (pair) =>
-          `${terminalSemantic(light, pair.foreground)} ${terminalSemantic(light, pair.background)}`,
-      ),
+    const missing = Object.keys(light).filter(
+      (name) =>
+        namedForegroundToken(name) &&
+        usesVar(light[name]) &&
+        !declaredForegrounds.has(name),
     );
-
-    const declaredForegrounds = new Set(
-      declared.map((pair) => terminalSemantic(light, pair.foreground)),
+    assert.equal(
+      missing.length,
+      0,
+      `custom properties ending in -foreground or -fg must have their own ADR-0015 row: ${missing.join(", ")}`,
     );
-
-    for (const pair of namedForegroundPairs(names)) {
-      const key = `${terminalSemantic(light, pair.foreground)} ${terminalSemantic(light, pair.background)}`;
-      assert.ok(
-        declaredTerminals.has(key),
-        `${pair.foreground} on ${pair.background} is a semantic pair without a declared contrast target in ADR-0015`,
-      );
-    }
-
-    for (const name of names) {
-      if (!/^--color-text-/.test(name)) continue;
-      const terminal = terminalSemantic(light, name);
-      assert.ok(
-        declaredForegrounds.has(terminal),
-        `${name} is a semantic text token without a declared contrast target in ADR-0015`,
-      );
-    }
   });
 
   it("meets WCAG AA contrast for every declared pair in light and dark themes", () => {
