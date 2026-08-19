@@ -16,7 +16,7 @@ Three documented levels, always in this order:
 
 **Rule: components may use semantic or component-level tokens only, never primitives.** A5 lots (Button, TextField, Label, Dialog, Select, DropdownMenu, Badge) must follow that rule. A primitive used in a component is a leak: changing `--color-blue-600` would restyle that component even when `--color-action-primary` was meant to be the brand switch.
 
-The alternative theme is the existing document-root class toggle (`:root` / `:root.light` vs `:root.dark`). Dark reassigns **semantic** tokens only. Component tokens stay on `:root, :root.light` so they follow the semantic layer. Two reassignments are enough to prove the layer (`--color-action-primary` and `--color-surface-canvas`); the extracted dark theme reassigns the rest of the TPE light/dark sheet.
+The alternative theme is the existing document-root class toggle (`:root` / `:root.light` vs `:root.dark`). Dark reassigns **semantic** tokens only. Component tokens stay on `:root, :root.light` so they follow the semantic layer. Two reassignments are enough to prove the layer (`--color-text-primary` and `--color-surface-canvas`); the extracted dark theme reassigns the rest of the TPE light/dark sheet. `--color-action-primary` is not reassigned: both themes keep `--color-blue-600` so white action text meets 4.5:1.
 
 No Style Dictionary. No JS theme module. One CSS file, no JS dependency.
 
@@ -29,6 +29,7 @@ Values come from `apps/web/src/styles/global.css` and `DESIGN.md` (Operate Blue,
 | Token | Value |
 | --- | --- |
 | `--color-white` | `#ffffff` |
+| `--color-blue-400` | `#60a5fa` |
 | `--color-blue-500` | `#3b82f6` |
 | `--color-blue-600` | `#2563eb` |
 | `--color-blue-900` | `#1e3a8a` |
@@ -71,7 +72,7 @@ Values come from `apps/web/src/styles/global.css` and `DESIGN.md` (Operate Blue,
 | `--radius-lg` | `0.5rem` |
 | `--radius-xl` | `0.75rem` |
 
-`--color-blue-500` is TPE dark Operate Blue. Light Operate Blue is `--color-blue-600`.
+Operate Blue for actions is `--color-blue-600` in both themes so `--color-action-primary-foreground` meets 4.5:1. `--color-blue-400` is the dark focus ring (3:1 on muted, secondary, and accent). `--color-blue-500` remains for dark chart-1.
 
 ### Semantic (light default)
 
@@ -120,11 +121,10 @@ Declared on `:root, :root.light`. Aliases (sidebar) may point at other semantic 
 
 ### Semantic (dark reassignment)
 
-`:root.dark` reassigns the following. Tokens omitted here keep the light semantic value (`--color-action-primary-foreground` stays white; `--color-danger-fill` stays `--color-red-700`; radius and font stay put). Sidebar aliases are not repeated: they already follow the semantic tokens they reference.
+`:root.dark` reassigns the following. Tokens omitted here keep the light semantic value (`--color-action-primary` stays `--color-blue-600` so white action text meets 4.5:1; `--color-action-primary-foreground` stays white; `--color-danger-fill` stays `--color-red-700`; radius and font stay put). Sidebar aliases are not repeated: they already follow the semantic tokens they reference.
 
 | Token | Dark value |
 | --- | --- |
-| `--color-action-primary` | `var(--color-blue-500)` |
 | `--color-surface-canvas` | `var(--color-ops-canvas)` |
 | `--color-surface-raised` | `var(--color-ops-raised)` |
 | `--color-surface-muted` | `var(--color-ops-muted)` |
@@ -136,7 +136,7 @@ Declared on `:root, :root.light`. Aliases (sidebar) may point at other semantic 
 | `--color-text-accent` | `var(--color-paper-accent)` |
 | `--color-border-default` | `var(--color-ops-line)` |
 | `--color-border-input` | `var(--color-ops-line)` |
-| `--color-focus-ring` | `var(--color-blue-500)` |
+| `--color-focus-ring` | `var(--color-blue-400)` |
 | `--color-danger` | `var(--color-red-400)` |
 | `--color-calendar-teammate` | `var(--color-amber-400)` |
 | `--color-calendar-teammate-fg` | `var(--color-stone-900)` |
@@ -148,6 +148,44 @@ Declared on `:root, :root.light`. Aliases (sidebar) may point at other semantic 
 | `--color-chart-3` | `var(--color-amber-400)` |
 | `--color-chart-4` | `var(--color-violet-400)` |
 | `--color-chart-5` | `var(--color-rose-400)` |
+
+### Contrast pairs (WCAG AA)
+
+Foreground/background relationships that must hold after resolving semantic tokens to primitives, in both `:root` / `:root.light` and `:root.dark`. This table is the source of truth for the automated contrast test. Normal text uses 4.5:1. Large text and non-text UI such as focus rings use 3:1.
+
+Any custom property whose name ends in `-foreground` or `-fg` and whose value is a `var()` must appear as Foreground in this table by that exact name. Aliasing another token (for example `--color-action-sidebar-foreground`) does not count as a declared target.
+
+Left out of this table on purpose:
+
+- Hairline `--color-border-*` tokens sit below 3:1. They are decorative and do not carry information.
+- The text-on-surface matrix is incomplete. Further pairs land with A5b and A5c.
+
+| Foreground | Background | Minimum ratio |
+| --- | --- | --- |
+| `--color-action-primary-foreground` | `--color-action-primary` | 4.5:1 |
+| `--color-action-primary-foreground` | `--color-danger-fill` | 4.5:1 |
+| `--color-action-sidebar-foreground` | `--color-action-sidebar` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-raised` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-muted` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-secondary` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-accent` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-raised` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-muted` | 4.5:1 |
+| `--color-text-secondary` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-accent` | `--color-surface-accent` | 4.5:1 |
+| `--color-calendar-teammate-fg` | `--color-calendar-teammate` | 4.5:1 |
+| `--color-focus-ring` | `--color-surface-canvas` | 3:1 |
+| `--color-focus-ring` | `--color-surface-raised` | 3:1 |
+| `--color-focus-ring` | `--color-surface-muted` | 3:1 |
+| `--color-focus-ring` | `--color-surface-secondary` | 3:1 |
+| `--color-focus-ring` | `--color-surface-accent` | 3:1 |
+| `--text-field-fg` | `--text-field-bg` | 4.5:1 |
+| `--label-fg` | `--color-surface-canvas` | 4.5:1 |
+| `--dialog-fg` | `--dialog-bg` | 4.5:1 |
+| `--select-fg` | `--select-bg` | 4.5:1 |
+| `--dropdown-menu-fg` | `--dropdown-menu-bg` | 4.5:1 |
 
 ### Component (A5 lots)
 
