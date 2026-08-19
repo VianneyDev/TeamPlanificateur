@@ -101,7 +101,7 @@ describe("design-system token content (A3)", () => {
     );
   });
 
-  it("declares primitive --color-blue-500 as the extracted TPE dark Operate Blue", () => {
+  it("declares primitive --color-blue-500 as a literal palette step", () => {
     const light = cascade(readText(TOKEN_CSS), isLightRoot);
     assert.equal(light["--color-blue-500"], "#3b82f6");
     assert.equal(usesVar(light["--color-blue-500"]), false);
@@ -135,9 +135,13 @@ describe("design-system token content (A3)", () => {
       reassigned.length >= 2,
       `dark theme must reassign at least two semantic tokens (got ${reassigned.join(", ") || "none"})`,
     );
-    assert.equal(dark["--color-action-primary"], "var(--color-blue-500)");
+    assert.equal(dark["--color-action-primary"], "var(--color-blue-600)");
     assert.equal(dark["--color-surface-canvas"], "var(--color-ops-canvas)");
-    assert.notEqual(light["--color-action-primary"], dark["--color-action-primary"]);
+    assert.equal(
+      light["--color-action-primary"],
+      dark["--color-action-primary"],
+      "dark action-primary stays on --color-blue-600 so white text meets 4.5:1",
+    );
     assert.notEqual(light["--color-surface-canvas"], dark["--color-surface-canvas"]);
   });
 
@@ -191,5 +195,208 @@ describe("design-system token content (A3)", () => {
     const bundlerAdr = readText("docs/adr/0011-design-system-tsup.md");
     assert.match(bundlerAdr, /ADR-0015/);
     assert.doesNotMatch(bundlerAdr, /--button-bg-default/);
+  });
+});
+
+function parseContrastPairs(adr) {
+  const heading = /^### Contrast pairs \(WCAG AA\)\s*$/m;
+  const split = adr.split(heading);
+  assert.equal(split.length, 2, "ADR-0015 must declare a Contrast pairs (WCAG AA) section");
+  const section = split[1].split(/^### /m)[0];
+  const pairs = [];
+  for (const line of section.split("\n")) {
+    const cells = line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell.length > 0);
+    if (cells.length < 3) continue;
+    if (cells[0] === "Foreground") continue;
+    if (/^:?-{3,}:?$/.test(cells[0])) continue;
+    const foreground = cells[0].replace(/`/g, "");
+    const background = cells[1].replace(/`/g, "");
+    const minimum = Number.parseFloat(cells[2]);
+    assert.equal(foreground.startsWith("--"), true, `contrast foreground must be a token, got ${cells[0]}`);
+    assert.equal(background.startsWith("--"), true, `contrast background must be a token, got ${cells[1]}`);
+    assert.equal(Number.isFinite(minimum), true, `contrast minimum must be a ratio, got ${cells[2]}`);
+    pairs.push({ foreground, background, minimum });
+  }
+  assert.ok(pairs.length > 0, "ADR-0015 contrast table must list at least one pair");
+  return pairs;
+}
+
+function namedForegroundPairs(tokenNames) {
+  const names = new Set(tokenNames);
+  const pairs = [];
+  for (const name of tokenNames) {
+    const base = name.endsWith("-foreground")
+      ? name.slice(0, -"-foreground".length)
+      : name.endsWith("-fg")
+        ? name.slice(0, -"-fg".length)
+        : null;
+    if (base && names.has(base)) {
+      pairs.push({ foreground: name, background: base });
+    }
+  }
+  return pairs;
+}
+
+function terminalSemantic(props, name) {
+  const seen = new Set();
+  let current = name;
+  while (!seen.has(current)) {
+    seen.add(current);
+    const value = props[current];
+    const next = varTarget(value);
+    if (next === null) return current;
+    if (Object.hasOwn(props, next) && varTarget(props[next]) === null) {
+      return current;
+    }
+    current = next;
+  }
+  assert.fail(`token cycle while resolving ${name}`);
+}
+
+function parseColor(value) {
+  const hexMatch = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
+  if (hexMatch) {
+    let hex = hexMatch[1];
+    if (hex.length === 3) {
+      hex = [...hex].map((char) => char + char).join("");
+    }
+    return {
+      r: Number.parseInt(hex.slice(0, 2), 16),
+      g: Number.parseInt(hex.slice(2, 4), 16),
+      b: Number.parseInt(hex.slice(4, 6), 16),
+    };
+  }
+
+  const rgbMatch =
+    /^rgba?\(\s*([\d.]+)\s*[, ]\s*([\d.]+)\s*[, ]\s*([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i.exec(
+      value,
+    );
+  if (rgbMatch) {
+    const alpha =
+      rgbMatch[4] == null
+        ? 1
+        : rgbMatch[4].endsWith("%")
+          ? Number.parseFloat(rgbMatch[4]) / 100
+          : Number.parseFloat(rgbMatch[4]);
+    assert.equal(
+      alpha,
+      1,
+      `contrast pairs must resolve to opaque colors, got ${value}`,
+    );
+    return {
+      r: Number(rgbMatch[1]),
+      g: Number(rgbMatch[2]),
+      b: Number(rgbMatch[3]),
+    };
+  }
+
+  assert.fail(`cannot parse color ${value}`);
+}
+
+function resolveColor(props, name) {
+  const seen = new Set();
+  let current = name;
+  while (!seen.has(current)) {
+    seen.add(current);
+    const value = props[current];
+    assert.ok(value, `${name} did not resolve: missing ${current}`);
+    const next = varTarget(value);
+    if (next === null) return parseColor(value);
+    current = next;
+  }
+  assert.fail(`token cycle while resolving ${name}`);
+}
+
+function srgbToLinear(channel) {
+  const value = channel / 255;
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+}
+
+function relativeLuminance(color) {
+  return (
+    0.2126 * srgbToLinear(color.r) +
+    0.7152 * srgbToLinear(color.g) +
+    0.0722 * srgbToLinear(color.b)
+  );
+}
+
+function contrastRatio(foreground, background) {
+  const lighter = Math.max(relativeLuminance(foreground), relativeLuminance(background));
+  const darker = Math.min(relativeLuminance(foreground), relativeLuminance(background));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function semanticColorNames(props) {
+  return Object.keys(props).filter(
+    (name) => name.startsWith("--color-") && usesVar(props[name]),
+  );
+}
+
+describe("design-system semantic contrast (A3b)", () => {
+  it("declares a contrast target for every named semantic foreground/background pair", () => {
+    const adr = readText("docs/adr/0015-design-system-tokens.md");
+    const declared = parseContrastPairs(adr);
+    const light = cascade(readText(TOKEN_CSS), isLightRoot);
+    const names = semanticColorNames(light);
+
+    const declaredTerminals = new Set(
+      declared.map(
+        (pair) =>
+          `${terminalSemantic(light, pair.foreground)} ${terminalSemantic(light, pair.background)}`,
+      ),
+    );
+
+    const declaredForegrounds = new Set(
+      declared.map((pair) => terminalSemantic(light, pair.foreground)),
+    );
+
+    for (const pair of namedForegroundPairs(names)) {
+      const key = `${terminalSemantic(light, pair.foreground)} ${terminalSemantic(light, pair.background)}`;
+      assert.ok(
+        declaredTerminals.has(key),
+        `${pair.foreground} on ${pair.background} is a semantic pair without a declared contrast target in ADR-0015`,
+      );
+    }
+
+    for (const name of names) {
+      if (!/^--color-text-/.test(name)) continue;
+      const terminal = terminalSemantic(light, name);
+      assert.ok(
+        declaredForegrounds.has(terminal),
+        `${name} is a semantic text token without a declared contrast target in ADR-0015`,
+      );
+    }
+  });
+
+  it("meets WCAG AA contrast for every declared pair in light and dark themes", () => {
+    const pairs = parseContrastPairs(readText("docs/adr/0015-design-system-tokens.md"));
+    const css = readText(TOKEN_CSS);
+    const themes = [
+      { name: "light", props: cascade(css, isLightRoot) },
+      {
+        name: "dark",
+        props: cascade(css, (selectors) => isLightRoot(selectors) || isDarkRoot(selectors)),
+      },
+    ];
+
+    const failures = [];
+    for (const theme of themes) {
+      for (const pair of pairs) {
+        const ratio = contrastRatio(
+          resolveColor(theme.props, pair.foreground),
+          resolveColor(theme.props, pair.background),
+        );
+        if (ratio + 1e-9 < pair.minimum) {
+          failures.push(
+            `${theme.name} ${pair.foreground} on ${pair.background}: ${ratio.toFixed(2)}:1 (need ${pair.minimum}:1)`,
+          );
+        }
+      }
+    }
+
+    assert.equal(failures.length, 0, failures.join("\n"));
   });
 });

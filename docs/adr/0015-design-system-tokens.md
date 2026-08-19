@@ -16,7 +16,7 @@ Three documented levels, always in this order:
 
 **Rule: components may use semantic or component-level tokens only, never primitives.** A5 lots (Button, TextField, Label, Dialog, Select, DropdownMenu, Badge) must follow that rule. A primitive used in a component is a leak: changing `--color-blue-600` would restyle that component even when `--color-action-primary` was meant to be the brand switch.
 
-The alternative theme is the existing document-root class toggle (`:root` / `:root.light` vs `:root.dark`). Dark reassigns **semantic** tokens only. Component tokens stay on `:root, :root.light` so they follow the semantic layer. Two reassignments are enough to prove the layer (`--color-action-primary` and `--color-surface-canvas`); the extracted dark theme reassigns the rest of the TPE light/dark sheet.
+The alternative theme is the existing document-root class toggle (`:root` / `:root.light` vs `:root.dark`). Dark reassigns **semantic** tokens only. Component tokens stay on `:root, :root.light` so they follow the semantic layer. Two reassignments are enough to prove the layer (`--color-text-primary` and `--color-surface-canvas`); the extracted dark theme reassigns the rest of the TPE light/dark sheet. `--color-action-primary` is not reassigned: both themes keep `--color-blue-600` so white action text meets 4.5:1.
 
 No Style Dictionary. No JS theme module. One CSS file, no JS dependency.
 
@@ -71,7 +71,7 @@ Values come from `apps/web/src/styles/global.css` and `DESIGN.md` (Operate Blue,
 | `--radius-lg` | `0.5rem` |
 | `--radius-xl` | `0.75rem` |
 
-`--color-blue-500` is TPE dark Operate Blue. Light Operate Blue is `--color-blue-600`.
+Operate Blue for actions is `--color-blue-600` in both themes so `--color-action-primary-foreground` meets 4.5:1. `--color-blue-500` remains for non-text dark uses (focus ring, chart-1).
 
 ### Semantic (light default)
 
@@ -120,11 +120,10 @@ Declared on `:root, :root.light`. Aliases (sidebar) may point at other semantic 
 
 ### Semantic (dark reassignment)
 
-`:root.dark` reassigns the following. Tokens omitted here keep the light semantic value (`--color-action-primary-foreground` stays white; `--color-danger-fill` stays `--color-red-700`; radius and font stay put). Sidebar aliases are not repeated: they already follow the semantic tokens they reference.
+`:root.dark` reassigns the following. Tokens omitted here keep the light semantic value (`--color-action-primary` stays `--color-blue-600` so white action text meets 4.5:1; `--color-action-primary-foreground` stays white; `--color-danger-fill` stays `--color-red-700`; radius and font stay put). Sidebar aliases are not repeated: they already follow the semantic tokens they reference.
 
 | Token | Dark value |
 | --- | --- |
-| `--color-action-primary` | `var(--color-blue-500)` |
 | `--color-surface-canvas` | `var(--color-ops-canvas)` |
 | `--color-surface-raised` | `var(--color-ops-raised)` |
 | `--color-surface-muted` | `var(--color-ops-muted)` |
@@ -148,6 +147,30 @@ Declared on `:root, :root.light`. Aliases (sidebar) may point at other semantic 
 | `--color-chart-3` | `var(--color-amber-400)` |
 | `--color-chart-4` | `var(--color-violet-400)` |
 | `--color-chart-5` | `var(--color-rose-400)` |
+
+### Contrast pairs (WCAG AA)
+
+Foreground/background relationships that must hold after resolving semantic tokens to primitives, in both `:root` / `:root.light` and `:root.dark`. This table is the source of truth for the automated contrast test. Normal text uses 4.5:1. Large text and non-text UI such as focus rings use 3:1. Hairline `--color-border-*` tokens are decorative and are not contrast pairs.
+
+A semantic `*-foreground` / `*-fg` token plus its matching background token is a pair. Adding such a pair without a row here must fail the test rather than silently pass.
+
+| Foreground | Background | Minimum ratio |
+| --- | --- | --- |
+| `--color-action-primary-foreground` | `--color-action-primary` | 4.5:1 |
+| `--color-action-primary-foreground` | `--color-danger-fill` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-raised` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-muted` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-secondary` | 4.5:1 |
+| `--color-text-primary` | `--color-surface-accent` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-raised` | 4.5:1 |
+| `--color-text-muted` | `--color-surface-muted` | 4.5:1 |
+| `--color-text-secondary` | `--color-surface-canvas` | 4.5:1 |
+| `--color-text-accent` | `--color-surface-accent` | 4.5:1 |
+| `--color-calendar-teammate-fg` | `--color-calendar-teammate` | 4.5:1 |
+| `--color-focus-ring` | `--color-surface-canvas` | 3:1 |
+| `--color-focus-ring` | `--color-surface-raised` | 3:1 |
 
 ### Component (A5 lots)
 

@@ -166,7 +166,6 @@
 /* -------------------------------------------------------------------------- */
 
 :root.dark {
-  --color-action-primary: var(--color-blue-500);
   --color-surface-canvas: var(--color-ops-canvas);
   --color-surface-raised: var(--color-ops-raised);
   --color-surface-muted: var(--color-ops-muted);
