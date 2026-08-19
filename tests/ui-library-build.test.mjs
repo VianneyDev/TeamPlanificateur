@@ -223,7 +223,7 @@ describe("UI library build artefact (A4)", { concurrency: 1 }, () => {
           type: "module",
         }),
       );
-      execFileSync("npm", ["install", "--ignore-scripts", tarballPath], {
+      execFileSync("npm", ["install", "--ignore-scripts", tarballPath, "react@19", "react-dom@19"], {
         cwd: consumer,
         stdio: "pipe",
       });
@@ -231,9 +231,12 @@ describe("UI library build artefact (A4)", { concurrency: 1 }, () => {
       writeFileSync(
         join(consumer, "probe.mjs"),
         `\
-import {} from "@vianneytraina/ui";
+import { Button, TextField, Label } from "@vianneytraina/ui";
 const js = import.meta.resolve("@vianneytraina/ui");
 const css = import.meta.resolve("@vianneytraina/ui/styles.css");
+if (!Button || !TextField || !Label) {
+  throw new Error("named exports Button, TextField, Label must be present");
+}
 if (!js.endsWith("/dist/index.js")) {
   throw new Error("JS entry did not resolve to dist/index.js: " + js);
 }

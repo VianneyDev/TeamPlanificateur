@@ -6,3 +6,10 @@
 // CSS import. This source import never ships as `src/`; it is baked
 // in at package build time.
 import "./styles.css";
+
+export { Button } from "./components/Button/Button";
+export type { ButtonProps, ButtonVariant } from "./components/Button/Button";
+export { TextField } from "./components/TextField/TextField";
+export type { TextFieldProps } from "./components/TextField/TextField";
+export { Label } from "./components/Label/Label";
+export type { LabelProps } from "./components/Label/Label";
