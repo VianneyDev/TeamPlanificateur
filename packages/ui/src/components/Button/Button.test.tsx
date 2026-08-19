@@ -75,8 +75,8 @@ describe("Button", () => {
   it("forwards a ref to the native button", () => {
     const ref = createRef<HTMLButtonElement>();
 
-    render(<Button ref={ref}>Go</Button>);
+    render(<Button ref={ref}>Valider</Button>);
 
-    expect(ref.current).toBe(screen.getByRole("button", { name: "Go" }));
+    expect(ref.current).toBe(screen.getByRole("button", { name: "Valider" }));
   });
 });
