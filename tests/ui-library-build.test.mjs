@@ -159,28 +159,34 @@ describe("UI library build artefact (A4)", { concurrency: 1 }, () => {
       "packages/ui/LICENSE must copy the repo-root MIT copyright",
     );
 
-    const listing = execFileSync("pnpm", ["pack", "--dry-run"], {
-      cwd: join(repoRoot, "packages/ui"),
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    const packed = listing
-      .split("Tarball Contents\n")[1]
-      ?.split("Tarball Details")[0]
-      ?.trim()
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .sort();
+    const packDir = mkdtempSync(join(tmpdir(), "ui-a4-pack-"));
+    try {
+      execFileSync("pnpm", ["pack", "--pack-destination", packDir], {
+        cwd: join(repoRoot, "packages/ui"),
+        stdio: "pipe",
+      });
+      const tarball = globSync("*.tgz", { cwd: packDir })[0];
+      assert.ok(tarball, "pnpm pack must emit a tarball");
 
-    assert.deepEqual(packed, [
-      "LICENSE",
-      "README.md",
-      "dist/index.css",
-      "dist/index.d.ts",
-      "dist/index.js",
-      "package.json",
-    ]);
+      const packed = execFileSync("tar", ["tzf", join(packDir, tarball)], {
+        encoding: "utf8",
+      })
+        .split("\n")
+        .map((line) => line.trim().replace(/^package\//, ""))
+        .filter((entry) => entry.length > 0 && !entry.endsWith("/"))
+        .sort();
+
+      assert.deepEqual(packed, [
+        "LICENSE",
+        "README.md",
+        "dist/index.css",
+        "dist/index.d.ts",
+        "dist/index.js",
+        "package.json",
+      ]);
+    } finally {
+      rmSync(packDir, { recursive: true, force: true });
+    }
   });
 
   it("resolves the JS entry and CSS public specifier from outside the workspace", () => {
