@@ -61,7 +61,7 @@ describe("pnpm monorepo workspace contract (A1)", () => {
     );
     assert.deepEqual(ui.repository, {
       type: "git",
-      url: "https://github.com/VianneyDev/TeamPlanificateur.git",
+      url: "git+https://github.com/VianneyDev/TeamPlanificateur.git",
       directory: "packages/ui",
     });
     assert.deepEqual(ui.publishConfig, { access: "public" });
