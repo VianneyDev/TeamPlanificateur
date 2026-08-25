@@ -1,6 +1,6 @@
 {
   "name": "@vianneytraina/ui",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "private": false,
   "author": "Vianney Traina",
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/VianneyDev/TeamPlanificateur/tree/master/packages/ui",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VianneyDev/TeamPlanificateur.git",
+    "url": "git+https://github.com/VianneyDev/TeamPlanificateur.git",
     "directory": "packages/ui"
   },
   "publishConfig": {
