@@ -13,7 +13,7 @@ const unusedVarsRule = [
 
 export default tseslint.config(
   {
-    ignores: ["**/node_modules/**", "**/dist/**"],
+    ignores: ["**/node_modules/**", "**/dist/**", "**/storybook-static/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

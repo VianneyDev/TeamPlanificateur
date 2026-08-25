@@ -83,4 +83,19 @@ describe("CI workspace retarget (A2)", () => {
       /pnpm --filter eccentric-equinox exec prisma migrate deploy/,
     );
   });
+
+  it("pins Vite 6 so Astro plugin types match the app bundler", () => {
+    const root = readJson("package.json");
+    const app = readJson("apps/web/package.json");
+    const ui = readJson("packages/ui/package.json");
+
+    assert.equal(root.pnpm?.overrides?.vite, "^6.4.1");
+    assert.equal(app.devDependencies.vite, "^6.4.1");
+    assert.equal(ui.devDependencies.vite, "^6.4.1");
+    assert.doesNotMatch(
+      readText("pnpm-lock.yaml"),
+      /vite@7\./,
+      "a second Vite major breaks @tailwindcss/vite vs astro/config Plugin types",
+    );
+  });
 });
