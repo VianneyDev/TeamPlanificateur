@@ -158,7 +158,7 @@ Any custom property whose name ends in `-foreground` or `-fg` and whose value is
 Left out of this table on purpose:
 
 - Hairline `--color-border-*` tokens sit below 3:1. They are decorative and do not carry information.
-- The text-on-surface matrix is incomplete. Further pairs land with A5b and A5c.
+- The text-on-surface matrix is incomplete beyond the pairs listed here.
 
 | Foreground | Background | Minimum ratio |
 | --- | --- | --- |
@@ -186,6 +186,9 @@ Left out of this table on purpose:
 | `--dialog-fg` | `--dialog-bg` | 4.5:1 |
 | `--select-fg` | `--select-bg` | 4.5:1 |
 | `--dropdown-menu-fg` | `--dropdown-menu-bg` | 4.5:1 |
+| `--color-danger` | `--dropdown-menu-bg` | 4.5:1 |
+| `--badge-fg-default` | `--badge-bg-default` | 4.5:1 |
+| `--badge-fg-accent` | `--badge-bg-accent` | 4.5:1 |
 
 ### Component (A5 lots)
 

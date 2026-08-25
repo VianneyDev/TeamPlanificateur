@@ -1,14 +1,14 @@
-# Radix primitives for Dialog and Select
+# Radix primitives for Dialog, Select, and DropdownMenu
 
-`@vianneytraina/ui` wraps `@radix-ui/react-dialog` and `@radix-ui/react-select` for Dialog and Select. Those two packages are declared in `packages/ui` `dependencies`. Button, TextField, and Label stay handwritten native elements.
+`@vianneytraina/ui` wraps `@radix-ui/react-dialog`, `@radix-ui/react-select`, and `@radix-ui/react-dropdown-menu` for Dialog, Select, and DropdownMenu. Those packages are declared in `packages/ui` `dependencies`. Button, TextField, Label, and Badge stay handwritten native elements.
 
 This ADR records what is delegated, why, and what that costs. A11’s monorepo README cites this file. It does not restate it.
 
 ## Decision
 
-Dialog and Select are presentational wrappers around Radix. They add class names, tokens (ADR-0015), and a French close label. They do not reimplement overlay behaviour.
+Dialog, Select, and DropdownMenu are presentational wrappers around Radix. They add class names, tokens (ADR-0015), and a French close label on Dialog. They do not reimplement overlay behaviour.
 
-Button, TextField, and Label do not wrap Radix. Their accessible behaviour is a native `button` / `input` / `label` plus a handful of attributes (`type`, `disabled`, `htmlFor`). That does not justify a runtime dependency.
+Button, TextField, Label, and Badge do not wrap Radix. Their accessible behaviour is a native `button` / `input` / `label` / `span` plus a handful of attributes (`type`, `disabled`, `htmlFor`). That does not justify a runtime dependency.
 
 ### 1. What is delegated
 
@@ -35,7 +35,16 @@ Button, TextField, and Label do not wrap Radix. Their accessible behaviour is a 
 - Overflow: Viewport plus ScrollUpButton / ScrollDownButton when the list is taller than the available height.
 - Form field: a visually hidden native `<select>` (via `@radix-ui/react-visually-hidden`) submits `name` / `value` with the surrounding form.
 
-`packages/ui` does not re-code any of the above. Tests (A5 seam 3) assert the observable result (roles, Escape, Tab loop, list keys). They do not assert Radix internals.
+**DropdownMenu** (`@radix-ui/react-dropdown-menu`, plus the menu/popper stack):
+
+- Trigger is a button with `aria-haspopup="menu"` and `aria-expanded`. Content `role="menu"` in a portal. Items `role="menuitem"` (checkbox and radio items use `menuitemcheckbox` / `menuitemradio`).
+- Open from the keyboard: Space, Enter, ArrowDown, ArrowUp on the trigger.
+- Item navigation: ArrowDown / ArrowUp move the highlight and skip disabled items. Home / End jump to first / last. Typeahead matches item text.
+- Enter / Space activate the highlighted item and close (unless the caller cancels `onSelect`). Escape closes without activating. Pointer click activates.
+- Focus restore to the trigger on close.
+- Positioning: Radix Popper (side, align, offset, collision). Content is portaled so it is not clipped by the island.
+
+`packages/ui` does not re-code any of the above. Tests (A5 seam 3) assert the observable result (roles, Escape, Tab loop, list keys, menu keys). They do not assert Radix internals.
 
 ### 2. Why not a homemade implementation
 
@@ -48,20 +57,20 @@ Radix is the audited implementation of those primitives. A hand-rolled focus tra
 - Tab order across a portal: the next Tab target is not the next node in the island tree. A homemade trap that walks `querySelectorAll` inside Content fails when the close button, the form, and the trigger live in different document subtrees.
 - Nested dialogs, restore-focus after unmount, and dismiss-on-outside that must ignore the trigger click that opened the overlay.
 
-Rebuilding that for two components would spend the timebox on a worse Dialog. Wrapping Radix spends it on tokens, the barrel, and the publish proofs.
+Rebuilding that for overlay components would spend the timebox on a worse Dialog. Wrapping Radix spends it on tokens, the barrel, and the publish proofs.
 
 ### 3. What it costs
 
-Two runtime dependencies on the published package (`@radix-ui/react-dialog`, `@radix-ui/react-select`). They are listed in `package.json` inside the tarball. tsup does not inline them in `dist/index.js` (ADR-0011 excludes `dependencies`). Installing `@vianneytraina/ui` therefore pulls those packages **and** their graph: focus-scope, dismissable-layer, focus-guards, portal, popper, presence, `react-remove-scroll`, `aria-hidden`, visually-hidden, collection, and the shared Radix primitives. That is extra bytes, extra version resolution, and a second copy if `apps/web` still depends on the same Radix packages until A9.
+Three runtime dependencies on the published package (`@radix-ui/react-dialog`, `@radix-ui/react-select`, `@radix-ui/react-dropdown-menu`). They are listed in `package.json` inside the tarball. tsup does not inline them in `dist/index.js` (ADR-0011 excludes `dependencies`). Installing `@vianneytraina/ui` therefore pulls those packages **and** their graph: focus-scope, dismissable-layer, focus-guards, portal, popper, presence, `react-remove-scroll`, `aria-hidden`, visually-hidden, collection, and the shared Radix primitives. That is extra bytes, extra version resolution, and a second copy if `apps/web` still depends on the same Radix packages until A9.
 
-The public barrel grows to Radix’s compound surface, not just `Dialog` and `Select`. Named exports today include `DialogPortal`, `DialogOverlay`, `DialogClose`, `SelectGroup`, `SelectLabel`, `SelectSeparator`, `SelectScrollUpButton`, and `SelectScrollDownButton` (ADR-0009). Each name is a semver commitment. Removing `DialogPortal` later is a breaking change even if no Team Planning Engine screen imports it yet. A10’s CHANGELOG has to treat those names as public API.
+The public barrel grows to Radix’s compound surface, not just `Dialog`, `Select`, and `DropdownMenu`. Named exports today include `DialogPortal`, `DialogOverlay`, `DialogClose`, `SelectGroup`, `SelectLabel`, `SelectSeparator`, `SelectScrollUpButton`, `SelectScrollDownButton`, `DropdownMenuPortal`, `DropdownMenuGroup`, `DropdownMenuCheckboxItem`, and `DropdownMenuSub` (ADR-0009). Each name is a semver commitment. Removing `DialogPortal` later is a breaking change even if no Team Planning Engine screen imports it yet. A10’s CHANGELOG has to treat those names as public API.
 
 Consumers inherit a React constraint from both layers. ADR-0014 requires `react` / `react-dom` `>=18.0.0`. Radix 1.1 / 2.2 peer-depend on `react` / `react-dom` `^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc`. A consumer must satisfy **both**. pnpm will warn (or fail under `strict-peer-dependencies`) if the app’s React is outside Radix’s range, even when it meets our peer. We do not bundle React (ADR-0014); we do couple the consumer to a React that Radix accepts.
 
 ## Alternatives not taken
 
-- **Handwritten Dialog and Select.** Rejected: the timebox is packaging, not a new focus-trap. The failure modes above are the product.
-- **Headless UI, React Aria, or Ariakit.** Viable primitives. Rejected for this extract: Team Planning Engine already uses Radix Dialog and Select. A5b copies that behaviour, not a second overlay stack.
-- **Radix for Button, TextField, and Label.** Rejected: native elements already expose the role, name, disabled, and keyboard behaviour those components need. `@radix-ui/react-label` would add a dependency for `htmlFor`.
+- **Handwritten Dialog, Select, and DropdownMenu.** Rejected: the timebox is packaging, not a new focus-trap. The failure modes above are the product.
+- **Headless UI, React Aria, or Ariakit.** Viable primitives. Rejected for this extract: Team Planning Engine already uses Radix Dialog, Select, and Dropdown Menu. A5 lots copy that behaviour, not a second overlay stack.
+- **Radix for Button, TextField, Label, and Badge.** Rejected: native elements already expose the role, name, disabled, and keyboard behaviour those components need. `@radix-ui/react-label` would add a dependency for `htmlFor`.
 - **Bundling Radix into `dist/index.js`.** Would hide the install graph and duplicate Radix if the app still imports it. Dependencies stay declared; tsup leaves them external (ADR-0011).
 - **Peer-depending on Radix instead of depending on it.** Would force every consumer to install matching Radix versions by hand. A design-system package that wraps Radix should bring those wrappers’ runtime with it. The cost in section 3 is accepted.
