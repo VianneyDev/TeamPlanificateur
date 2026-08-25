@@ -79,7 +79,7 @@ Frozen `packages/ui/package.json` identity:
   "homepage": "https://github.com/VianneyDev/TeamPlanificateur/tree/master/packages/ui",
   "repository": {
     "type": "git",
-    "url": "https://github.com/VianneyDev/TeamPlanificateur.git",
+    "url": "git+https://github.com/VianneyDev/TeamPlanificateur.git",
     "directory": "packages/ui"
   },
   "publishConfig": {
