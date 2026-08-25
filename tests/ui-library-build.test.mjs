@@ -231,11 +231,11 @@ describe("UI library build artefact (A4)", { concurrency: 1 }, () => {
       writeFileSync(
         join(consumer, "probe.mjs"),
         `\
-import { Button, TextField, Label, Dialog, Select } from "@vianneytraina/ui";
+import { Button, TextField, Label, Dialog, Select, DropdownMenu, Badge } from "@vianneytraina/ui";
 const js = import.meta.resolve("@vianneytraina/ui");
 const css = import.meta.resolve("@vianneytraina/ui/styles.css");
-if (!Button || !TextField || !Label || !Dialog || !Select) {
-  throw new Error("named exports Button, TextField, Label, Dialog, Select must be present");
+if (!Button || !TextField || !Label || !Dialog || !Select || !DropdownMenu || !Badge) {
+  throw new Error("named exports Button, TextField, Label, Dialog, Select, DropdownMenu, Badge must be present");
 }
 if (!js.endsWith("/dist/index.js")) {
   throw new Error("JS entry did not resolve to dist/index.js: " + js);
