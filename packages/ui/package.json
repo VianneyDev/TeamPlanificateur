@@ -37,7 +37,9 @@
     "typecheck": "tsc --noEmit",
     "build": "tsup",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -45,6 +47,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@storybook/addon-a11y": "^10.5.10",
+    "@storybook/addon-docs": "^10.5.10",
+    "@storybook/react-vite": "^10.5.10",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -57,9 +62,11 @@
     "jsdom": "^30.0.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "storybook": "^10.5.10",
     "tsup": "^8.5.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.66.0",
+    "vite": "^7.3.6",
     "vitest": "^4.1.10"
   },
   "dependencies": {
