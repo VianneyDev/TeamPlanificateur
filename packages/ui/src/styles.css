@@ -158,6 +158,11 @@
   --badge-border-default: var(--color-border-default);
   --badge-bg-accent: var(--color-surface-accent);
   --badge-fg-accent: var(--color-text-accent);
+  /* Écart assumé avec le rendu actuel de apps/web, qui utilise une
+   teinte transparente (border-primary/25) plutôt qu'une couleur
+   solide. Le design system normalise vers un token sémantique
+   opaque. Un primitif alpha (cf. --color-amber-400-alpha-22)
+   reste possible si l'écart visuel gêne en A9. */
   --badge-border-accent: var(--color-action-primary);
   --badge-radius: var(--radius-control);
 }
