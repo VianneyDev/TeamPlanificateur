@@ -13,12 +13,16 @@
     "test:watch": "pnpm --filter eccentric-equinox test:watch",
     "test:api": "pnpm --filter eccentric-equinox test:api",
     "test:ui": "pnpm --filter @vianneytraina/ui test",
+    "test:storybook": "playwright test",
     "test:workspace": "node --test tests/*.test.mjs",
     "db:migrate:test": "pnpm --filter eccentric-equinox db:migrate:test"
   },
   "packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937",
   "devDependencies": {
-    "@changesets/cli": "^3.0.1"
+    "@axe-core/playwright": "4.13.0",
+    "@changesets/cli": "^3.0.1",
+    "@playwright/test": "1.62.1",
+    "http-server": "^14.1.1"
   },
   "pnpm": {
     "overrides": {
