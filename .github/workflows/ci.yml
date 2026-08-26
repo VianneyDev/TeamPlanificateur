@@ -146,6 +146,7 @@ jobs:
       - name: Commit regenerated screenshots
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_snapshots }}
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git add tests/storybook.spec.mjs-snapshots/
           if git diff --cached --quiet; then
             echo "Snapshots are already up to date"
