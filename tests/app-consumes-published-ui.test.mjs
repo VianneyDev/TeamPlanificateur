@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const localUiPackage = realpathSync(join(repoRoot, "packages/ui"));
 
+// A9 visual discrepancies vs apps/web, listed then accepted (package is source of truth):
+// - --badge-border-accent is a solid --color-action-primary; .badge-external used border-primary/25.
+// - Default Badge has a 1px --badge-border-default; .badge-role had no border.
+// - DialogContent uses --dialog-bg; the app previously passed className="bg-card".
+
 function readText(relativePath) {
   return readFileSync(join(repoRoot, relativePath), "utf8");
 }
@@ -111,5 +116,24 @@ describe("app consumes published @vianneytraina/ui (A9)", () => {
     assert.match(combined, /\bButton\b/);
     assert.match(combined, /\bDialog\b/);
     assert.match(combined, /\bBadge\b/);
+  });
+
+  it("SSR-renders Gestion package components before hydration", () => {
+    const page = readText("apps/web/src/pages/gestion.astro");
+    const visibleIslands = [
+      ...page.matchAll(
+        /<(TeamsPanelWithProvider|MembersPanelWithProvider)[\s\S]*?\/>/g,
+      ),
+    ].map((match) => match[0]);
+
+    assert.equal(visibleIslands.length, 3);
+    for (const island of visibleIslands) {
+      assert.match(
+        island,
+        /\bclient:visible\b/,
+        "Gestion package consumers must SSR without waiting for hydration",
+      );
+      assert.doesNotMatch(island, /\bclient:load\b/);
+    }
   });
 });
