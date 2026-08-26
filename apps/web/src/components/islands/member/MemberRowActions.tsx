@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/islands/ui/dropdown-menu";
-import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/islands/ui/dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@vianneytraina/ui";
 import type { Member } from "@/lib/types";
 import { useArchiveMember } from "@/hooks/members/useArchiveMember";
 import { useRestoreMember } from "@/hooks/members/useRestoreMember";
@@ -71,7 +70,7 @@ export default function MemberRowActions({
         open={confirmAction === "archive"}
         onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton className="bg-card">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Archiver ce membre ?</DialogTitle>
             <DialogDescription>
@@ -79,18 +78,17 @@ export default function MemberRowActions({
               tard.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
-              className="btn-outline"
+              variant="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-primary"
               disabled={decisionPending}
               aria-busy={isArchiving}
               onClick={() =>
@@ -98,7 +96,7 @@ export default function MemberRowActions({
               }
             >
               {isArchiving ? "Archivage…" : "Archiver"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -107,25 +105,24 @@ export default function MemberRowActions({
         open={confirmAction === "restore"}
         onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton className="bg-card">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Restaurer ce membre ?</DialogTitle>
             <DialogDescription>
               Le membre réapparaîtra dans la liste des membres actifs.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
-              className="btn-outline"
+              variant="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-primary"
               disabled={decisionPending}
               aria-busy={isRestoring}
               onClick={() =>
@@ -133,7 +130,7 @@ export default function MemberRowActions({
               }
             >
               {isRestoring ? "Restauration…" : "Restaurer"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { Badge, Button, TextField } from "@vianneytraina/ui";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
@@ -115,12 +116,12 @@ export default function TeamsPanel({
         <h2 className="sr-only">Équipes</h2>
 
         <div className="relative min-w-0 flex-1 sm:max-w-md">
-          <input
+          <TextField
             type="search"
             placeholder="Rechercher…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="field pr-9"
+            className="pr-9"
             aria-label="Rechercher une équipe"
           />
           {searchInput.length > 0 && (
@@ -138,14 +139,14 @@ export default function TeamsPanel({
           )}
         </div>
 
-        <button
+        <Button
           type="button"
-          className="btn-primary w-full gap-1.5 sm:ml-auto sm:w-auto"
+          className="w-full sm:ml-auto sm:w-auto"
           onClick={() => setCreateOpen(true)}
         >
           <Plus size={16} aria-hidden />
           Nouvelle équipe
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -156,13 +157,9 @@ export default function TeamsPanel({
           <span className="text-sm text-destructive">
             Impossible de charger les équipes.
           </span>
-          <button
-            type="button"
-            className="btn-outline shrink-0"
-            onClick={() => refetch()}
-          >
+          <Button type="button" variant="outline" className="shrink-0" onClick={() => refetch()}>
             Réessayer
-          </button>
+          </Button>
         </div>
       )}
 
@@ -222,14 +219,10 @@ export default function TeamsPanel({
                           Aucune équipe pour ce filtre. Créez une équipe pour y
                           rattacher des membres.
                         </p>
-                        <button
-                          type="button"
-                          className="btn-primary gap-1.5"
-                          onClick={() => setCreateOpen(true)}
-                        >
+                        <Button type="button" onClick={() => setCreateOpen(true)}>
                           <Plus size={16} aria-hidden />
                           Nouvelle équipe
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -243,9 +236,7 @@ export default function TeamsPanel({
                     <td className="px-4 py-3 text-foreground sm:px-5">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium">{team.name}</span>
-                        {team.archived && (
-                          <span className="badge-archived">Archivée</span>
-                        )}
+                        {team.archived && <Badge>Archivée</Badge>}
                       </div>
                     </td>
 

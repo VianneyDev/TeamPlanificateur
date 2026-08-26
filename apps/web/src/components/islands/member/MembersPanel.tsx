@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { Badge, Button, TextField } from "@vianneytraina/ui";
 import { useMembers } from "@/hooks/members/useMembers";
 import { useTeams } from "@/hooks/teams/useTeams";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -132,12 +133,12 @@ export default function MembersPanel({
         <h2 className="sr-only">{title}</h2>
 
         <div className="relative min-w-0 flex-1 sm:max-w-md">
-          <input
+          <TextField
             type="search"
             placeholder="Rechercher…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="field pr-9"
+            className="pr-9"
             aria-label={`Rechercher un ${entityWord}`}
           />
           {searchInput.length > 0 && (
@@ -155,15 +156,15 @@ export default function MembersPanel({
           )}
         </div>
 
-        <button
+        <Button
           type="button"
-          className="btn-primary w-full gap-1.5 sm:ml-auto sm:w-auto"
+          className="w-full sm:ml-auto sm:w-auto"
           onClick={() => setCreateOpen(true)}
           disabled={teamsLoading}
         >
           <Plus size={16} aria-hidden />
           {createLabel}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -172,13 +173,9 @@ export default function MembersPanel({
           className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
         >
           <span className="text-sm text-destructive">{errorLabel}</span>
-          <button
-            type="button"
-            className="btn-outline shrink-0"
-            onClick={() => refetch()}
-          >
+          <Button type="button" variant="outline" className="shrink-0" onClick={() => refetch()}>
             Réessayer
-          </button>
+          </Button>
         </div>
       )}
 
@@ -238,15 +235,14 @@ export default function MembersPanel({
                         <p className="max-w-md text-sm text-muted-foreground">
                           {emptyCopy}
                         </p>
-                        <button
+                        <Button
                           type="button"
-                          className="btn-primary gap-1.5"
                           onClick={() => setCreateOpen(true)}
                           disabled={teamsLoading}
                         >
                           <Plus size={16} aria-hidden />
                           {createLabel}
-                        </button>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -260,11 +256,9 @@ export default function MembersPanel({
                     <td className="px-4 py-3 text-foreground sm:px-5">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium">{member.name}</span>
-                        {member.archived && (
-                          <span className="badge-archived">Archivé</span>
-                        )}
+                        {member.archived && <Badge>Archivé</Badge>}
                         {!externalOnly && member.isExternal && (
-                          <span className="badge-external">Externe</span>
+                          <Badge variant="accent">Externe</Badge>
                         )}
                       </div>
                     </td>
@@ -276,9 +270,7 @@ export default function MembersPanel({
                     </td>
 
                     <td className="px-4 py-3 sm:px-5">
-                      <span className="badge-role">
-                        {ROLE_LABELS[member.role] ?? member.role}
-                      </span>
+                      <Badge>{ROLE_LABELS[member.role] ?? member.role}</Badge>
                     </td>
 
                     <td className="px-4 py-3 text-right sm:px-5">

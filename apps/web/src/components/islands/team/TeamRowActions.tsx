@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/islands/ui/dropdown-menu";
-import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/islands/ui/dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@vianneytraina/ui";
 import type { Team } from "@/lib/types";
 import { useArchiveTeam } from "@/hooks/teams/useArchiveTeam";
 import { useDeleteTeam } from "@/hooks/teams/useDeleteTeam";
@@ -65,7 +64,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           )}
 
           <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
+            variant="destructive"
             onClick={() => setConfirmAction("delete")}
           >
             Supprimer
@@ -77,7 +76,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
         open={confirmAction === "archive"}
         onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton className="bg-card">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Archiver cette équipe ?</DialogTitle>
             <DialogDescription>
@@ -85,18 +84,17 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               tard.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
-              className="btn-outline"
+              variant="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-primary"
               disabled={decisionPending}
               aria-busy={isArchiving}
               onClick={() =>
@@ -104,7 +102,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               }
             >
               {isArchiving ? "Archivage…" : "Archiver"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -113,25 +111,24 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
         open={confirmAction === "restore"}
         onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton className="bg-card">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Restaurer cette équipe ?</DialogTitle>
             <DialogDescription>
               L’équipe réapparaîtra dans la liste des équipes actives.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
-              className="btn-outline"
+              variant="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-primary"
               disabled={decisionPending}
               aria-busy={isRestoring}
               onClick={() =>
@@ -139,7 +136,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               }
             >
               {isRestoring ? "Restauration…" : "Restaurer"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -148,7 +145,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
         open={confirmAction === "delete"}
         onOpenChange={(open) => !open && !decisionPending && setConfirmAction(null)}
       >
-        <DialogContent showCloseButton className="bg-card">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Supprimer cette équipe ?</DialogTitle>
             <DialogDescription>
@@ -156,18 +153,18 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               plus d’équipe.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
+          <DialogFooter>
+            <Button
               type="button"
-              className="btn-outline"
+              variant="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-danger"
+              variant="danger"
               disabled={decisionPending}
               aria-busy={isDeleting}
               onClick={() =>
@@ -175,7 +172,7 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
               }
             >
               {isDeleting ? "Suppression…" : "Supprimer"}
-            </button>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

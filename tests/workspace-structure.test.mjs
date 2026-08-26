@@ -26,22 +26,10 @@ describe("pnpm monorepo workspace contract (A1)", () => {
     assert.match(npmrc, /^link-workspace-packages\s*=\s*false\s*$/m);
   });
 
-  it("keeps the app private and free of a design-system dependency", () => {
+  it("keeps the app private so Changesets never versions it", () => {
     const app = readJson("apps/web/package.json");
     assert.equal(app.name, "eccentric-equinox");
     assert.equal(app.private, true);
-
-    const declared = {
-      ...app.dependencies,
-      ...app.devDependencies,
-      ...app.optionalDependencies,
-      ...app.peerDependencies,
-    };
-    assert.equal(
-      Object.hasOwn(declared, "@vianneytraina/ui"),
-      false,
-      "apps/web must not depend on @vianneytraina/ui until A9",
-    );
   });
 
   it("publishes @vianneytraina/ui identity at 1.0.0", () => {

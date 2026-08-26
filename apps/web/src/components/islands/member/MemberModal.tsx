@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/islands/ui/dialog";
+  Label,
+  TextField,
+} from "@vianneytraina/ui";
 import type { Member, Team } from "@/lib/types";
 import { useCreateMember } from "@/hooks/members/useCreateMember";
 import { useUpdateMember } from "@/hooks/members/useUpdateMember";
@@ -110,7 +113,7 @@ export default function MemberModal({
         if (!value && !isPending) onClose();
       }}
     >
-      <DialogContent className="bg-card">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {mode === "update"
@@ -129,21 +132,22 @@ export default function MemberModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium text-foreground">Nom</span>
-            <input
-              className="field"
+          <div className="space-y-1.5">
+            <Label htmlFor="member-name">Nom</Label>
+            <TextField
+              id="member-name"
               placeholder={`Nom du ${entityLabel}`}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
               required
             />
-          </label>
+          </div>
 
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium text-foreground">Rôle</span>
+          <div className="space-y-1.5">
+            <Label htmlFor="member-role">Rôle</Label>
             <select
+              id="member-role"
               className="field"
               value={role}
               onChange={(e) => setRole(e.target.value as "manager" | "member")}
@@ -151,12 +155,13 @@ export default function MemberModal({
               <option value="member">Membre</option>
               <option value="manager">Manager</option>
             </select>
-          </label>
+          </div>
 
           {role === "member" && (
-            <label className="block space-y-1.5 text-sm">
-              <span className="font-medium text-foreground">Équipe</span>
+            <div className="space-y-1.5">
+              <Label htmlFor="member-team">Équipe</Label>
               <select
+                id="member-team"
                 className="field"
                 value={teamIds[0] ?? ""}
                 onChange={(e) => setTeamIds([e.target.value])}
@@ -176,7 +181,7 @@ export default function MemberModal({
                   Aucune équipe active - créez-en une dans l’onglet Équipes.
                 </span>
               )}
-            </label>
+            </div>
           )}
 
           {role === "manager" && (
@@ -220,19 +225,13 @@ export default function MemberModal({
             </fieldset>
           )}
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
-              type="button"
-              className="btn-outline"
-              onClick={onClose}
-              disabled={isPending}
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={!canSubmit || isPending}
-              className="btn-primary"
               aria-busy={isPending}
             >
               {mode === "update"
@@ -242,7 +241,7 @@ export default function MemberModal({
                 : isPending
                   ? "Création…"
                   : "Créer"}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
