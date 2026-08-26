@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { existsSync, globSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, globSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { before, describe, it } from "node:test";
+import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -22,7 +21,7 @@ const REQUIRED_STORIES = {
   Button: ["Default", "Ghost", "Outline", "Danger"],
   TextField: ["Default"],
   Label: ["Default"],
-  Dialog: ["Default", "Without Close Button"],
+  Dialog: ["Default", "WithoutCloseButton"],
   Select: ["Default", "Small"],
   DropdownMenu: ["Default", "Destructive"],
   Badge: ["Default", "Accent"],
@@ -79,6 +78,26 @@ describe("UI Storybook contract (A6)", () => {
     }
   });
 
+  it("keeps one source story per required component variant", () => {
+    for (const [component, storyNames] of Object.entries(REQUIRED_STORIES)) {
+      const source = readText(
+        join(
+          "packages/ui/src/components",
+          component,
+          `${component}.stories.tsx`,
+        ),
+      );
+
+      for (const storyName of storyNames) {
+        assert.match(
+          source,
+          new RegExp(`export const ${storyName}\\b`),
+          `${component} must export the ${storyName} story`,
+        );
+      }
+    }
+  });
+
   it("imports component source from colocated stories, never the package name", () => {
     const storyFiles = globSync("src/**/*.stories.tsx", { cwd: uiRoot });
     assert.ok(storyFiles.length > 0, "expected colocated story files");
@@ -118,66 +137,52 @@ describe("UI Storybook contract (A6)", () => {
   });
 });
 
-describe("UI Storybook static site (A6)", { concurrency: 1 }, () => {
-  before(() => {
-    execFileSync("pnpm", ["--filter", "@vianneytraina/ui", "build-storybook"], {
-      cwd: repoRoot,
-      stdio: "pipe",
-    });
+describe("Storybook visual and accessibility CI contract (A8)", () => {
+  it("keeps Storybook building in CI instead of this contract suite", () => {
+    const source = readText("tests/ui-storybook.test.mjs");
+    const storybookSourceContract = source.slice(
+      0,
+      source.indexOf('describe("Storybook visual and accessibility CI contract'),
+    );
+    const ui = readJson("packages/ui/package.json");
+
+    assert.equal(typeof ui.scripts["build-storybook"], "string");
+    assert.match(ui.scripts["build-storybook"], /^storybook build(?:\s|$)/);
+    assert.doesNotMatch(storybookSourceContract, /node:child_process/);
+    assert.doesNotMatch(
+      storybookSourceContract,
+      /storybook-static\/index\.(?:html|json)/,
+    );
   });
 
-  it("builds a static site A8 can serve, with one story per variant and a docs page", () => {
-    const staticDir = join(uiRoot, "storybook-static");
-    assert.equal(
-      existsSync(join(staticDir, "index.html")),
-      true,
-      "storybook build must emit storybook-static/index.html",
-    );
+  it("runs screenshot comparison and axe against the built Storybook", () => {
+    const root = readJson("package.json");
+    const config = readText("playwright.config.mjs");
+    const suite = readText("tests/storybook.spec.mjs");
 
-    const indexPath = join(staticDir, "index.json");
-    assert.equal(
-      existsSync(indexPath),
-      true,
-      "storybook-static/index.json must list built stories",
-    );
-
-    const index = JSON.parse(readFileSync(indexPath, "utf8"));
-    const storiesByTitle = {};
-    const docsTitles = new Set();
-
-    for (const entry of Object.values(index.entries ?? {})) {
-      if (entry.type === "story") {
-        (storiesByTitle[entry.title] ??= []).push(entry.name);
-      }
-      if (entry.type === "docs") {
-        docsTitles.add(entry.title);
-      }
-    }
-
-    for (const [title, names] of Object.entries(REQUIRED_STORIES)) {
-      assert.ok(
-        docsTitles.has(title),
-        `docs page missing for ${title}`,
-      );
-      for (const name of names) {
-        assert.ok(
-          (storiesByTitle[title] ?? []).includes(name),
-          `${title} is missing story "${name}" (got: ${(storiesByTitle[title] ?? []).join(", ")})`,
-        );
-      }
-    }
+    assert.match(root.scripts["test:storybook"], /playwright test/);
+    assert.match(config, /packages\/ui\/storybook-static/);
+    assert.match(suite, /toHaveScreenshot/);
+    assert.match(suite, /@axe-core\/playwright/);
+    assert.match(suite, /["']serious["']/);
+    assert.match(suite, /["']critical["']/);
   });
 
-  it("does not leak stories into the tsup dist after a package build", () => {
-    execFileSync("pnpm", ["--filter", "@vianneytraina/ui", "build"], {
-      cwd: repoRoot,
-      stdio: "pipe",
-    });
+  it("builds once and passes the static Storybook artifact to one Docker test job", () => {
+    const workflow = readText(".github/workflows/ci.yml");
 
-    const distFiles = readdirSync(join(uiRoot, "dist"));
-    assert.ok(
-      !distFiles.some((name) => name.includes(".stories")),
-      `dist/ must not contain story files (got: ${distFiles.join(", ")})`,
+    assert.match(workflow, /workflow_dispatch:/);
+    assert.match(workflow, /mcr\.microsoft\.com\/playwright:v[\d.]+-noble/);
+    assert.match(workflow, /actions\/upload-artifact@/);
+    assert.match(workflow, /actions\/download-artifact@/);
+    assert.match(workflow, /packages\/ui\/storybook-static/);
+    assert.match(workflow, /pnpm test:storybook/);
+    assert.match(workflow, /--update-snapshots/);
+    assert.match(workflow, /contents:\s*write/);
+    assert.match(
+      workflow,
+      /commit -m "test: update Storybook visual snapshots"/,
     );
+    assert.match(workflow, /git push origin/);
   });
 });

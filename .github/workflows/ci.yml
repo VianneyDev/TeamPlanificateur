@@ -7,6 +7,13 @@ on:
       - reopened
       - synchronize
       - closed
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: Generate Docker baselines for review and commit
+        required: true
+        default: false
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -58,6 +65,114 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  storybook_build:
+    name: Build Storybook
+    if: |
+      github.event_name == 'workflow_dispatch' || (
+      github.event_name == 'pull_request' && (
+      github.event.action == 'synchronize'
+      || github.event.action == 'opened'
+      || github.event.action == 'reopened'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Storybook
+        run: pnpm --filter @vianneytraina/ui build-storybook
+
+      - name: Upload static Storybook
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: packages/ui/storybook-static/
+          if-no-files-found: error
+          retention-days: 1
+
+  storybook_test:
+    name: Storybook visual and accessibility
+    needs: storybook_build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      options: --ipc=host
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download static Storybook
+        uses: actions/download-artifact@v4
+        with:
+          name: storybook-static
+          path: packages/ui/storybook-static
+
+      - name: Compare screenshots and run axe
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.update_snapshots }}
+        run: pnpm test:storybook
+
+      - name: Regenerate screenshots
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_snapshots }}
+        run: pnpm test:storybook --update-snapshots
+
+      - name: Commit regenerated screenshots
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_snapshots }}
+        run: |
+          git add tests/storybook.spec.mjs-snapshots/
+          if git diff --cached --quiet; then
+            echo "Snapshots are already up to date"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "test: update Storybook visual snapshots"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Upload regenerated screenshots
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.update_snapshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-visual-snapshots
+          path: tests/storybook.spec.mjs-snapshots/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Playwright failure report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
   test:
     name: API tests (Neon)
