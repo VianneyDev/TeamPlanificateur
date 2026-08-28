@@ -16,6 +16,8 @@ export default defineConfig({
           environment: "node",
           include: ["tests/api/**/*.test.ts"],
           setupFiles: ["./tests/setup-env.ts"],
+          // reset-demo wipes the shared Neon branch; files must not overlap.
+          fileParallelism: false,
           // Neon preview branches (CI) can cold-start; beforeAll seeds several
           // sequential Hono round-trips and must outlive the default 10s hook.
           hookTimeout: 60_000,
