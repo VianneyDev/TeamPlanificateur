@@ -5,6 +5,8 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { Member } from "@/lib/types";
 import { generateDailyRecap } from "@/lib/recap";
+import { isDemoResetEnabled } from "@/lib/demo-reset-enabled";
+import { resetDemoDataset } from "@/lib/demo-reset";
 import {
   CreateMemberSchema,
   MemberExternalQuerySchema,
@@ -1149,6 +1151,20 @@ app.post("/jobs/daily-recap", async (c) => {
   }
 
   const result = await generateDailyRecap();
+  return c.json({ ok: true, ...result });
+});
+
+app.post("/jobs/reset-demo", async (c) => {
+  if (!isDemoResetEnabled()) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const resetToken = process.env.DEMO_RESET_TOKEN;
+  if (!resetToken || c.req.header("x-demo-reset-token") !== resetToken) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const result = await resetDemoDataset();
   return c.json({ ok: true, ...result });
 });
 
