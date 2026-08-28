@@ -2,10 +2,12 @@
 import "@/styles/global.css";
 import "@vianneytraina/ui/styles.css";
 import AppHeader from "@/components/islands/AppHeader";
+import { isDemoResetEnabled } from "@/lib/demo-reset-enabled";
 
 const { title = "Planning équipe" } = Astro.props;
 const member = Astro.locals.member;
 const pathname = Astro.url.pathname;
+const showDemoBanner = isDemoResetEnabled();
 
 const memberPayload = member
 	? {
@@ -55,6 +57,14 @@ const memberPayload = member
 		</script>
 	</head>
 	<body class="flex min-h-dvh flex-col bg-background text-foreground">
+		{showDemoBanner && (
+			<div
+				class="border-b border-primary/20 bg-accent px-4 py-2 text-center text-sm text-accent-foreground"
+				role="status"
+			>
+				Démonstration publique. Les données sont fictives et réinitialisées chaque nuit.
+			</div>
+		)}
 		<!--
 THESIS: Un dashboard entreprise familier où le mois et les demandes se lisent en un coup d’œil, sans spectacle.
 OWN-WORLD: Light-by-default ops chrome, dark toggle, accent bleu, top bar, split calendrier / file; dark lifted (not muddy).
