@@ -19,6 +19,7 @@ export default defineConfig({
         "@radix-ui/react-dialog",
         "@radix-ui/react-select",
         "@tanstack/react-query",
+        "@vianneytraina/ui",
         "clsx",
         "lucide-react",
         "radix-ui",

@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/islands/ui/dialog";
+  Label,
+  TextField,
+} from "@vianneytraina/ui";
 import type { Team } from "@/lib/types";
 import { useCreateTeam } from "@/hooks/teams/useCreateTeam";
 import { useUpdateTeam } from "@/hooks/teams/useUpdateTeam";
@@ -72,7 +75,7 @@ export default function TeamModal({
         if (!value && !isPending) onClose();
       }}
     >
-      <DialogContent className="bg-card">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>
             {mode === "update" ? "Modifier l’équipe" : "Nouvelle équipe"}
@@ -85,31 +88,25 @@ export default function TeamModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="block space-y-1.5 text-sm">
-            <span className="font-medium text-foreground">Nom</span>
-            <input
-              className="field"
+          <div className="space-y-1.5">
+            <Label htmlFor="team-name">Nom</Label>
+            <TextField
+              id="team-name"
               placeholder="Nom de l’équipe"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
               required
             />
-          </label>
+          </div>
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <button
-              type="button"
-              className="btn-outline"
-              onClick={onClose}
-              disabled={isPending}
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={!canSubmit || isPending}
-              className="btn-primary"
               aria-busy={isPending}
             >
               {mode === "update"
@@ -119,7 +116,7 @@ export default function TeamModal({
                 : isPending
                   ? "Création…"
                   : "Créer"}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
