@@ -43,6 +43,10 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm test` / `pnpm test:api` | Run Vitest (API tests against Neon test branch)  |
 | `pnpm db:migrate:test`        | Apply Prisma migrations to the Neon test branch  |
 
+## Deployment (GCP)
+
+Cloud Run, Secret Manager, GCS recap bucket, IAM, and Cloud Scheduler: [docs/deploiement-gcp.md](docs/deploiement-gcp.md).
+
 ## Tests & database isolation
 
 API tests use a **dedicated Neon branch**, not the dev database from `.env`.

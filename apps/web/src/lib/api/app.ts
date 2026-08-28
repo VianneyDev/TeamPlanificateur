@@ -4,6 +4,7 @@ import { zValidator } from "@hono/zod-validator";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import type { Member } from "@/lib/types";
+import { generateDailyRecap } from "@/lib/recap";
 import {
   CreateMemberSchema,
   MemberExternalQuerySchema,
@@ -29,26 +30,17 @@ import {
   countActiveTeamsAmong,
   findActiveMembersOrphanedWithoutTeam,
 } from "@/lib/member-team-invariant";
-import {
-  isManager,
-  resolveActingMember,
-} from "@/lib/api/acting-member";
+import { isManager, resolveActingMember } from "@/lib/api/acting-member";
 import {
   UpsertMonthlyWorkedDaysSchema,
   isDaysExceedMonthIssue,
 } from "@/lib/schemas/monthly-worked-days";
-import {
-  DayOffYearSchema,
-  ToggleDayOffSchema,
-} from "@/lib/schemas/day-off";
+import { DayOffYearSchema, ToggleDayOffSchema } from "@/lib/schemas/day-off";
 import {
   CreateLeaveRequestSchema,
   LeaveRequestListQuerySchema,
 } from "@/lib/schemas/leave-request";
-import {
-  enumerateWeekdayDates,
-  isWeekendDate,
-} from "@/lib/day-off-range";
+import { enumerateWeekdayDates, isWeekendDate } from "@/lib/day-off-range";
 import { isFutureMonth } from "@/lib/monthly-worked-days-rules";
 import {
   DAYS_EXCEED_MONTH_CODE,
@@ -456,7 +448,9 @@ app.get("/days-off", async (c) => {
   }
 
   const year = yearResult.data;
-  const start = new Date(`${String(year).padStart(4, "0")}-01-01T00:00:00.000Z`);
+  const start = new Date(
+    `${String(year).padStart(4, "0")}-01-01T00:00:00.000Z`,
+  );
   const end = new Date(
     `${String(year + 1).padStart(4, "0")}-01-01T00:00:00.000Z`,
   );
@@ -584,9 +578,7 @@ app.put(
       );
     }
 
-    const submittedDates = body.date
-      ? [body.date]
-      : [body.from!, body.to!];
+    const submittedDates = body.date ? [body.date] : [body.from!, body.to!];
     if (submittedDates.some((date) => isWeekendDate(date))) {
       return c.json(
         {
@@ -1148,6 +1140,16 @@ app.put(
 app.post("/logout", (c) => {
   c.header("Set-Cookie", "selectedMemberId=; Path=/; Max-Age=0");
   return c.redirect("/", 302);
+});
+
+app.post("/jobs/daily-recap", async (c) => {
+  const recapToken = process.env.RECAP_TOKEN;
+  if (!recapToken || c.req.header("x-recap-token") !== recapToken) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const result = await generateDailyRecap();
+  return c.json({ ok: true, ...result });
 });
 
 export default app;
