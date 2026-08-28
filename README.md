@@ -24,7 +24,9 @@ pnpm install
 pnpm dev
 ```
 
-The app runs at `http://localhost:4321`.
+The app runs at `http://localhost:4321`. Leave `DEMO_RESET_ENABLED` unset locally so the nightly demo reset and its banner stay off.
+
+Production Cloud Run also uses `DEMO_RESET_ENABLED` and `DEMO_RESET_TOKEN` (see [docs/deploiement-gcp.md](docs/deploiement-gcp.md)).
 
 ## Commands
 

@@ -14,7 +14,7 @@ Dashboard pour la gestion d’équipes et de membres. Les managers administrent 
 - **UI** : React 19 (îlots), Tailwind CSS v4 (`@tailwindcss/vite`), composants Radix (`apps/web/src/components/islands/ui/`) + `class-variance-authority`, `tailwind-merge`, `clsx`, toasts **Sonner**
 - **API** : Hono (`basePath("/api")`), validation `@hono/zod-validator`
 - **Données client** : TanStack Query (fetch, cache, optimistic updates sur les mutations)
-- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL` dans `apps/web/.env`). Les tests Vitest utilisent `apps/web/.env.test` (branche Neon dédiée), pas `.env` - voir `docs/adr/0002-test-database-neon-branch.md`.
+- **BDD** : Prisma 7, client JS avec `@prisma/adapter-pg` et pool `pg` ; PostgreSQL (URL standard `DATABASE_URL` dans `apps/web/.env`). Les tests Vitest utilisent `apps/web/.env.test` (branche Neon dédiée), pas `.env` - voir `docs/adr/0002-test-database-neon-branch.md`. Jobs Cloud Run : `RECAP_TOKEN` / `RECAP_BUCKET` (récap quotidien), `DEMO_RESET_ENABLED` / `DEMO_RESET_TOKEN` (réinitialisation de démo). Ne pas activer `DEMO_RESET_ENABLED` en local.
 - **Validation** : Zod v4 — schémas partagés dans `apps/web/src/lib/schemas/`
 
 ## Flux de données (résumé)

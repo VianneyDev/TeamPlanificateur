@@ -13,7 +13,7 @@ Application déployée sur Google Cloud Run. Ce document décrit l'architecture,
 | Service Cloud Run  | `teamplanificateur`                                                     |
 | Bucket de sortie   | `gs://tpe-vianney-prod-recaps`                                          |
 | Bucket de sources  | `gs://run-sources-tpe-vianney-prod-europe-west9` (créé automatiquement) |
-| Secrets            | `tp-database-url`, `tp-recap-token`                                     |
+| Secrets            | `tp-database-url`, `tp-recap-token`, `tp-demo-reset-token`              |
 | Comptes de service | `tp-run`, `tp-scheduler`                                                |
 | Job planifié       | `tp-daily-recap`                                                        |
 
@@ -27,7 +27,8 @@ Toutes les ressources sont dans la même région. Ne pas en créer ailleurs.
 Cloud Scheduler (tp-daily-recap)
   |  POST 7h00, lundi au vendredi, Europe/Paris
   v
-Cloud Run (teamplanificateur)          <-- Secret Manager (DATABASE_URL, RECAP_TOKEN)
+Cloud Run (teamplanificateur)          <-- Secret Manager (DATABASE_URL, RECAP_TOKEN, DEMO_RESET_TOKEN)
+                                       <-- DEMO_RESET_ENABLED=true
   |  Astro SSR + API Hono
   |
   +--> Neon PostgreSQL (endpoint pooler)
@@ -91,8 +92,8 @@ gcloud run deploy teamplanificateur \
   --max-instances 3 \
   --allow-unauthenticated \
   --service-account="tp-run@tpe-vianney-prod.iam.gserviceaccount.com" \
-  --set-secrets "DATABASE_URL=tp-database-url:latest,RECAP_TOKEN=tp-recap-token:latest" \
-  --set-env-vars "RECAP_BUCKET=tpe-vianney-prod-recaps"
+  --set-secrets "DATABASE_URL=tp-database-url:latest,RECAP_TOKEN=tp-recap-token:latest,DEMO_RESET_TOKEN=tp-demo-reset-token:latest" \
+  --set-env-vars "RECAP_BUCKET=tpe-vianney-prod-recaps,DEMO_RESET_ENABLED=true"
 ```
 
 Depuis la racine du dépôt. Les options non repassées lors d'un redéploiement sont héritées de la révision précédente.
@@ -140,6 +141,7 @@ Deux identités distinctes, chacune avec le minimum de droits, accordés sur une
 | ------------------------------------ | -------------------------------- |
 | `roles/secretmanager.secretAccessor` | secret `tp-database-url`         |
 | `roles/secretmanager.secretAccessor` | secret `tp-recap-token`          |
+| `roles/secretmanager.secretAccessor` | secret `tp-demo-reset-token`     |
 | `roles/storage.objectAdmin`          | bucket `tpe-vianney-prod-recaps` |
 
 **`tp-scheduler`**, identité du déclencheur :
@@ -228,6 +230,39 @@ Détails :
 - `--time-zone` est obligatoire, sinon le calendrier est interprété en UTC et décale d'une à deux heures selon la saison ;
 - `--attempt-deadline=120s` laisse la marge nécessaire au démarrage à froid, le service étant éteint la nuit ;
 - l'en-tête `Content-Type` est requis. Astro 5 rejette les requêtes non-GET sans cet en-tête au titre de sa protection contre la falsification de requête entre sites.
+
+---
+
+## Réinitialisation nocturne de la démo
+
+`POST /api/jobs/reset-demo` vide les données applicatives et repeuple un jeu fictif. Deux gardes, dans cet ordre :
+
+1. `DEMO_RESET_ENABLED` doit valoir exactement `true` (sinon 403, avant même de lire le jeton). Ne pas définir ce flag en local : il active aussi le bandeau de démonstration.
+2. En-tête `x-demo-reset-token` égal à `DEMO_RESET_TOKEN` (secret `tp-demo-reset-token`). Ne pas réutiliser `RECAP_TOKEN`.
+
+Déclenchement manuel :
+
+```bash
+SERVICE_URL=$(gcloud run services describe teamplanificateur \
+  --region europe-west9 --format='value(status.url)')
+DEMO_RESET_TOKEN=$(gcloud secrets versions access latest --secret=tp-demo-reset-token)
+
+curl -sS -X POST "${SERVICE_URL}/api/jobs/reset-demo" \
+  -H "Content-Type: application/json" \
+  -H "x-demo-reset-token: ${DEMO_RESET_TOKEN}"
+```
+
+Le job Cloud Scheduler qui l'appelle chaque nuit se configure à part, sur le même modèle que `tp-daily-recap` (en-tête `x-demo-reset-token` à la place de `x-recap-token`).
+
+Créer le secret s'il n'existe pas encore, puis accorder l'accès à `tp-run` :
+
+```bash
+printf '%s' '<valeur>' | gcloud secrets create tp-demo-reset-token --data-file=-
+
+gcloud secrets add-iam-policy-binding tp-demo-reset-token \
+  --member="serviceAccount:tp-run@tpe-vianney-prod.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.secretAccessor"
+```
 
 ---
 
