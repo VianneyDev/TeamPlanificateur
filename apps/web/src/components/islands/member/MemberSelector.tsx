@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User } from "lucide-react";
+import { ChevronDown, User } from "lucide-react";
 import { Badge } from "@vianneytraina/ui";
 
 import {
@@ -50,29 +50,47 @@ type MemberSelectorProps = {
 };
 
 function DemoRoleGuide() {
+  const [open, setOpen] = useState(false);
+
   return (
     <section
-      className="mb-5 space-y-3 rounded-md border border-border bg-muted/50 p-3 text-left"
+      className="mb-5 space-y-2.5 rounded-md border border-border bg-muted/50 p-3 text-left"
       aria-label="Que permet chaque rôle"
     >
       <div className="rounded border border-primary/20 bg-accent/50 px-2.5 py-1.5 text-xs font-medium text-accent-foreground">
         {MEMBER_ROLE_GUIDE_HINT}
       </div>
-      <dl className="space-y-2.5">
-        {MEMBER_ROLE_EXPLANATIONS.map((entry) => (
-          <div
-            key={`${entry.role}-${entry.isExternal}`}
-            className="flex flex-col gap-1"
-          >
-            <dt>
-              <Badge className="shrink-0">{memberRoleLabel(entry)}</Badge>
-            </dt>
-            <dd className="text-xs leading-relaxed text-muted-foreground">
-              {entry.description}
-            </dd>
-          </div>
-        ))}
-      </dl>
+
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer items-center justify-between rounded px-0.5 py-0.5 text-xs font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span>Détail des rôles</span>
+        <ChevronDown
+          className={`size-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      {open ? (
+        <dl className="space-y-2.5 border-t border-border/60 pt-2.5">
+          {MEMBER_ROLE_EXPLANATIONS.map((entry) => (
+            <div
+              key={`${entry.role}-${entry.isExternal}`}
+              className="flex flex-col gap-1"
+            >
+              <dt>
+                <Badge className="shrink-0">{memberRoleLabel(entry)}</Badge>
+              </dt>
+              <dd className="text-xs leading-relaxed text-muted-foreground">
+                {entry.description}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
     </section>
   );
 }

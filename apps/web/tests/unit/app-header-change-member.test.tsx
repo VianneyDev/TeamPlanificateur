@@ -191,10 +191,18 @@ describe("AppHeader demo change-member entry", () => {
         '[role="dialog"][aria-labelledby]',
       );
       expect(dialog).not.toBeNull();
-      expect(dialog!.textContent).toContain(
-        "consulte ses congés et soumet des demandes",
-      );
       expect(dialog!.textContent).toContain("commencez par un manager");
+      expect(dialog!.textContent).toContain("Détail des rôles");
+
+      const toggle = dialog!.querySelector("button[aria-expanded]");
+      expect(toggle).not.toBeNull();
+      act(() => {
+        (toggle as HTMLButtonElement).click();
+      });
+
+      expect(dialog!.textContent).toContain(
+        "consulte ses congés et soumet des demandes.",
+      );
     } finally {
       fetch.mockRestore();
     }

@@ -84,7 +84,15 @@ describe("MemberSelector demo role guide", () => {
     return count;
   }
 
-  it("hides role explanations when the demo lock is off", () => {
+  function toggleGuide() {
+    const button = container!.querySelector('button[aria-expanded]');
+    expect(button).not.toBeNull();
+    act(() => {
+      (button as HTMLButtonElement).click();
+    });
+  }
+
+  it("hides role explanations and toggle when the demo lock is off", () => {
     mountSelector(false);
 
     expect(text()).not.toContain(MEMBER_EXPLANATION);
@@ -92,32 +100,50 @@ describe("MemberSelector demo role guide", () => {
     expect(text()).not.toContain(MANAGER_EXPLANATION);
     expect(text()).not.toContain(EXTERNAL_MANAGER_EXPLANATION);
     expect(text()).not.toContain(MANAGER_HINT);
+    expect(text()).not.toContain("Détail des rôles");
   });
 
-  it("hides role explanations when the demo lock prop is omitted", () => {
+  it("hides role explanations and toggle when the demo lock prop is omitted", () => {
     mountSelector();
 
     expect(text()).not.toContain(MEMBER_EXPLANATION);
     expect(text()).not.toContain(MANAGER_HINT);
+    expect(text()).not.toContain("Détail des rôles");
   });
 
-  it("explains each role once and points to manager when the demo lock is on", () => {
+  it("shows hint and toggle collapsed by default, expanding roles on click", () => {
     mountSelector(true);
 
+    expect(text()).toContain(MANAGER_HINT);
+    expect(text()).toContain("Détail des rôles");
+    const button = container!.querySelector('button[aria-expanded]');
+    expect(button?.getAttribute("aria-expanded")).toBe("false");
+    expect(text()).not.toContain(MEMBER_EXPLANATION);
+
+    // Expand
+    toggleGuide();
+    expect(button?.getAttribute("aria-expanded")).toBe("true");
     expect(countOccurrences(MEMBER_EXPLANATION)).toBe(1);
     expect(countOccurrences(EXTERNAL_MEMBER_EXPLANATION)).toBe(1);
     expect(countOccurrences(MANAGER_EXPLANATION)).toBe(1);
     expect(countOccurrences(EXTERNAL_MANAGER_EXPLANATION)).toBe(1);
-    expect(text()).toContain(MANAGER_HINT);
     expect(text()).toContain("Membre externe");
     expect(text()).toContain("Manager externe");
+
+    // Collapse
+    toggleGuide();
+    expect(button?.getAttribute("aria-expanded")).toBe("false");
+    expect(text()).not.toContain(MEMBER_EXPLANATION);
   });
 
-  it("keeps the same guide on the form used in the change-member dialog", () => {
+  it("keeps the same collapsible guide on the form used in the change-member dialog", () => {
     mountForm(true);
 
-    expect(text()).toContain(MEMBER_EXPLANATION);
     expect(text()).toContain(MANAGER_HINT);
+    expect(text()).toContain("Détail des rôles");
     expect(container!.querySelector(".panel")).toBeNull();
+
+    toggleGuide();
+    expect(text()).toContain(MEMBER_EXPLANATION);
   });
 });
