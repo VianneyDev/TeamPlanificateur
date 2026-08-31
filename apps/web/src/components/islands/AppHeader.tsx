@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import {
+  ArrowLeftRight,
   CalendarDays,
   ChevronDown,
   Clock3,
@@ -35,6 +36,7 @@ type AppHeaderMember = {
 type AppHeaderProps = {
   pathname: string;
   member: AppHeaderMember | null;
+  demoResetEnabled?: boolean;
 };
 
 function readTheme(): Theme {
@@ -153,15 +155,22 @@ function ThemeToggleButton() {
   );
 }
 
-function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
+function postLogout() {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/api/logout";
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function ActingMemberMenu({
+  member,
+  demoResetEnabled,
+}: {
+  member: AppHeaderMember;
+  demoResetEnabled: boolean;
+}) {
   const roleLabel = memberRoleLabel(member);
-  const logout = () => {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/api/logout";
-    document.body.appendChild(form);
-    form.submit();
-  };
 
   return (
     <DropdownMenu>
@@ -199,12 +208,24 @@ function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {demoResetEnabled ? (
+          <DropdownMenuItem
+            className="cursor-pointer gap-2"
+            onSelect={(event) => {
+              event.preventDefault();
+              postLogout();
+            }}
+          >
+            <ArrowLeftRight className="size-4" aria-hidden="true" />
+            Changer de membre
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           variant="destructive"
           className="cursor-pointer gap-2"
           onSelect={(event) => {
             event.preventDefault();
-            logout();
+            postLogout();
           }}
         >
           <LogOut className="size-4" aria-hidden="true" />
@@ -215,7 +236,11 @@ function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
   );
 }
 
-export default function AppHeader({ pathname, member }: AppHeaderProps) {
+export default function AppHeader({
+  pathname,
+  member,
+  demoResetEnabled = false,
+}: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
 
@@ -255,7 +280,10 @@ export default function AppHeader({ pathname, member }: AppHeaderProps) {
             <ThemeToggleButton />
             {member ? (
               <div className="hidden sm:block">
-                <ActingMemberMenu member={member} />
+                <ActingMemberMenu
+                  member={member}
+                  demoResetEnabled={demoResetEnabled}
+                />
               </div>
             ) : null}
             <div className="md:hidden">
@@ -331,6 +359,15 @@ export default function AppHeader({ pathname, member }: AppHeaderProps) {
                   </div>
                 </div>
                 <form method="POST" action="/api/logout" className="space-y-1">
+                  {demoResetEnabled ? (
+                    <button
+                      type="submit"
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted"
+                    >
+                      <ArrowLeftRight className="size-4" aria-hidden="true" />
+                      Changer de membre
+                    </button>
+                  ) : null}
                   <button
                     type="submit"
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-muted"

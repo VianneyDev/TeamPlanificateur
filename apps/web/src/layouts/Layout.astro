@@ -7,7 +7,7 @@ import { isDemoResetEnabled } from "@/lib/demo-reset-enabled";
 const { title = "Planning équipe" } = Astro.props;
 const member = Astro.locals.member;
 const pathname = Astro.url.pathname;
-const showDemoBanner = isDemoResetEnabled();
+const demoResetEnabled = isDemoResetEnabled();
 
 const memberPayload = member
 	? {
@@ -57,7 +57,7 @@ const memberPayload = member
 		</script>
 	</head>
 	<body class="flex min-h-dvh flex-col bg-background text-foreground">
-		{showDemoBanner && (
+		{demoResetEnabled && (
 			<div
 				class="border-b border-primary/20 bg-accent px-4 py-2 text-center text-sm text-accent-foreground"
 				role="status"
@@ -73,7 +73,12 @@ FIRST VIEWPORT: Top bar TPE + nav (desktop) / menu hamburger (mobile) + thème +
 FORM: seed:canon-comp-b · Canon enterprise dashboard · craft bar Linear + Notion · topnav-split · light default.
 FINISH: UX pass — Acting Member menu, mobile nav, theme lift, sticky footer, calendar contrast.
 		-->
-		<AppHeader client:load pathname={pathname} member={memberPayload} />
+		<AppHeader
+			client:load
+			pathname={pathname}
+			member={memberPayload}
+			demoResetEnabled={demoResetEnabled}
+		/>
 
 		<main class="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 sm:py-8">
 			<slot />
