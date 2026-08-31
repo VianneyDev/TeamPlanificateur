@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
+import { Badge } from "@vianneytraina/ui";
 
 import {
   Select,
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/islands/ui/select";
 import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
+import { memberRoleLabel } from "@/lib/member-role-label";
 
 interface Team {
   id: string;
@@ -18,6 +20,25 @@ interface Team {
 interface Member {
   id: string;
   name: string;
+  role: string;
+  isExternal: boolean;
+}
+
+export function MemberNameWithRole({
+  name,
+  role,
+  isExternal,
+}: {
+  name: string;
+  role: string;
+  isExternal: boolean;
+}) {
+  return (
+    <span className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
+      <span className="break-words">{name}</span>
+      <Badge className="shrink-0">{memberRoleLabel({ role, isExternal })}</Badge>
+    </span>
+  );
 }
 
 export default function MemberSelector() {
@@ -132,7 +153,7 @@ export default function MemberSelector() {
             >
               <SelectTrigger
                 id="member-selector-member"
-                className="w-full cursor-pointer"
+                className="h-auto min-h-9 w-full cursor-pointer whitespace-normal data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:flex-wrap"
               >
                 <SelectValue placeholder="Choisir votre nom" />
               </SelectTrigger>
@@ -141,9 +162,13 @@ export default function MemberSelector() {
                   <SelectItem
                     key={member.id}
                     value={member.id}
-                    className="cursor-pointer"
+                    className="h-auto cursor-pointer flex-wrap whitespace-normal *:[span]:last:min-w-0 *:[span]:last:flex-wrap"
                   >
-                    {member.name}
+                    <MemberNameWithRole
+                      name={member.name}
+                      role={member.role}
+                      isExternal={member.isExternal}
+                    />
                   </SelectItem>
                 ))}
               </SelectContent>
