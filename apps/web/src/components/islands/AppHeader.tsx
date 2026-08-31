@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/islands/ui/dropdown-menu";
+import { memberRoleLabel } from "@/lib/member-role-label";
 
 const STORAGE_KEY = "tpe-theme";
 
@@ -153,6 +154,7 @@ function ThemeToggleButton() {
 }
 
 function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
+  const roleLabel = memberRoleLabel(member);
   const logout = () => {
     const form = document.createElement("form");
     form.method = "POST";
@@ -166,7 +168,7 @@ function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
       <DropdownMenuTrigger
         type="button"
         className="acting-member-chip group outline-none"
-        aria-label={`Acting Member ${member.name}. Ouvrir le menu`}
+        aria-label={`${roleLabel} ${member.name}. Ouvrir le menu`}
       >
         <span
           className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-foreground"
@@ -179,7 +181,7 @@ function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
             {member.name}
           </span>
           <span className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span className="hidden sm:inline">Acting Member</span>
+            <span className="hidden sm:inline">{roleLabel}</span>
             <ChevronDown
               className="size-3.5 opacity-70 transition group-data-[state=open]:rotate-180"
               aria-hidden="true"
@@ -193,7 +195,7 @@ function ActingMemberMenu({ member }: { member: AppHeaderMember }) {
             <span className="text-sm font-medium text-foreground">
               {member.name}
             </span>
-            <span className="text-xs text-muted-foreground">Acting Member</span>
+            <span className="text-xs text-muted-foreground">{roleLabel}</span>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -324,7 +326,7 @@ export default function AppHeader({ pathname, member }: AppHeaderProps) {
                       {member.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Acting Member
+                      {memberRoleLabel(member)}
                     </p>
                   </div>
                 </div>
