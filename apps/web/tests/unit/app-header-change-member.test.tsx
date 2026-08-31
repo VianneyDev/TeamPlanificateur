@@ -156,6 +156,7 @@ describe("AppHeader demo change-member entry", () => {
       );
       expect(dialog).not.toBeNull();
       expect(dialog!.textContent).toContain("Sélectionnez votre équipe et votre nom");
+      expect(dialog!.querySelector(".panel")).toBeNull();
       expect(document.querySelector('[role="menu"]')).toBeNull();
       expect(submit).not.toHaveBeenCalled();
     } finally {
