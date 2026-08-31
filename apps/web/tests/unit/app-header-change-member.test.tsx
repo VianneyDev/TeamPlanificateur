@@ -165,6 +165,49 @@ describe("AppHeader demo change-member entry", () => {
     }
   });
 
+  it("explains roles in the change-member dialog when the demo lock is on", () => {
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    try {
+      mount(true);
+      openActingMemberMenu();
+
+      const changeMember = [...document.querySelectorAll('[role="menuitem"]')].find(
+        (item) => item.textContent?.includes("Changer de membre"),
+      );
+      expect(changeMember).toBeDefined();
+
+      act(() => {
+        changeMember!.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+        );
+      });
+
+      const dialog = document.querySelector(
+        '[role="dialog"][aria-labelledby]',
+      );
+      expect(dialog).not.toBeNull();
+      expect(dialog!.textContent).toContain("commencez par un manager");
+      expect(dialog!.textContent).toContain("Détail des rôles");
+
+      const toggle = dialog!.querySelector("button[aria-expanded]");
+      expect(toggle).not.toBeNull();
+      act(() => {
+        (toggle as HTMLButtonElement).click();
+      });
+
+      expect(dialog!.textContent).toContain(
+        "consulte ses congés et soumet des demandes.",
+      );
+    } finally {
+      fetch.mockRestore();
+    }
+  });
+
   it("keeps Se déconnecter posting to logout when the demo lock is on", () => {
     const submit = vi
       .spyOn(HTMLFormElement.prototype, "submit")
