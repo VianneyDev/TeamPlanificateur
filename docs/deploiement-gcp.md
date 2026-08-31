@@ -81,10 +81,29 @@ Ne pas exclure `Dockerfile` du `.gcloudignore` : sans lui, `gcloud` bascule sur 
 ---
 
 ## Déploiement
+Deux étapes. Ne pas utiliser `gcloud run deploy --source .` : la détection bascule sur les Buildpacks et ignore le Dockerfile, ce qui produit un container incapable de démarrer.
+
+### 1. Construire l'image
+
+```bash
+TAG=$(git rev-parse --short HEAD)
+IMAGE="europe-west9-docker.pkg.dev/tpe-vianney-prod/cloud-run-source-deploy/teamplanificateur:${TAG}"
+
+gcloud builds submit --tag "${IMAGE}"
+```
+
+Depuis la racine du dépôt. `gcloud builds submit` utilise le Dockerfile
+de façon fiable, contrairement à la détection automatique de
+`run deploy --source`.
+
+Le tag reprend le hash du commit : on sait ainsi quelle version du code
+tourne dans une révision donnée.
+
+### 2. Déployer 
 
 ```bash
 gcloud run deploy teamplanificateur \
-  --source . \
+  --image "${IMAGE}" \
   --region europe-west9 \
   --port 8080 \
   --memory 1Gi \
@@ -96,9 +115,14 @@ gcloud run deploy teamplanificateur \
   --set-env-vars "RECAP_BUCKET=tpe-vianney-prod-recaps,DEMO_RESET_ENABLED=true"
 ```
 
-Depuis la racine du dépôt. Les options non repassées lors d'un redéploiement sont héritées de la révision précédente.
+Les options non repassées lors d'un redéploiement sont héritées de la
+révision précédente.
 
-Pour ne modifier qu'un paramètre sans reconstruire l'image, utiliser `gcloud run services update` avec les mêmes options.
+Pour modifier uniquement la configuration sans reconstruire l'image,
+utiliser `gcloud run services update` avec les mêmes options.
+
+Pour revenir à une image déjà construite, rejouer l'étape 2 avec un
+autre tag. Aucune reconstruction n'est nécessaire.
 
 ---
 
