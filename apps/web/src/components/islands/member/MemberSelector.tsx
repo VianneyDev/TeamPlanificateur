@@ -52,20 +52,22 @@ type MemberSelectorProps = {
 function DemoRoleGuide() {
   return (
     <section
-      className="mb-5 rounded-md border border-border bg-muted/60 px-3 py-2.5 text-left"
+      className="mb-5 space-y-3 rounded-md border border-border bg-muted/50 p-3 text-left"
       aria-label="Que permet chaque rôle"
     >
-      <p className="text-xs text-muted-foreground">{MEMBER_ROLE_GUIDE_HINT}</p>
-      <dl className="mt-2 space-y-2">
+      <div className="rounded border border-primary/20 bg-accent/50 px-2.5 py-1.5 text-xs font-medium text-accent-foreground">
+        {MEMBER_ROLE_GUIDE_HINT}
+      </div>
+      <dl className="space-y-2.5">
         {MEMBER_ROLE_EXPLANATIONS.map((entry) => (
           <div
             key={`${entry.role}-${entry.isExternal}`}
-            className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2"
+            className="flex flex-col gap-1"
           >
-            <dt className="shrink-0">
+            <dt>
               <Badge className="shrink-0">{memberRoleLabel(entry)}</Badge>
             </dt>
-            <dd className="min-w-0 text-xs leading-snug text-muted-foreground">
+            <dd className="text-xs leading-relaxed text-muted-foreground">
               {entry.description}
             </dd>
           </div>

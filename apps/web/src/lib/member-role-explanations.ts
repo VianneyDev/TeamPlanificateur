@@ -10,17 +10,19 @@ export const MEMBER_ROLE_EXPLANATIONS = [
   {
     role: "member",
     isExternal: true,
-    description: "idem, et renseigne ses jours travaillés chaque mois.",
+    description:
+      "consulte ses congés, soumet des demandes et renseigne ses jours travaillés chaque mois.",
   },
   {
     role: "manager",
     isExternal: false,
     description:
-      "approuve les demandes, corrige directement les congés des membres, gère les équipes et les membres.",
+      "approuve les demandes, corrige les congés des membres, gère les équipes et les membres.",
   },
   {
     role: "manager",
     isExternal: true,
-    description: "idem, et renseigne ses jours travaillés.",
+    description:
+      "mêmes actions qu'un manager, et renseigne ses jours travaillés chaque mois.",
   },
 ] as const;

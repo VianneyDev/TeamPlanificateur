@@ -6,13 +6,13 @@ import MemberSelector, {
   MemberSelectorForm,
 } from "@/components/islands/member/MemberSelector";
 
-const MEMBER_EXPLANATION = "consulte ses congés et soumet des demandes";
+const MEMBER_EXPLANATION = "consulte ses congés et soumet des demandes.";
 const EXTERNAL_MEMBER_EXPLANATION =
-  "idem, et renseigne ses jours travaillés chaque mois";
+  "consulte ses congés, soumet des demandes et renseigne ses jours travaillés chaque mois.";
 const MANAGER_EXPLANATION =
-  "approuve les demandes, corrige directement les congés des membres, gère les équipes et les membres";
+  "approuve les demandes, corrige les congés des membres, gère les équipes et les membres.";
 const EXTERNAL_MANAGER_EXPLANATION =
-  "idem, et renseigne ses jours travaillés.";
+  "mêmes actions qu'un manager, et renseigne ses jours travaillés chaque mois.";
 const MANAGER_HINT = "commencez par un manager";
 
 describe("MemberSelector demo role guide", () => {
