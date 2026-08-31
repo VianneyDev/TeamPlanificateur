@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { CLOUD_RUN_HOSTNAME } from "../../cloud-run-hostname.mjs";
 import { startBuiltServer, type BuiltServer } from "./helpers";
 
-const PUBLIC_HOST = "teamplanificateur.a.run.app";
+const PUBLIC_HOST = CLOUD_RUN_HOSTNAME;
 const PUBLIC_ORIGIN = `https://${PUBLIC_HOST}`;
 
 const FORM_HEADERS = {
