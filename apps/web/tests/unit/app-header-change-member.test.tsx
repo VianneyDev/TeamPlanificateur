@@ -68,6 +68,16 @@ describe("AppHeader demo change-member entry", () => {
     });
   }
 
+  function openMobileMenu() {
+    const trigger = container!.querySelector(
+      'button[aria-label="Ouvrir le menu"]',
+    );
+    expect(trigger).toBeInstanceOf(HTMLButtonElement);
+    act(() => {
+      (trigger as HTMLButtonElement).click();
+    });
+  }
+
   function menuItemLabels(): string[] {
     return [...document.querySelectorAll('[role="menuitem"]')].map(
       (item) => item.textContent?.replace(/\s+/g, " ").trim() ?? "",
@@ -81,6 +91,18 @@ describe("AppHeader demo change-member entry", () => {
     const labels = menuItemLabels();
     expect(labels).not.toContain("Changer de membre");
     expect(labels).toContain("Se déconnecter");
+  });
+
+  it("hides Changer de membre from the mobile menu when the demo lock is off", () => {
+    mount(false);
+    openMobileMenu();
+
+    const mobileMenu = container!.querySelector(
+      '[role="dialog"][aria-label="Menu de navigation"]',
+    );
+    expect(mobileMenu).not.toBeNull();
+    expect(mobileMenu!.textContent).not.toContain("Changer de membre");
+    expect(mobileMenu!.textContent).toContain("Se déconnecter");
   });
 
   it("hides Changer de membre when the demo lock prop is omitted", () => {
@@ -104,7 +126,12 @@ describe("AppHeader demo change-member entry", () => {
     );
   });
 
-  it("returns to the member selector through the existing logout POST", () => {
+  it("opens the existing member selector in a dialog without logging out", () => {
+    const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), {
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
     const submit = vi
       .spyOn(HTMLFormElement.prototype, "submit")
       .mockImplementation(() => {});
@@ -124,13 +151,15 @@ describe("AppHeader demo change-member entry", () => {
         );
       });
 
-      expect(submit).toHaveBeenCalledTimes(1);
-      const form = submit.mock.contexts[0] as HTMLFormElement;
-      expect(form.method.toLowerCase()).toBe("post");
-      expect(new URL(form.action, "http://localhost").pathname).toBe(
-        "/api/logout",
+      const dialog = document.querySelector(
+        '[role="dialog"][aria-labelledby]',
       );
+      expect(dialog).not.toBeNull();
+      expect(dialog!.textContent).toContain("Sélectionnez votre équipe et votre nom");
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+      expect(submit).not.toHaveBeenCalled();
     } finally {
+      fetch.mockRestore();
       submit.mockRestore();
     }
   });
