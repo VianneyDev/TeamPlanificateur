@@ -7,7 +7,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { applyQueryStates, useQueryState } from "@/hooks/useQueryState";
 import type { MemberStatus } from "@/lib/api/member";
-import { MEMBER_ROLE_LABELS } from "@/lib/member-role-label";
+import { memberBaseRoleLabel } from "@/lib/member-role-label";
 import type { Member } from "@/lib/types";
 import MemberModal from "@/components/islands/member/MemberModal";
 import MemberRowActions from "@/components/islands/member/MemberRowActions";
@@ -17,8 +17,6 @@ const STATUS_OPTIONS: { value: MemberStatus; label: string }[] = [
   { value: "archived", label: "Archivés" },
   { value: "all", label: "Tous" },
 ];
-
-const ROLE_LABELS: Record<string, string> = MEMBER_ROLE_LABELS;
 
 const SEARCH_DEBOUNCE_MS = 300;
 const FETCH_INDICATOR_DELAY_MS = 200;
@@ -268,7 +266,7 @@ export default function MembersPanel({
                     </td>
 
                     <td className="px-4 py-3 sm:px-5">
-                      <Badge>{ROLE_LABELS[member.role] ?? member.role}</Badge>
+                      <Badge>{memberBaseRoleLabel(member.role)}</Badge>
                     </td>
 
                     <td className="px-4 py-3 text-right sm:px-5">

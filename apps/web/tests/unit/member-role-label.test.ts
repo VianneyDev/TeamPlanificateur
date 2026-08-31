@@ -25,4 +25,10 @@ describe("memberRoleLabel", () => {
       memberRoleLabel({ role: "member", isExternal: false }),
     ).toBe("Membre");
   });
+
+  it("uses a neutral label for an unsupported stored role", () => {
+    expect(
+      memberRoleLabel({ role: "administrator", isExternal: false }),
+    ).toBe("Rôle inconnu");
+  });
 });
