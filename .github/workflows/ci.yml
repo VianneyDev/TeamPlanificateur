@@ -66,6 +66,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Built-server CSRF tests
+        run: pnpm test:ssr
+
   storybook_build:
     name: Build Storybook
     if: |

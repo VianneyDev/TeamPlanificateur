@@ -43,6 +43,7 @@ All commands are run from the root of the project, from a terminal:
 | `pnpm typecheck`              | TypeScript check (`tsc --noEmit`)                |
 | `pnpm lint`                   | ESLint (narrow correctness rules; Astro + React) |
 | `pnpm test` / `pnpm test:api` | Run Vitest (API tests against Neon test branch)  |
+| `pnpm test:ssr`               | CSRF/origin checks against the built Node server |
 | `pnpm db:migrate:test`        | Apply Prisma migrations to the Neon test branch  |
 
 ## Deployment (GCP)
@@ -59,11 +60,13 @@ API tests use a **dedicated Neon branch**, not the dev database from `.env`.
 
 `.env.test` is gitignored. See [docs/adr/0002-test-database-neon-branch.md](docs/adr/0002-test-database-neon-branch.md).
 
+`pnpm test:ssr` starts the compiled Node server (`apps/web/dist/server/entry.mjs`). Run `pnpm build` first. It does not use the database.
+
 ## CI
 
 PRs run [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
 
-1. **Lint, typecheck & build** (no database) - `pnpm lint`, `pnpm typecheck`, `pnpm build`
+1. **Lint, typecheck & build** (no database) - `pnpm lint`, `pnpm typecheck`, `pnpm build`, then `pnpm test:ssr` against `dist/server/entry.mjs`
 2. **API tests** - create an ephemeral Neon branch `preview/pr-<number>-<branch>`, apply Prisma migrations with the **direct (unpooled)** connection string, then `pnpm test`
 3. **Cleanup** - on PR close, delete that Neon branch (required to stay under Neon branch quotas)
 

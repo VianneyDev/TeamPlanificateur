@@ -9,6 +9,14 @@ export default defineConfig({
   output: "server",
   adapter: node({ mode: "standalone" }),
   integrations: [react()],
+  // Cloud Run terminates TLS in front of the container. Without this, Astro
+  // ignores the public Host and CSRF compares Origin: https://*.run.app to
+  // localhost on form POSTs such as logout.
+  // Hostname only: Astro 5.17.2 drops X-Forwarded-Proto when the pattern also
+  // sets protocol (https://github.com/withastro/astro/issues/15559).
+  security: {
+    allowedDomains: [{ hostname: "**.run.app" }],
+  },
   vite: {
     plugins: [tailwindcss()],
     // Prebundle island client deps at startup. Astro loads islands dynamically,

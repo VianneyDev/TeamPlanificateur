@@ -313,7 +313,7 @@ Limite connue : le jeton est stocké en clair dans la configuration du job, Clou
 | Le conteneur ne démarre pas                      | `HOST` non défini, ou port codé en dur                        |
 | `Cannot find module` au démarrage                | Dépendance runtime déclarée en `devDependencies`              |
 | Erreur 500 après changement d'identité           | Propagation IAM non terminée, ou droit manquant sur le secret |
-| `Cross-site POST form submissions are forbidden` | En-tête `Content-Type` absent de la requête                   |
+| `Cross-site POST form submissions are forbidden` | En-tête `Content-Type` absent (jobs), ou discordance `Origin` / origine reconstruite (logout, voir Points ouverts) |
 | `gcloud` ignore le Dockerfile                    | `Dockerfile` exclu par le `.gcloudignore`                     |
 | Épuisement du pool de connexions                 | Endpoint Neon sans `-pooler`, ou `--max-instances` trop élevé |
 
@@ -322,3 +322,17 @@ Journaux :
 ```bash
 gcloud run services logs read teamplanificateur --region europe-west9 --limit 50
 ```
+
+---
+
+## Points ouverts
+
+### Déconnexion rejetée en production (résolu)
+
+**Symptôme.** `POST /api/logout` depuis le navigateur renvoyait `Cross-site POST form submissions are forbidden`. Les jobs `POST /api/jobs/*` appelés sans en-tête `Origin` passaient.
+
+**Cause.** Astro 5 compare `Origin` à l'origine reconstruite de la requête. Le conteneur Cloud Run reçoit du HTTP en clair. Sans `security.allowedDomains`, l'adaptateur Node ignore le `Host` public et `X-Forwarded-Host` : l'hôte retombe sur `localhost`. Même si `X-Forwarded-Proto: https` est lu, l'origine vue par Astro (`https://localhost`) ne correspond pas à `Origin: https://….run.app`. `astro dev` ne passe pas par ce chemin, d'où l'absence du bug en local. L'appel navigateur est un `POST` de formulaire vers l'URL relative `/api/logout` : ce n'est pas une URL absolue vers un autre domaine.
+
+**Solution.** `security.allowedDomains: [{ hostname: "**.run.app" }]` dans `apps/web/astro.config.mjs`, pour faire confiance aux en-têtes transmis par le proxy Google. La protection CSRF reste active : un `Origin` d'un autre hôte est toujours rejeté. Ne pas mettre `protocol: "https"` dans le motif sous Astro 5.17.2 (le proto transféré est alors ignoré). Un domaine personnalisé hors `*.run.app` devra être ajouté à cette liste.
+
+Couvert par `pnpm test:ssr` (serveur construit, pas Hono isolé).
