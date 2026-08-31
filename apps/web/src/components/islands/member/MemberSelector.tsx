@@ -10,6 +10,10 @@ import {
   SelectValue,
 } from "@/components/islands/ui/select";
 import { MAX_LIST_PAGE_SIZE } from "@/lib/schemas/pagination";
+import {
+  MEMBER_ROLE_EXPLANATIONS,
+  MEMBER_ROLE_GUIDE_HINT,
+} from "@/lib/member-role-explanations";
 import { memberRoleLabel } from "@/lib/member-role-label";
 
 interface Team {
@@ -41,7 +45,39 @@ export function MemberNameWithRole({
   );
 }
 
-export function MemberSelectorForm() {
+type MemberSelectorProps = {
+  demoResetEnabled?: boolean;
+};
+
+function DemoRoleGuide() {
+  return (
+    <section
+      className="mb-5 rounded-md border border-border bg-muted/60 px-3 py-2.5 text-left"
+      aria-label="Que permet chaque rôle"
+    >
+      <p className="text-xs text-muted-foreground">{MEMBER_ROLE_GUIDE_HINT}</p>
+      <dl className="mt-2 space-y-2">
+        {MEMBER_ROLE_EXPLANATIONS.map((entry) => (
+          <div
+            key={`${entry.role}-${entry.isExternal}`}
+            className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2"
+          >
+            <dt className="shrink-0">
+              <Badge className="shrink-0">{memberRoleLabel(entry)}</Badge>
+            </dt>
+            <dd className="min-w-0 text-xs leading-snug text-muted-foreground">
+              {entry.description}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+export function MemberSelectorForm({
+  demoResetEnabled = false,
+}: MemberSelectorProps) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
@@ -96,6 +132,8 @@ export function MemberSelectorForm() {
           Sélectionnez votre équipe et votre nom
         </p>
       </div>
+
+      {demoResetEnabled ? <DemoRoleGuide /> : null}
 
       <div className="space-y-5">
         <div className="space-y-1.5">
@@ -186,11 +224,13 @@ export function MemberSelectorForm() {
   );
 }
 
-export default function MemberSelector() {
+export default function MemberSelector({
+  demoResetEnabled = false,
+}: MemberSelectorProps) {
   return (
     <div className="flex flex-1 items-center justify-center">
       <div className="panel w-full max-w-md">
-        <MemberSelectorForm />
+        <MemberSelectorForm demoResetEnabled={demoResetEnabled} />
       </div>
     </div>
   );

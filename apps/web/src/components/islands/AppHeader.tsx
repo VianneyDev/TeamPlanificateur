@@ -406,7 +406,7 @@ export default function AppHeader({
             <DialogDescription className="sr-only">
               Sélectionnez une équipe et un membre pour changer d’identité.
             </DialogDescription>
-            <MemberSelectorForm />
+            <MemberSelectorForm demoResetEnabled={demoResetEnabled} />
           </DialogContent>
         </Dialog>
       ) : null}

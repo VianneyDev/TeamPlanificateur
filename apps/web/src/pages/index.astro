@@ -4,11 +4,13 @@ export const prerender = false;
 import Layout from "@/layouts/Layout.astro";
 import MemberSelector from "@/components/islands/member/MemberSelector";
 import TeamCalendarWithProvider from "@/components/islands/calendar/TeamCalendarWithProvider";
+import { isDemoResetEnabled } from "@/lib/demo-reset-enabled";
 
 const selectedMember =
    Astro.locals.member && !Astro.locals.member.archived
       ? Astro.locals.member
       : null;
+const demoResetEnabled = isDemoResetEnabled();
 ---
 
 <Layout title="Calendrier d'équipe">
@@ -24,7 +26,7 @@ const selectedMember =
 
    {!selectedMember && (
       <div class="flex min-h-[50vh]">
-         <MemberSelector client:load />
+         <MemberSelector client:load demoResetEnabled={demoResetEnabled} />
       </div>
    )}
 
