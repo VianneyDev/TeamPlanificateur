@@ -3,6 +3,7 @@ import { defineConfig } from "astro/config";
 import node from "@astrojs/node";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
+import { CLOUD_RUN_HOSTNAME } from "./cloud-run-hostname.mjs";
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,12 +11,12 @@ export default defineConfig({
   adapter: node({ mode: "standalone" }),
   integrations: [react()],
   // Cloud Run terminates TLS in front of the container. Without this, Astro
-  // ignores the public Host and CSRF compares Origin: https://*.run.app to
-  // localhost on form POSTs such as logout.
+  // ignores the public Host and CSRF compares Origin: https://<service>.run.app
+  // to localhost on form POSTs such as logout.
   // Hostname only: Astro 5.17.2 drops X-Forwarded-Proto when the pattern also
   // sets protocol (https://github.com/withastro/astro/issues/15559).
   security: {
-    allowedDomains: [{ hostname: "teamplanificateur-521616569803.europe-west9.run.app" }],
+    allowedDomains: [{ hostname: CLOUD_RUN_HOSTNAME }],
   },
   vite: {
     plugins: [tailwindcss()],
