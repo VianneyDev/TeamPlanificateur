@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/islands/ui/dropdown-menu";
-import MemberSelector from "@/components/islands/member/MemberSelector";
+import { MemberSelectorForm } from "@/components/islands/member/MemberSelector";
 import { memberRoleLabel } from "@/lib/member-role-label";
 
 const STORAGE_KEY = "tpe-theme";
@@ -406,7 +406,7 @@ export default function AppHeader({
             <DialogDescription className="sr-only">
               Sélectionnez une équipe et un membre pour changer d’identité.
             </DialogDescription>
-            <MemberSelector />
+            <MemberSelectorForm />
           </DialogContent>
         </Dialog>
       ) : null}
