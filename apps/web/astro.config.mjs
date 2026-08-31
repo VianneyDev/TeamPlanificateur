@@ -15,7 +15,7 @@ export default defineConfig({
   // Hostname only: Astro 5.17.2 drops X-Forwarded-Proto when the pattern also
   // sets protocol (https://github.com/withastro/astro/issues/15559).
   security: {
-    allowedDomains: [{ hostname: "**.run.app" }],
+    allowedDomains: [{ hostname: "teamplanificateur-521616569803.europe-west9.run.app" }],
   },
   vite: {
     plugins: [tailwindcss()],
