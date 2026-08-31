@@ -12,6 +12,7 @@
     "test": "pnpm --filter eccentric-equinox test",
     "test:watch": "pnpm --filter eccentric-equinox test:watch",
     "test:api": "pnpm --filter eccentric-equinox test:api",
+    "test:ssr": "pnpm --filter eccentric-equinox test:ssr",
     "test:ui": "pnpm --filter @vianneytraina/ui test",
     "test:storybook": "playwright test",
     "test:workspace": "node --test tests/*.test.mjs",

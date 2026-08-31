@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:api": "vitest run tests/api",
+    "test:ssr": "vitest run --config vitest.ssr.config.ts",
     "db:migrate:test": "node --import ./scripts/load-env-test.mjs ./node_modules/prisma/build/index.js migrate deploy"
   },
   "dependencies": {
