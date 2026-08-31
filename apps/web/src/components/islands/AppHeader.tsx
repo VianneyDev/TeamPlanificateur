@@ -13,6 +13,13 @@ import {
 } from "lucide-react";
 
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@vianneytraina/ui";
+
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -20,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/islands/ui/dropdown-menu";
+import MemberSelector from "@/components/islands/member/MemberSelector";
 import { memberRoleLabel } from "@/lib/member-role-label";
 
 const STORAGE_KEY = "tpe-theme";
@@ -166,9 +174,11 @@ function postLogout() {
 function ActingMemberMenu({
   member,
   demoResetEnabled,
+  onChangeMember,
 }: {
   member: AppHeaderMember;
   demoResetEnabled: boolean;
+  onChangeMember: () => void;
 }) {
   const roleLabel = memberRoleLabel(member);
 
@@ -211,10 +221,7 @@ function ActingMemberMenu({
         {demoResetEnabled ? (
           <DropdownMenuItem
             className="cursor-pointer gap-2"
-            onSelect={(event) => {
-              event.preventDefault();
-              postLogout();
-            }}
+            onSelect={onChangeMember}
           >
             <ArrowLeftRight className="size-4" aria-hidden="true" />
             Changer de membre
@@ -242,7 +249,12 @@ export default function AppHeader({
   demoResetEnabled = false,
 }: AppHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [memberSelectorOpen, setMemberSelectorOpen] = useState(false);
   const menuId = useId();
+  const openMemberSelector = () => {
+    setMenuOpen(false);
+    setMemberSelectorOpen(true);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -283,6 +295,7 @@ export default function AppHeader({
                 <ActingMemberMenu
                   member={member}
                   demoResetEnabled={demoResetEnabled}
+                  onChangeMember={openMemberSelector}
                 />
               </div>
             ) : null}
@@ -358,16 +371,17 @@ export default function AppHeader({
                     </p>
                   </div>
                 </div>
-                <form method="POST" action="/api/logout" className="space-y-1">
-                  {demoResetEnabled ? (
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted"
-                    >
-                      <ArrowLeftRight className="size-4" aria-hidden="true" />
-                      Changer de membre
-                    </button>
-                  ) : null}
+                {demoResetEnabled ? (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-foreground hover:bg-muted"
+                    onClick={openMemberSelector}
+                  >
+                    <ArrowLeftRight className="size-4" aria-hidden="true" />
+                    Changer de membre
+                  </button>
+                ) : null}
+                <form method="POST" action="/api/logout">
                   <button
                     type="submit"
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-medium text-destructive hover:bg-muted"
@@ -380,6 +394,21 @@ export default function AppHeader({
             ) : null}
           </div>
         </div>
+      ) : null}
+
+      {demoResetEnabled ? (
+        <Dialog
+          open={memberSelectorOpen}
+          onOpenChange={setMemberSelectorOpen}
+        >
+          <DialogContent className="!p-0">
+            <DialogTitle className="sr-only">Changer de membre</DialogTitle>
+            <DialogDescription className="sr-only">
+              Sélectionnez une équipe et un membre pour changer d’identité.
+            </DialogDescription>
+            <MemberSelector />
+          </DialogContent>
+        </Dialog>
       ) : null}
     </>
   );
