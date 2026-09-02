@@ -12,7 +12,6 @@ export type {
   ButtonEmphasis,
   ButtonIntent,
   ButtonProps,
-  ButtonVariant,
 } from "./components/Button/Button";
 export { TextField } from "./components/TextField/TextField";
 export type { TextFieldProps } from "./components/TextField/TextField";

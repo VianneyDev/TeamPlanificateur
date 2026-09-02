@@ -30,7 +30,9 @@ function DialogPreview({
         <Label htmlFor="dialog-member-name">Nom</Label>
         <TextField id="dialog-member-name" />
         <DialogFooter>
-          <Button variant="ghost">Annuler</Button>
+          <Button intent="neutral" emphasis="ghost">
+            Annuler
+          </Button>
           <Button>Créer</Button>
         </DialogFooter>
       </DialogContent>
