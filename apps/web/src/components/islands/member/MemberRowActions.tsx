@@ -81,7 +81,8 @@ export default function MemberRowActions({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              intent="neutral"
+              emphasis="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
@@ -115,7 +116,8 @@ export default function MemberRowActions({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              intent="neutral"
+              emphasis="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >

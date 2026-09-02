@@ -157,7 +157,7 @@ export default function TeamsPanel({
           <span className="text-sm text-destructive">
             Impossible de charger les équipes.
           </span>
-          <Button type="button" variant="outline" className="shrink-0" onClick={() => refetch()}>
+          <Button type="button" intent="neutral" emphasis="outline" className="shrink-0" onClick={() => refetch()}>
             Réessayer
           </Button>
         </div>

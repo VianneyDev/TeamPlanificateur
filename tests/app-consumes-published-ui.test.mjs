@@ -39,17 +39,25 @@ describe("app consumes published @vianneytraina/ui (A9)", () => {
     const app = readJson("apps/web/package.json");
     const range = app.dependencies["@vianneytraina/ui"];
 
-    assert.equal(range, "^1.0.0");
+    assert.equal(range, "^2.0.0");
     assert.doesNotMatch(String(range), /workspace:/);
   });
 
   it("installs the registry tarball, not a symlink to the local UI package", () => {
     const installedRoot = resolveAppUiPackageRoot();
+    const installed = JSON.parse(
+      readFileSync(join(installedRoot, "package.json"), "utf8"),
+    );
 
     assert.notEqual(
       installedRoot,
       localUiPackage,
       "apps/web must resolve @vianneytraina/ui from the registry, not packages/ui",
+    );
+    assert.match(
+      String(installed.version),
+      /^2\./,
+      "installed package must be the published 2.x release",
     );
     assert.ok(
       existsSync(join(installedRoot, "dist/index.js")),

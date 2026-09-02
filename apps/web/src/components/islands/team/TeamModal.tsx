@@ -101,7 +101,7 @@ export default function TeamModal({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
+            <Button type="button" intent="neutral" emphasis="outline" onClick={onClose} disabled={isPending}>
               Annuler
             </Button>
             <Button
