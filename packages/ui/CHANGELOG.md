@@ -1,5 +1,11 @@
 # @vianneytraina/ui
 
+## 2.0.0
+
+### Major Changes
+
+- 648479c: Button removes the mixed `variant` prop. Use `intent` and `emphasis` instead. See the mapping table in the package README.
+
 ## 1.1.0
 
 ### Minor Changes
