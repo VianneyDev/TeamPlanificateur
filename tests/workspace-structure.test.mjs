@@ -32,10 +32,10 @@ describe("pnpm monorepo workspace contract (A1)", () => {
     assert.equal(app.private, true);
   });
 
-  it("publishes @vianneytraina/ui identity at 1.0.0", () => {
+  it("publishes @vianneytraina/ui identity at 1.1.0", () => {
     const ui = readJson("packages/ui/package.json");
     assert.equal(ui.name, "@vianneytraina/ui");
-    assert.equal(ui.version, "1.0.0");
+    assert.equal(ui.version, "1.1.0");
     assert.equal(ui.private, false);
     assert.equal(ui.author, "Vianney Traina");
     assert.equal(ui.license, "MIT");
