@@ -8,7 +8,12 @@
 import "./styles.css";
 
 export { Button } from "./components/Button/Button";
-export type { ButtonProps, ButtonVariant } from "./components/Button/Button";
+export type {
+  ButtonEmphasis,
+  ButtonIntent,
+  ButtonProps,
+  ButtonVariant,
+} from "./components/Button/Button";
 export { TextField } from "./components/TextField/TextField";
 export type { TextFieldProps } from "./components/TextField/TextField";
 export { Label } from "./components/Label/Label";

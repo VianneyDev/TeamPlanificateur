@@ -64,11 +64,33 @@ describe("Button", () => {
   it.each(["default", "ghost", "outline", "danger"] as const)(
     "keeps its accessible name with mixed variant %s",
     (variant) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
       render(<Button variant={variant}>Action</Button>);
 
       expect(
         screen.getByRole("button", { name: "Action" }),
       ).not.toHaveAttribute("variant");
+      warn.mockRestore();
+    },
+  );
+
+  it.each([
+    ["default", "neutral", "filled"],
+    ["ghost", "neutral", "ghost"],
+    ["outline", "neutral", "outline"],
+    ["danger", "danger", "filled"],
+  ] as const)(
+    "maps deprecated variant %s to intent %s and emphasis %s",
+    (variant, intent, emphasis) => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      render(<Button variant={variant}>Action</Button>);
+      const button = screen.getByRole("button", { name: "Action" });
+
+      expect(button).toHaveAttribute("data-intent", intent);
+      expect(button).toHaveAttribute("data-emphasis", emphasis);
+      warn.mockRestore();
     },
   );
 
@@ -78,5 +100,32 @@ describe("Button", () => {
     render(<Button ref={ref}>Valider</Button>);
 
     expect(ref.current).toBe(screen.getByRole("button", { name: "Valider" }));
+  });
+
+  it("warns in development that variant is deprecated", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    render(<Button variant="outline">Annuler</Button>);
+
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("`variant` is deprecated"),
+    );
+    warn.mockRestore();
+  });
+
+  it("keeps its accessible name with intent and emphasis", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    render(
+      <Button intent="neutral" emphasis="outline">
+        Annuler
+      </Button>,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Annuler" }),
+    ).toBeInTheDocument();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
