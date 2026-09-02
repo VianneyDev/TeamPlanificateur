@@ -5,10 +5,6 @@ const meta = {
   title: "Button",
   component: Button,
   argTypes: {
-    variant: {
-      control: "select",
-      options: ["default", "ghost", "outline", "danger"],
-    },
     intent: {
       control: "select",
       options: ["neutral", "danger"],
@@ -30,17 +26,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { variant: "default" },
+  args: { intent: "neutral", emphasis: "filled" },
 };
 
 export const Ghost: Story = {
-  args: { variant: "ghost", children: "Annuler" },
+  args: { intent: "neutral", emphasis: "ghost", children: "Annuler" },
 };
 
 export const Outline: Story = {
-  args: { variant: "outline", children: "Modifier" },
+  args: { intent: "neutral", emphasis: "outline", children: "Modifier" },
 };
 
 export const Danger: Story = {
-  args: { variant: "danger", children: "Archiver" },
+  args: { intent: "danger", emphasis: "filled", children: "Archiver" },
 };

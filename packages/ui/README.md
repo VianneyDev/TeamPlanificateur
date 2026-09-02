@@ -10,7 +10,7 @@ import "@vianneytraina/ui/styles.css";
 
 ## Migrating Button off `variant`
 
-`Button` used to mix meaning and look in a single `variant` prop (`default`, `ghost`, `outline`, `danger`). From 1.1.0, prefer `intent` (what the action means) and `emphasis` (how strongly it is drawn). `variant` still works in 1.x and logs a development warning. It is removed in 2.0.0.
+`Button` used to mix meaning and look in a single `variant` prop (`default`, `ghost`, `outline`, `danger`). From 2.0.0, use `intent` (what the action means) and `emphasis` (how strongly it is drawn). `variant` was removed.
 
 | `variant` (v1) | `intent` | `emphasis` |
 | --- | --- | --- |
