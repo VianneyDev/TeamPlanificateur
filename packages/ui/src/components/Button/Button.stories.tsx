@@ -9,6 +9,14 @@ const meta = {
       control: "select",
       options: ["default", "ghost", "outline", "danger"],
     },
+    intent: {
+      control: "select",
+      options: ["neutral", "danger"],
+    },
+    emphasis: {
+      control: "select",
+      options: ["filled", "ghost", "outline"],
+    },
     disabled: { control: "boolean" },
     children: { control: "text" },
   },
