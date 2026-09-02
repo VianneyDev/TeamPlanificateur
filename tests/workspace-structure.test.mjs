@@ -32,10 +32,10 @@ describe("pnpm monorepo workspace contract (A1)", () => {
     assert.equal(app.private, true);
   });
 
-  it("publishes @vianneytraina/ui identity at 1.1.0", () => {
+  it("publishes @vianneytraina/ui identity at 2.0.0", () => {
     const ui = readJson("packages/ui/package.json");
     assert.equal(ui.name, "@vianneytraina/ui");
-    assert.equal(ui.version, "1.1.0");
+    assert.equal(ui.version, "2.0.0");
     assert.equal(ui.private, false);
     assert.equal(ui.author, "Vianney Traina");
     assert.equal(ui.license, "MIT");
@@ -53,5 +53,20 @@ describe("pnpm monorepo workspace contract (A1)", () => {
       directory: "packages/ui",
     });
     assert.deepEqual(ui.publishConfig, { access: "public" });
+  });
+
+  it("records the Button v1.x deprecation and v2 break in the generated changelog", () => {
+    const changelog = readText("packages/ui/CHANGELOG.md");
+    const readme = readText("packages/ui/README.md");
+
+    assert.match(changelog, /^## 2\.0\.0$/m);
+    assert.match(changelog, /^## 1\.1\.0$/m);
+    assert.match(changelog, /intent/);
+    assert.match(changelog, /emphasis/);
+    assert.match(changelog, /variant/);
+    assert.match(readme, /\| `default` \| `neutral` \| `filled` \|/);
+    assert.match(readme, /\| `ghost` \| `neutral` \| `ghost` \|/);
+    assert.match(readme, /\| `outline` \| `neutral` \| `outline` \|/);
+    assert.match(readme, /\| `danger` \| `danger` \| `filled` \|/);
   });
 });
