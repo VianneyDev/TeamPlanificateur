@@ -87,7 +87,8 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              intent="neutral"
+              emphasis="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
@@ -121,7 +122,8 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              intent="neutral"
+              emphasis="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
@@ -156,7 +158,8 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              intent="neutral"
+              emphasis="outline"
               disabled={decisionPending}
               onClick={() => setConfirmAction(null)}
             >
@@ -164,7 +167,8 @@ export default function TeamRowActions({ team, onEdit }: TeamRowActionsProps) {
             </Button>
             <Button
               type="button"
-              variant="danger"
+              intent="danger"
+              emphasis="filled"
               disabled={decisionPending}
               aria-busy={isDeleting}
               onClick={() =>

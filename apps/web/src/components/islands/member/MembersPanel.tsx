@@ -169,7 +169,7 @@ export default function MembersPanel({
           className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"
         >
           <span className="text-sm text-destructive">{errorLabel}</span>
-          <Button type="button" variant="outline" className="shrink-0" onClick={() => refetch()}>
+          <Button type="button" intent="neutral" emphasis="outline" className="shrink-0" onClick={() => refetch()}>
             Réessayer
           </Button>
         </div>

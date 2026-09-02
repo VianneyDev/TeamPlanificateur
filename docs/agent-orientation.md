@@ -27,7 +27,7 @@ Les mutations passent par les routes Hono ; les `useMutation` peuvent appliquer 
 
 ## Architecture
 
-Monorepo pnpm : `apps/web` (app privée `eccentric-equinox`) et `packages/ui` (`@vianneytraina/ui`). L’app consomme `@vianneytraina/ui` depuis le registry (`^1.0.0`, ADR-0013).
+Monorepo pnpm : `apps/web` (app privée `eccentric-equinox`) et `packages/ui` (`@vianneytraina/ui`). L’app consomme `@vianneytraina/ui` depuis le registry (`^2.0.0`, ADR-0013).
 
 | Zone                                         | Rôle                                                      |
 | -------------------------------------------- | --------------------------------------------------------- |
