@@ -2,6 +2,8 @@
 
 Composants React accessibles et tokens de design extraits de TeamPlanificateur.
 
+Le build utilise tsup (ESM, CSS frère). Vite library mode est l’alternative identifiée si la maintenance de tsup bloque (ADR-0011).
+
 Importez la feuille de styles une seule fois dans le layout Astro, pas par îlot :
 
 ```js
