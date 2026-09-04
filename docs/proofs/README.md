@@ -20,10 +20,10 @@ Published versions of [`@vianneytraina/ui`](https://www.npmjs.com/package/@viann
 
 ## Visual gate: red, then green after acceptance
 
-An intentional Badge padding change failed the Storybook visual job, then passed after snapshots were accepted with `workflow_dispatch` (`update_snapshots`).
+An intentional Badge padding change failed the Storybook visual job, then passed after the snapshots were accepted.
 
 - Red run: [actions/runs/33171129497](https://github.com/VianneyDev/TeamPlanificateur/actions/runs/33171129497) ([capture](ci/visual-diff-red.png)). Quality and API jobs stayed green; **Storybook visual and accessibility** failed.
-- Green after acceptance: [actions/runs/33173560696](https://github.com/VianneyDev/TeamPlanificateur/actions/runs/33173560696) ([capture](ci/snapshots-accepted-green.png)). That is the `workflow_dispatch` with `update_snapshots`: compare is skipped on purpose; the job regenerates baselines and commits them.
+- Green run: [actions/runs/33856702634](https://github.com/VianneyDev/TeamPlanificateur/actions/runs/33856702634) ([capture](ci/snapshots-accepted-green.png)). **Storybook visual and accessibility** compared screenshots and ran axe: 28 passed.
 
 Pixel-level diff from the same Badge padding demo (PR 72):
 
