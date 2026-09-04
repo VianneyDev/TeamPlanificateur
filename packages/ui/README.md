@@ -1,11 +1,25 @@
 # @vianneytraina/ui
 
-Composants React accessibles et tokens de design extraits de TeamPlanificateur.
+Accessible React components and design tokens extracted from TeamPlanificateur.
 
-Importez la feuille de styles une seule fois dans le layout Astro, pas par îlot :
+```sh
+npm i @vianneytraina/ui
+```
+
+`react` and `react-dom` are peer dependencies (`>=18`).
+
+Import the stylesheet once in the Astro layout, not per island:
 
 ```js
 import "@vianneytraina/ui/styles.css";
+```
+
+Then import components by name:
+
+```jsx
+import { Button } from "@vianneytraina/ui";
+
+<Button intent="neutral" emphasis="filled">Enregistrer</Button>
 ```
 
 ## Migrating Button off `variant`
